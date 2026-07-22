@@ -1,13 +1,35 @@
 import { describe, it, expect, vi } from "vitest";
 import type { Address, Hex, PublicClient } from "viem";
 
-import { discoverAgent } from "../../src/lib/discovery";
-
-const SOMNIA_CHAIN_ID = 50312;
+const ACTIVE_CHAIN_ID = 43113;
 // All-lowercase address — viem.isAddress accepts uniform-case forms
 // without a checksum challenge.
 const AGENT = "0x000000000000000000000000000000000000beef" as Address;
 const REGISTRY = "0x97F743A9AAa5AcAA73075C1B8F1921274755CF70" as Address;
+
+// `discoverAgent` refuses to run against a network with no deployed
+// WardAgentRegistry, which is the real state of Avalanche until one is
+// deployed. Pin a configured network here so these tests exercise discovery
+// itself rather than that (separately correct) precondition.
+vi.mock("../../src/lib/networks", async () => {
+  const actual =
+    await vi.importActual<typeof import("../../src/lib/networks")>("../../src/lib/networks");
+  const configured = {
+    ...actual.NETWORKS[ACTIVE_CHAIN_ID],
+    oracleAddress: "0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf" as Address,
+    queueAddress: "0x2222222222222222222222222222222222222222" as Address,
+    registryAddress: REGISTRY,
+  };
+  return {
+    ...actual,
+    NETWORKS: { ...actual.NETWORKS, [ACTIVE_CHAIN_ID]: configured },
+    getNetwork: (chainId: number) =>
+      chainId === ACTIVE_CHAIN_ID ? configured : actual.getNetwork(chainId),
+    getActiveNetwork: () => configured,
+  };
+});
+
+const { discoverAgent } = await import("../../src/lib/discovery");
 const ORACLE = "0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf" as Address;
 const REGISTRAR = "0x1111111111111111111111111111111111111111" as Address;
 const POLICY_ID = ("0x" + "ab".repeat(32)) as Hex;
@@ -32,7 +54,7 @@ interface ClientOpts {
 
 function makeClient(opts: ClientOpts): PublicClient {
   const client = {
-    chain: { id: SOMNIA_CHAIN_ID },
+    chain: { id: ACTIVE_CHAIN_ID },
     getCode: vi.fn(async () => opts.code ?? "0x"),
     getTransactionCount: vi.fn(async () => opts.nonce ?? 0),
     getBalance: vi.fn(async () => opts.balance ?? 0n),

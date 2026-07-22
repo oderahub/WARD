@@ -181,7 +181,7 @@ export function SelectorRow({
 
       <div className="flex flex-col gap-1">
         <Input
-          aria-label="native value cap per call (STT)"
+          aria-label="native value cap per call (AVAX)"
           aria-invalid={errVal ? true : undefined}
           aria-describedby={errVal ? valErrId : undefined}
           className="w-32 font-mono"
@@ -189,7 +189,7 @@ export function SelectorRow({
           value={selector.valueCapPerCall}
           onChange={(e) => onChange({ ...selector, valueCapPerCall: e.target.value })}
           onBlur={() => valPath && touch(valPath)}
-          title="Caps native STT msg.value for this call. ERC20 token amounts inside calldata are NOT parsed or capped. To restrict token spend, allowlist the token contract as a target and use tier=VETO_REQUIRED on `transfer(address,uint256)` / `approve(address,uint256)`."
+          title="Caps native AVAX msg.value for this call. ERC20 token amounts inside calldata are NOT parsed or capped. To restrict token spend, allowlist the token contract as a target and use tier=VETO_REQUIRED on `transfer(address,uint256)` / `approve(address,uint256)`."
         />
         {errVal && (
           <p id={valErrId} role="alert" className="text-[11px] text-danger">

@@ -195,8 +195,8 @@ cli
   });
 
 cli
-  .command("preflight", "Check env + wallet balance against Somnia testnet")
-  .option("--min-balance <eth>", "Minimum recommended balance in STT", { default: "0.5", type: [String] })
+  .command("preflight", "Check env + wallet balance against Avalanche Fuji")
+  .option("--min-balance <eth>", "Minimum recommended balance in AVAX", { default: "0.5", type: [String] })
   .action(async (opts: { minBalance?: string }) => {
     const result = await preflightCmd({ minBalance: parseEther(stringOption(opts.minBalance, "min-balance") ?? "0.5") });
     if (!result.ok) process.exit(1);

@@ -49,8 +49,8 @@ describe("computePerCallExceedsDailyWarnings", () => {
         {
           target: ADDR_A,
           selectors: [
-            selector(SEL_X, 2n * 10n ** 18n), // 2 STT > 1 STT daily
-            selector(SEL_Y, 5n * 10n ** 17n), // 0.5 STT < 1 STT daily
+            selector(SEL_X, 2n * 10n ** 18n), // 2 AVAX > 1 AVAX daily
+            selector(SEL_Y, 5n * 10n ** 17n), // 0.5 AVAX < 1 AVAX daily
           ],
         },
       ],
@@ -88,8 +88,8 @@ describe("computeAggregateCapNote", () => {
         {
           target: ADDR_A,
           selectors: [
-            selector(SEL_X, 3n * 10n ** 17n), // 0.3 STT
-            selector(SEL_Y, 4n * 10n ** 17n), // 0.4 STT — sum 0.7 < 1
+            selector(SEL_X, 3n * 10n ** 17n), // 0.3 AVAX
+            selector(SEL_Y, 4n * 10n ** 17n), // 0.4 AVAX — sum 0.7 < 1
           ],
         },
       ],
@@ -104,8 +104,8 @@ describe("computeAggregateCapNote", () => {
         {
           target: ADDR_A,
           selectors: [
-            selector(SEL_X, 6n * 10n ** 17n), // 0.6 STT
-            selector(SEL_Y, 7n * 10n ** 17n), // 0.7 STT — sum 1.3 > 1
+            selector(SEL_X, 6n * 10n ** 17n), // 0.6 AVAX
+            selector(SEL_Y, 7n * 10n ** 17n), // 0.7 AVAX — sum 1.3 > 1
           ],
         },
       ],
@@ -113,8 +113,8 @@ describe("computeAggregateCapNote", () => {
     );
     const { note } = computeAggregateCapNote(input);
     expect(note).not.toBeNull();
-    expect(note).toContain("1.3 STT");
-    expect(note).toContain("1 STT");
+    expect(note).toContain("1.3 AVAX");
+    expect(note).toContain("1 AVAX");
     expect(note).toMatch(/Only a subset of payable calls can succeed per day/);
   });
 });

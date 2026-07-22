@@ -1,6 +1,6 @@
 ---
 name: ward-integration
-description: Full Ward usage manual for Somnia Shannon — publish policies (CLI + dashboard), wire `checkIntent` into a Solidity agent, operate the queue, run watch mode, deploy your own oracle, scaffold a new agent, and onboard with an AI assistant.
+description: Full Ward usage manual for Avalanche Fuji — publish policies (CLI + dashboard), wire `checkIntent` into a Solidity agent, operate the queue, run watch mode, deploy your own oracle, scaffold a new agent, and onboard with an AI assistant.
 ---
 
 # Ward — full integration + usage skill
@@ -11,7 +11,7 @@ description: Full Ward usage manual for Somnia Shannon — publish policies (CLI
 
 - [How to use this file](#how-to-use-this-file)
 - [TL;DR — Ward is already deployed; here's how to use it](#tldr--ward-is-already-deployed-heres-how-to-use-it)
-- [1. Canonical Shannon addresses](#1-canonical-shannon-addresses-dont-deploy-your-own-unless-you-need-to)
+- [1. Canonical Fuji addresses](#1-canonical-fuji-addresses-dont-deploy-your-own-unless-you-need-to)
 - [2. Three paths to use Ward](#2-three-paths-to-use-ward)
 - [3. POLICY.md format (strict-compiler rules)](#3-policymd-format-strict-compiler-rules)
 - [4. Publish a policy via CLI](#4-publish-a-policy-via-cli)
@@ -54,9 +54,9 @@ This file is self-contained: every address, command, schema rule, selector, stru
 
 ---
 
-## TL;DR — Ward is a live agent on Shannon; here's how to use it
+## TL;DR — Ward is a live agent on Fuji; here's how to use it
 
-- **Ward is live on Somnia Shannon testnet (chainId 50312).** All three contracts (Oracle, Queue, AgentRegistry) are deployed and registered in Ward's own `WardAgentRegistry` — they show up by name in `findWardAgents()` so other agents and tooling can discover the gate without hard-coded addresses.
+- **Ward is live on Avalanche Fuji testnet (chainId 43113).** All three contracts (Oracle, Queue, AgentRegistry) are deployed and registered in Ward's own `WardAgentRegistry` — they show up by name in `findWardAgents()` so other agents and tooling can discover the gate without hard-coded addresses.
 - **You almost never deploy Ward.** Both core contracts are ownerless, fundless, pure metadata/view.
 - **Three things you do:** (1) publish a `POLICY.md` to get a `policyId`, (2) wire `oracle.checkIntent(policyId, intent, spentToday)` in front of every external call in your agent, (3) optionally use `WardQueue` for delayed / vetoable selectors.
 - **Canonical for new integrations (v0.11.0+):** use the v2 oracle, v2 queue, and registry listed in §1. The v1 oracle and queue in that table stay live for pre-v0.11.0 policies but lack `checkSelector`, so they cannot back the `wardGuarded` modifier.
@@ -64,7 +64,7 @@ This file is self-contained: every address, command, schema rule, selector, stru
 
 ---
 
-## 1. Canonical Shannon addresses (don't deploy your own unless you need to)
+## 1. Canonical Fuji addresses (don't deploy your own unless you need to)
 
 | Thing | Value |
 |---|---|
@@ -73,13 +73,13 @@ This file is self-contained: every address, command, schema rule, selector, stru
 | `WardAgentRegistry` *(v0.10.0, oracle-agnostic)* | `0x97F743A9AAa5AcAA73075C1B8F1921274755CF70` |
 | `WardOracle` *(v1, still live for pre-v0.11.0 policies)* | `0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf` |
 | `WardQueue` *(v1, still live)* | `0x98A3f7C38D19edF1ddA7E3bc38fa4B935aD590D5` |
-| Somnia agent platform | `0x037Bb9C718F3f7fe5eCBDB0b600D607b52706776` |
+| Avalanche agent platform | `0x037Bb9C718F3f7fe5eCBDB0b600D607b52706776` |
 | LLM inference agent id | `12847293847561029384` (uint256) |
 | JSON API agent id | `13174292974160097713` (uint256) |
 | Default request deposit | `0.12 ether` (validator reward only; see §11 gotcha 14) |
-| Chain | Somnia Shannon testnet, chainId `50312` |
-| RPC | `https://dream-rpc.somnia.network` |
-| Explorer | `https://shannon-explorer.somnia.network` |
+| Chain | Avalanche Fuji testnet, chainId `43113` |
+| RPC | `https://api.avax-test.network/ext/bc/C/rpc` |
+| Explorer | `https://testnet.snowtrace.io` |
 
 These are the **only** addresses your agent should reference unless you've deliberately deployed a private fork (§9).
 
@@ -171,7 +171,7 @@ Full direct surface (16 commands + 1 alias, sourced from `cli/src/index.ts`):
 | `ward policy:init --abi <path> --target <addr> [--profile strict\|balanced\|aggressive] [--expires <iso>]` | Generate a starter POLICY.md from a contract ABI. | `ward policy:init --abi out/MyAgent.sol/MyAgent.json --target 0xAbCd…` |
 | `ward analyze:gate <path> [--json]` | Static check that every dispatch in an agent contract is gated by `wardGuarded(...)`, `_wardCheck(...)`, or `WardCall.check(...)`. | `ward analyze:gate src/MyAgent.sol` |
 | `ward ai:init [--cursor] [--claude] [--codex] [--all] [--force]` | Regenerate Cursor / Claude / Codex (AGENTS.md) context files from this SKILL.md. | `ward ai:init --codex --force` |
-| `ward preflight [--min-balance <eth>]` | Verify env (PK shape, platform, agentId, oracle/queue), reach Somnia RPC, fetch chainId + STT balance. Exit 0 if ready, 1 otherwise. | `ward preflight --min-balance 0.5` |
+| `ward preflight [--min-balance <eth>]` | Verify env (PK shape, platform, agentId, oracle/queue), reach Avalanche RPC, fetch chainId + AVAX balance. Exit 0 if ready, 1 otherwise. | `ward preflight --min-balance 0.5` |
 | `ward tui [--json]` | Open the full-screen Ink queue monitor; `--json` streams NDJSON events to stdout instead. | `ward tui --json \| jq` |
 | `ward queue:status <execId>` | Cheap header read (skips `intent.data`): `state`, `tier`, `policyId`, `asker`, `target`, `selector`, `value`, `enqueuedAt`, `earliestCommitAt`, `deadline`. | `ward queue:status 42` |
 | `ward queue:handoff <execId>` (alias `handoff`) | Print operator handoff guidance for a queued execution (including the agent-side `dispatchQueued(uint256)` wrapper when the ABI exposes it). | `ward queue:handoff 42 --agent 0xAbCd… --abi out/MyAgent.sol/MyAgent.json` |
@@ -203,11 +203,11 @@ Enforce-mode publish (8 steps):
 
 1. **Connect Wallet** (top right). The connected address becomes the policy publisher.
 2. **Open the Publish tab.** ModeToggle defaults to **Enforce**. Left pane = form, right pane = live POLICY.md preview.
-3. **Pick a starter.** Four `PolicyTemplates` cards: **DEX swapper**, **NFT mint guard**, **Treasury bot**, **LLM dispatcher**. Click one to pre-fill targets/selectors/caps. Alternative: open "Already have an agent on Shannon? Import its call surface" disclosure to use Discover (§8).
+3. **Pick a starter.** Four `PolicyTemplates` cards: **DEX swapper**, **NFT mint guard**, **Treasury bot**, **LLM dispatcher**. Click one to pre-fill targets/selectors/caps. Alternative: open "Already have an agent on Fuji? Import its call surface" disclosure to use Discover (§8).
 4. **Fill identity.** `policy name`, `short id` (label, ≤32 bytes), `daily limit` (e.g. `1 ether`), `valid until`. Replace placeholder `0x0000…0000` target with your real contract address — compile check (green ✓ / red ✗) blocks publish until valid.
 5. **Tune selectors.** Per row: function signature like `transfer(address,uint256)`, approval mode (`IMMEDIATE` / `DELAYED` / `VETO_REQUIRED`), `valueCapPerCall`, `delaySeconds`.
 6. **Preview with `IntentSimulator`** (below publish button) — paste target+selector+value, see what `checkIntent` would return.
-7. **Click "publish policy"** → wallet prompts for `publishPolicy(PolicyInput)` on `WardOracle`. ~10s on Shannon.
+7. **Click "publish policy"** → wallet prompts for `publishPolicy(PolicyInput)` on `WardOracle`. ~10s on Fuji.
 8. **Reveal panel** (`PublishedReveal`) shows `bytes32 POLICY_ID = 0x…` (copy as Solidity constant), downloadable `.md`, and updates URL to `?revealed=<policyId>` (shareable; hydrates via cache → EventStore → `lookupPolicyOnChain`).
 
 ---
@@ -241,7 +241,7 @@ function expireIfStale(uint256 execId) external;                              //
 
 ```solidity
 struct Intent {
-    uint256 agentId;       // your Somnia agentId, or 0 if not an LLM agent
+    uint256 agentId;       // your Avalanche agentId, or 0 if not an LLM agent
     uint256 requestId;     // your nonce / correlation id
     address target;        // call destination
     bytes4  selector;      // first 4 bytes of data; MUST match data[0:4]
@@ -373,17 +373,17 @@ contract MyAgent {
 }
 ```
 
-For an LLM-driven async-callback agent (Somnia platform `createRequest` → `handleResponse` → Ward gate → dispatch), the integration is identical: build the `Intent` inside `handleResponse` (after asserting `msg.sender == address(PLATFORM)`), call `oracle.checkIntent`, then dispatch yourself. No code in this repo ships an LLM sample; the integration surface is the same five lines as the canonical template above.
+For an LLM-driven async-callback agent (Avalanche platform `createRequest` → `handleResponse` → Ward gate → dispatch), the integration is identical: build the `Intent` inside `handleResponse` (after asserting `msg.sender == address(PLATFORM)`), call `oracle.checkIntent`, then dispatch yourself. No code in this repo ships an LLM sample; the integration surface is the same five lines as the canonical template above.
 
 ### 6.1 Self-perpetuating loop pattern
 
-A self-perpetuating LLM agent re-queues itself with the Somnia platform after each callback, gated by the same `checkIntent` on every iteration. The policy does NOT change — one gated selector, the same `dailySpendWeiCap` covers every cycle.
+A self-perpetuating LLM agent re-queues itself with the Avalanche platform after each callback, gated by the same `checkIntent` on every iteration. The policy does NOT change — one gated selector, the same `dailySpendWeiCap` covers every cycle.
 
 Four kill switches an LLM-perpetuated agent MUST include — any one trips and the loop halts cleanly:
 
 1. **`paused` boolean** — owner-flippable (`setPaused(true)`), checked first.
 2. **`iterationsThisRun >= maxIterations`** — immutable hard cap set at construction.
-3. **`address(this).balance < PER_ITERATION_DEPOSIT`** — refuse to re-queue when the deposit floor (≈1 STT) won't cover the next `createRequest`.
+3. **`address(this).balance < PER_ITERATION_DEPOSIT`** — refuse to re-queue when the deposit floor (≈1 AVAX) won't cover the next `createRequest`.
 4. **Model verdict `STOP`** — let the LLM itself terminate; treat as authoritative.
 
 Wrap the self-kickoff in `try/catch` so a platform-side revert flips `paused` instead of bubbling and bricking `handleResponse`.
@@ -587,7 +587,7 @@ For the operator-facing TUI (`ward tui`), keybindings, NDJSON streaming, and the
 
 End state: a watch-mode policy is bound to an agent address; the dashboard polls and surfaces violations without blocking calls. Use this to monitor a 3rd-party agent you can't redeploy.
 
-**Canonical onboarding path (v0.10.0+): Watch Wizard.** Open the dashboard and go to `?tab=watch-wizard` (served by `dashboard/src/pages/WatchWizardPage.tsx`) — a 3-step paste-discover-publish flow that turns any deployed Somnia agent address into a published policy + saved Slack webhook in under 60 seconds:
+**Canonical onboarding path (v0.10.0+): Watch Wizard.** Open the dashboard and go to `?tab=watch-wizard` (served by `dashboard/src/pages/WatchWizardPage.tsx`) — a 3-step paste-discover-publish flow that turns any deployed Avalanche agent address into a published policy + saved Slack webhook in under 60 seconds:
 
 1. **Paste the deployed agent address.** The wizard pre-fills if you arrived via a deep-link (`?address=…&tab=watch-wizard`) — e.g. from the Agents catalog's "Watch in wizard" button.
 2. **Discover** runs `dashboard/src/lib/discovery.ts` — pure read-only chain probes (~7 RPC happy-path / ~20 worst-case). Detects EOA vs contract, ERC-165 / ERC-20 / ERC-721 fingerprints, and the Ward-aware signal (via `WardAgentRegistry.AgentRegistered` + `WardQueue.Enqueued` topic-filtered logs, chunked at 999 blocks). Step 2 surfaces the **honest mode banner** — real-time gating for Ward-aware agents, observation-only for everyone else.
@@ -612,18 +612,18 @@ For users who want hand-built watch-mode policies (custom selectors, caps not in
 
 `AgentDiscovery` first classifies the pasted address via `eth_getCode`:
 
-- **EOA agents** (`code == "0x"`) — the agent originates txs. Fetches the agent's recent outbound txs from Shannon Blockscout (`from == agent`, capped at `DEFAULT_MAX_TXS = 50`, newest first).
-- **Contract agents** (`code != "0x"`) — users invoke the agent. RPC-first: scans `eth_getLogs` for events emitted by the agent within the last `RPC_LOOKBACK_BLOCKS = 604_800` blocks (~7 days at 1s blocks), chunked at 999 blocks/call to fit Shannon's `eth_getLogs` cap; falls back to Blockscout txlist if the RPC returns nothing. Filters to `to == agent`, capped at 50.
+- **EOA agents** (`code == "0x"`) — the agent originates txs. Fetches the agent's recent outbound txs from Fuji Blockscout (`from == agent`, capped at `DEFAULT_MAX_TXS = 50`, newest first).
+- **Contract agents** (`code != "0x"`) — users invoke the agent. RPC-first: scans `eth_getLogs` for events emitted by the agent within the last `RPC_LOOKBACK_BLOCKS = 604_800` blocks (~7 days at 1s blocks), chunked at 999 blocks/call to fit Fuji's `eth_getLogs` cap; falls back to Blockscout txlist if the RPC returns nothing. Filters to `to == agent`, capped at 50.
 
 Each invocation is then replayed via `debug_traceTransaction` (callTracer). Every `CALL` / `CALLCODE` / `STATICCALL` frame whose `from` is the agent (direct or nested) yields a `(target, selector)` pair → that's the agent's real call surface. `DELEGATECALL` frames are explicitly excluded (the executing context is the agent itself, so the gate would record the agent's own selectors instead of external dependencies — useless for policy authoring). If the RPC doesn't expose `debug_traceTransaction`, the tx is skipped and `traceFailed` flips so the UI shows a banner — there is deliberately no receipt-log fallback (event-sig hashes are not function selectors). See `dashboard/src/lib/agent-discovery.ts`.
 
-Selectors resolve via (a) verified-source ABI from Shannon explorer if available, otherwise (b) bytecode disassembly + `openchain.xyz` signature lookup. View/pure selectors are filtered out. Imported functions default to `tier: IMMEDIATE`, `valueCapPerCall: "0"`, `delaySeconds: 0` (see `dashboard/src/components/publish/AgentDiscovery.tsx:155`) — there are NO smart suggestions per selector. You must manually adjust tier, caps, and delay per-selector in the form before publishing. "Add N selected" deep-merges into the draft (preserves user-edited tiers/caps; only appends NEW selectors).
+Selectors resolve via (a) verified-source ABI from Fuji explorer if available, otherwise (b) bytecode disassembly + `openchain.xyz` signature lookup. View/pure selectors are filtered out. Imported functions default to `tier: IMMEDIATE`, `valueCapPerCall: "0"`, `delaySeconds: 0` (see `dashboard/src/components/publish/AgentDiscovery.tsx:155`) — there are NO smart suggestions per selector. You must manually adjust tier, caps, and delay per-selector in the form before publishing. "Add N selected" deep-merges into the draft (preserves user-edited tiers/caps; only appends NEW selectors).
 
 ---
 
 ## 9. Deploy your own Ward (advanced)
 
-For private oracles, custom chains, or forks of policy semantics. Skip this if you're on Shannon — use the canonical addresses.
+For private oracles, custom chains, or forks of policy semantics. Skip this if you're on Fuji — use the canonical addresses.
 
 ```bash
 # 1. clone + install (forge-std is a git submodule)
@@ -657,10 +657,10 @@ export WARD_QUEUE=0x…
 # WARD_ORACLE_DEPLOY_BLOCK, WARD_QUEUE_LOOKBACK_BLOCKS
 ```
 
-**Shannon-specific flags (critical):**
+**Fuji-specific flags (critical):**
 
-- `--legacy` — Shannon RPC doesn't accept EIP-1559 envelopes.
-- `--gas-estimate-multiplier 2000` — Shannon's `eth_estimateGas` under-reports actual gas by ~15x; without this, every `CREATE` runs OOG. On other EVM chains, drop or retune (default `100` is usually fine).
+- `--legacy` — Fuji RPC doesn't accept EIP-1559 envelopes.
+- `--gas-estimate-multiplier 2000` — Fuji's `eth_estimateGas` under-reports actual gas by ~15x; without this, every `CREATE` runs OOG. On other EVM chains, drop or retune (default `100` is usually fine).
 
 Compiler settings pinned in `foundry.toml`: `solc 0.8.26`, `evm_version = shanghai`, `via_ir = true`, `optimizer_runs = 200`. Keep aligned if verifying bytecode against canonical.
 
@@ -689,7 +689,7 @@ Compiler settings pinned in `foundry.toml`: `solc 0.8.26`, `evm_version = shangh
 
 ## 11. Gotchas (production-critical)
 
-1. **Shannon gas multiplier — every CREATE OOGs without it.** Deploy with `--legacy --gas-estimate-multiplier 2000`; viem: `type: "legacy"` + explicit `gas`. Full Ward deploy is ~0.2–0.3 STT.
+1. **Fuji gas multiplier — every CREATE OOGs without it.** Deploy with `--legacy --gas-estimate-multiplier 2000`; viem: `type: "legacy"` + explicit `gas`. Full Ward deploy is ~0.2–0.3 AVAX.
 
 2. **`spentToday` tracks NATIVE value only, not ERC20 amounts.** `DAILY_CAP` checks `intent.value` (wei). ERC20 size limits must be enforced by the asker (`require(amountIn <= MAX)` pre-gate) or by routing the selector through `TIER_DELAYED`.
 
@@ -715,7 +715,7 @@ Compiler settings pinned in `foundry.toml`: `solc 0.8.26`, `evm_version = shangh
 
 13. **`checkIntent` is safe-by-default:** `ok = true` ONLY for legal + `TIER_IMMEDIATE`. DELAYED/VETO selectors cannot silently slip through; worst misuse is "policy too strict."
 
-14. **LLM agents on Somnia: ~1 STT deposit floor for short prompts.** `getRequestDeposit()` covers ONLY the validator-reward budget, NOT the LLM execution cost. 0.12 STT empirically fails with `"insufficient budget for execution cost"`. Use ~1 STT for short prompts; scale with prompt length.
+14. **LLM agents on Avalanche: ~1 AVAX deposit floor for short prompts.** `getRequestDeposit()` covers ONLY the validator-reward budget, NOT the LLM execution cost. 0.12 AVAX empirically fails with `"insufficient budget for execution cost"`. Use ~1 AVAX for short prompts; scale with prompt length.
 
 15. **LLM callback fires async (~5–90s) and `msg.sender` is the platform contract.** Guard the callback: `require(msg.sender == address(PLATFORM))`.
 
@@ -743,7 +743,7 @@ Compiler settings pinned in `foundry.toml`: `solc 0.8.26`, `evm_version = shangh
 
 27. **`policyId = keccak256(abi.encode(publisher, label))` and is STABLE across edits.** Once you hardcode `POLICY_ID` into your agent, `ward push` to the same `(wallet, label)` runs `updatePolicy` under the hood — the id stays valid, the rules change in place. Changing the **label** or pushing from a **different publisher wallet** produces a new id; editing fields inside the policy does not — no content-hash migration to perform. (See `contracts/src/WardOracle.sol:43,45` and `cli/src/cmd/policy.ts:100`.)
 
-28. **Caps in wei, not STT.** The markdown says `"1 ether"` — the compiler normalizes to `10^18` wei. Don't hand-write hex caps.
+28. **Caps in wei, not AVAX.** The markdown says `"1 ether"` — the compiler normalizes to `10^18` wei. Don't hand-write hex caps.
 
 29. **CLI tier check.** `compile` will reject `delaySeconds > 0` on IMMEDIATE / VETO_REQUIRED with a clear error. If you wrote `delaySeconds: 60` for an IMMEDIATE selector, you probably meant DELAYED.
 
@@ -783,7 +783,7 @@ Before returning code to the user, the LLM MUST confirm every box:
 
 ## 14. Reference: live addresses + chainId + RPC + explorer
 
-See §1 for the canonical address table, agent ids, Shannon chain id, RPC, explorer, and default request deposit. Solidity pragma is `0.8.26`; Foundry broadcasts on Shannon use `--legacy --gas-estimate-multiplier 2000`.
+See §1 for the canonical address table, agent ids, Fuji chain id, RPC, explorer, and default request deposit. Solidity pragma is `0.8.26`; Foundry broadcasts on Fuji use `--legacy --gas-estimate-multiplier 2000`.
 
 ---
 
@@ -953,9 +953,9 @@ Gate single-call paths with the modifier, multi-call paths inline — same `POLI
 
 ## 17. Integration guide — deploy + publish + bind walkthrough
 
-Wire an existing or new Somnia agent to enforce a written policy before every outbound call.
+Wire an existing or new Avalanche agent to enforce a written policy before every outbound call.
 
-This is a how-to: it assumes you already understand what Ward is and have `forge`, `node 20+`, and `pnpm` installed with STT in a deployer wallet. Ward holds no funds, owns no agents, and executes no calls — your agent stays in full custody and dispatch control. The oracle only answers "may this call execute under policy P?" synchronously, in the same transaction.
+This is a how-to: it assumes you already understand what Ward is and have `forge`, `node 20+`, and `pnpm` installed with AVAX in a deployer wallet. Ward holds no funds, owns no agents, and executes no calls — your agent stays in full custody and dispatch control. The oracle only answers "may this call execute under policy P?" synchronously, in the same transaction.
 
 The recommended path for a single-outbound-call function is the **`wardGuarded` modifier** on `WardAgentBase`. Everything below leads with that; the multi-outbound inline path is covered in [step 6](#17-6-multi-outbound-paths-inline-_wardcheck--_call).
 
@@ -973,7 +973,7 @@ A contract that inherits `WardAgentBase`, guards its entrypoints with `wardGuard
 
 ### 17.1 Choose or deploy a WardOracle (v2)
 
-For new integrations use the canonical v2 oracle already live on Somnia Shannon (chain id `50312`):
+For new integrations use the canonical v2 oracle already live on Avalanche Fuji (chain id `43113`):
 
 ```
 WardOracle (v2) = 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c
@@ -981,13 +981,13 @@ WardOracle (v2) = 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c
 
 The `wardGuarded` modifier calls `oracle.checkSelector(...)`, which only exists on the v2 oracle — so the modifier path **requires v2**. The legacy v1 oracle (`0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf`) is still live but reference it only as explicit legacy; bind there only if you are continuing a pre-v0.11.0 policy through the inline `checkIntent` path.
 
-To deploy your own oracle instead, run the repo's deploy script and capture the printed address. The `--gas-estimate-multiplier 2000` is required because Shannon's RPC under-reports gas by roughly 15×.
+To deploy your own oracle instead, run the repo's deploy script and capture the printed address. The `--gas-estimate-multiplier 2000` is required because Fuji's RPC under-reports gas by roughly 15×.
 
 ```bash
 cd contracts
 cp .env.example .env   # fill DEPLOYER_PK at minimum
 forge script script/Deploy.s.sol \
-  --rpc-url https://dream-rpc.somnia.network \
+  --rpc-url https://api.avax-test.network/ext/bc/C/rpc \
   --broadcast --legacy --gas-estimate-multiplier 2000 \
   --private-key "$DEPLOYER_PK"
 ```
@@ -1113,7 +1113,7 @@ Bind it on the already-deployed agent (owner only):
 
 ```bash
 cast send "$AGENT" "setPolicyId(bytes32)" "$POLICY_ID" \
-  --private-key "$DEPLOYER_PK" --rpc-url "$SOMNIA_TESTNET_RPC" --legacy
+  --private-key "$DEPLOYER_PK" --rpc-url "$FUJI_RPC" --legacy
 ```
 
 From this transaction on, every guarded entrypoint is checked against the policy. Each bind emits `PolicyBound(newPolicyId, oldPolicyId, by)`. The operational primitives, all `owner`-gated:
@@ -1168,7 +1168,7 @@ Generate a `WardAgentBase`-derived Foundry project with one command, then build 
 - **Node.js >= 20** — the monorepo's root `package.json` declares `"engines": { "node": ">=20" }` (and `.nvmrc` pins `20`).
 - **pnpm** — the scaffolder is published as a `pnpm create` initializer.
 - **Foundry** (`forge`, `cast`) — to build and test the generated project. Install via [getfoundry.sh](https://getfoundry.sh).
-- **A funded Shannon key** — only needed later, when you deploy. Somnia Shannon testnet is chain id `50312`, RPC `https://dream-rpc.somnia.network` (from `contracts/src/constants/SomniaTestnet.sol`).
+- **A funded Fuji key** — only needed later, when you deploy. Avalanche Fuji testnet is chain id `43113`, RPC `https://api.avax-test.network/ext/bc/C/rpc` (from `contracts/src/constants/AvalancheTestnet.sol`).
 
 You do not need a funded key to complete this tutorial. The scaffold + build + test steps are fully local.
 
@@ -1251,7 +1251,7 @@ Next steps:
 
   # Publish your policy and bind it:
   pnpm ward push ./POLICY.md --label my-agent
-  forge script script/Deploy.s.sol --rpc-url "$SOMNIA_TESTNET_RPC" \
+  forge script script/Deploy.s.sol --rpc-url "$FUJI_RPC" \
     --broadcast --legacy --gas-estimate-multiplier 2000
   # Then export AGENT + POLICY_ID and run script/Bind.s.sol.
 
@@ -1393,13 +1393,13 @@ Deploy ungated, then bind once you trust the policy:
 
 ```bash
 forge script script/Deploy.s.sol \
-  --rpc-url "$SOMNIA_TESTNET_RPC" \
+  --rpc-url "$FUJI_RPC" \
   --broadcast --legacy --gas-estimate-multiplier 2000
 
 export AGENT=$(jq -r '.agent' deployments/agent.json)
 export POLICY_ID=0x...
 forge script script/Bind.s.sol \
-  --rpc-url "$SOMNIA_TESTNET_RPC" \
+  --rpc-url "$FUJI_RPC" \
   --broadcast --legacy --gas-estimate-multiplier 2000
 ```
 
@@ -1464,7 +1464,7 @@ The compiler validates the fenced YAML against a strict schema (`additionalPrope
 |---|---|---|---|---|
 | `version` | string | yes | — (not stored) | Must be `"0.1"` for this release. The schema requires a string, so quote it: `version: "0.1"`. |
 | `expiresAt` | string \| number | yes | `uint64` | ISO 8601 string (`"2026-12-31T00:00:00Z"`) or unix seconds. After this instant, every check fails with `EXPIRED`. |
-| `dailySpendWeiCap` | string \| number | no | `uint256` | Per-UTC-day rolling sum of native `msg.value` (STT) across all calls. Accepts `"1 ether"` or a raw wei integer. Defaults to `0` — and `0` means **block all native spend**, not unlimited (see caveats). |
+| `dailySpendWeiCap` | string \| number | no | `uint256` | Per-UTC-day rolling sum of native `msg.value` (AVAX) across all calls. Accepts `"1 ether"` or a raw wei integer. Defaults to `0` — and `0` means **block all native spend**, not unlimited (see caveats). |
 | `maxSlippageBps` | integer 0..10000 | no | `uint16` | Stored on-chain but **not enforced** by `PolicyLib.validate` today. Defaults to `0`. |
 | `paused` | boolean | no | `bool` | When `true`, every check returns `(false, "PAUSED")`. Defaults to `false`. |
 | `targets` | array | yes | — | At least one target. Max 20 (see limits). |
@@ -1495,7 +1495,7 @@ The compiler validates the fenced YAML against a strict schema (`additionalPrope
 - A raw integer wei string: `"1000000000000000000"`.
 - A hex wei string: `"0x..."`.
 
-`ether` is the **only** supported unit. `gwei`, `eth`, `wei`, `finney`, and scientific notation are rejected. Near-miss typos get a hint — e.g. `"1 eth"` errors with `Unrecognized unit in "1 eth" — did you mean "1 ether"? (Supported: plain wei integer, or "N ether" for native STT.)`. Native STT (`msg.value`) is the only unit Ward meters; ERC-20 amounts encoded in calldata are never parsed as values.
+`ether` is the **only** supported unit. `gwei`, `eth`, `wei`, `finney`, and scientific notation are rejected. Near-miss typos get a hint — e.g. `"1 eth"` errors with `Unrecognized unit in "1 eth" — did you mean "1 ether"? (Supported: plain wei integer, or "N ether" for native AVAX.)`. Native AVAX (`msg.value`) is the only unit Ward meters; ERC-20 amounts encoded in calldata are never parsed as values.
 
 ### Tier semantics (recap)
 
@@ -1531,7 +1531,7 @@ if (spentToday > p.dailySpendWeiCap || i.value > p.dailySpendWeiCap - spentToday
 }
 ```
 
-With `dailySpendWeiCap == 0`, any intent carrying `value > 0` fails with `DAILY_CAP`. A policy whose selectors all have `valueCapPerCall: "0"` (no native value moves) can safely set `dailySpendWeiCap: "0"` — that is exactly what the ward-counter sample does. The cap meters native STT only; ERC-20 transfers do not count toward it. To bound token spend, add the token contract as a target and tier its `transfer` / `approve` selectors directly.
+With `dailySpendWeiCap == 0`, any intent carrying `value > 0` fails with `DAILY_CAP`. A policy whose selectors all have `valueCapPerCall: "0"` (no native value moves) can safely set `dailySpendWeiCap: "0"` — that is exactly what the ward-counter sample does. The cap meters native AVAX only; ERC-20 transfers do not count toward it. To bound token spend, add the token contract as a target and tier its `transfer` / `approve` selectors directly.
 
 #### Past or zero `expiresAt` is blocked at compile time
 
@@ -1627,7 +1627,7 @@ Adopters coming from off-chain TypeScript SDKs will notice three structural diff
 
 1. **Per-selector granularity.** Ward policies key on `(target, selector)` pairs, not `target` alone, so you can authorize `approve(...)` without authorizing `transfer(...)` on the same token.
 2. **Risk tiers replace allow/block/review flags.** `IMMEDIATE` ≈ allow, `DELAYED` ≈ review-with-timer, `VETO_REQUIRED` ≈ review-with-human-approval.
-3. **On-chain policy registry.** Policies are published on-chain under `(publisher, label)` namespaces and referenced by a stable `policyId`. The on-chain `Policy` struct — not an off-chain audit log — is the durable artifact other Somnia apps consume.
+3. **On-chain policy registry.** Policies are published on-chain under `(publisher, label)` namespaces and referenced by a stable `policyId`. The on-chain `Policy` struct — not an off-chain audit log — is the durable artifact other Avalanche apps consume.
 
 ### 19.1 Worked example: Conservative Trading Policy
 
@@ -1674,7 +1674,7 @@ What this policy authorizes:
 
 Exhaustive reference for every `ward` command, flag, and environment variable.
 
-The `ward` CLI compiles `POLICY.md` files, publishes them to `WardOracle`, inspects intents, drives the `WardQueue` lifecycle, runs static checks on agent contracts, and opens the queue-monitor TUI. Commands are either **offline** (no RPC, no wallet) or **on-chain** (read or write against Somnia Shannon testnet, chain id `50312`).
+The `ward` CLI compiles `POLICY.md` files, publishes them to `WardOracle`, inspects intents, drives the `WardQueue` lifecycle, runs static checks on agent contracts, and opens the queue-monitor TUI. Commands are either **offline** (no RPC, no wallet) or **on-chain** (read or write against Avalanche Fuji testnet, chain id `43113`).
 
 ### Invocation
 
@@ -1719,8 +1719,8 @@ On startup the CLI auto-loads a `.env` file from the current working directory (
 | `DEPLOYER_PK` | `preflight` only (fallback for `PRIVATE_KEY`) | — | Read only by `preflight`; if it differs from `PRIVATE_KEY` while both are set, `preflight` warns. |
 | `WARD_ORACLE` | `push`, `queue:handoff` (for a `VETO_REQUIRED` record) | — | Deployed `WardOracle` address. Canonical (v2): `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`. `lint` reads the oracle from its own `--oracle` flag, not this variable. |
 | `WARD_QUEUE` | `queue:status`, `queue:enqueue`, `queue:dispatch`, `queue:veto`, `queue:expire`, `queue:handoff` | — | Deployed `WardQueue` address. Canonical (v2): `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4`. |
-| `SOMNIA_TESTNET_RPC` | every on-chain command | `https://dream-rpc.somnia.network` | RPC URL for chain id `50312`. |
-| `SOMNIA_AGENT_PLATFORM` | `preflight` (sanity warning) | — | Compared against canonical platform `0x037Bb9C718F3f7fe5eCBDB0b600D607b52706776`. |
+| `FUJI_RPC` | every on-chain command | `https://api.avax-test.network/ext/bc/C/rpc` | RPC URL for chain id `43113`. |
+| `AVALANCHE_AGENT_PLATFORM` | `preflight` (sanity warning) | — | Compared against canonical platform `0x037Bb9C718F3f7fe5eCBDB0b600D607b52706776`. |
 | `LLM_INFERENCE_AGENT_ID` | `preflight` (sanity warning) | — | Compared against canonical id `12847293847561029384`. |
 
 Commands that need a missing variable fail fast with an explicit error, e.g. `WARD_ORACLE env var required (the deployed oracle address)`, `WARD_QUEUE env var required (the deployed queue address)`, or `PRIVATE_KEY env var required`.
@@ -1749,7 +1749,7 @@ Compile and publish (or update) a `POLICY.md` to `WardOracle` under your wallet'
 
 - **Argument:** `<path>` — the `POLICY.md` file.
 - **Flag:** `--label <name>` — ASCII label (≤ 32 bytes) for your policy namespace (default `default`). Right-padded to `bytes32`.
-- **Env:** requires `PRIVATE_KEY` and `WARD_ORACLE`; reads `SOMNIA_TESTNET_RPC` and optional `WARD_QUEUE`.
+- **Env:** requires `PRIVATE_KEY` and `WARD_ORACLE`; reads `FUJI_RPC` and optional `WARD_QUEUE`.
 
 The command computes `policyId = policyIdFor(walletAddress, label)`, reads `policyOwner(policyId)` on-chain to auto-detect publish vs. update, and refuses to overwrite a policy owned by another wallet (error: `policyId … is owned by …, not your wallet …; pick a different --label`). It **simulates first**, so a revert surfaces as `publishPolicy would revert: <reason>` / `updatePolicy would revert: <reason>` before any gas is paid; only on a clean simulation does it submit. On success it prints `OK · policyId = <id>` — that id is stable across updates and is what you reference in the agent contract.
 
@@ -1858,11 +1858,11 @@ pnpm ward ai:init --all
 
 #### `preflight`
 
-Check env + wallet balance against Somnia testnet. **On-chain read** (RPC only, no transaction).
+Check env + wallet balance against Avalanche Fuji. **On-chain read** (RPC only, no transaction).
 
-- **Flag:** `--min-balance <eth>` — minimum recommended balance in STT (default `0.5`).
-- **Env:** reads `PRIVATE_KEY` (or `DEPLOYER_PK`), `SOMNIA_TESTNET_RPC`, and the optional `WARD_ORACLE` / `WARD_QUEUE` / `SOMNIA_AGENT_PLATFORM` / `LLM_INFERENCE_AGENT_ID` variables.
-- **Output:** a `# ward preflight` report of rpc, chainId, wallet, balance, platform, agentId, and the two Ward addresses, followed by any `ERROR` / `WARN` lines, faucet links when the balance is low, and a final `preflight: OK` / `preflight: NOT READY`. It errors on a missing or malformed key, an invalid `WARD_ORACLE` / `WARD_QUEUE` address shape, or an unreachable RPC; it warns on a chainId other than `50312`, a low balance, or a non-canonical platform / agent id.
+- **Flag:** `--min-balance <eth>` — minimum recommended balance in AVAX (default `0.5`).
+- **Env:** reads `PRIVATE_KEY` (or `DEPLOYER_PK`), `FUJI_RPC`, and the optional `WARD_ORACLE` / `WARD_QUEUE` / `AVALANCHE_AGENT_PLATFORM` / `LLM_INFERENCE_AGENT_ID` variables.
+- **Output:** a `# ward preflight` report of rpc, chainId, wallet, balance, platform, agentId, and the two Ward addresses, followed by any `ERROR` / `WARN` lines, faucet links when the balance is low, and a final `preflight: OK` / `preflight: NOT READY`. It errors on a missing or malformed key, an invalid `WARD_ORACLE` / `WARD_QUEUE` address shape, or an unreachable RPC; it warns on a chainId other than `43113`, a low balance, or a non-canonical platform / agent id.
 - **Exit code:** `1` when not ready (any error present).
 
 ```bash
@@ -1874,7 +1874,7 @@ pnpm ward preflight --min-balance 0.5
 Pretty-print a `WardQueue` record header (cheap; skips the unbounded `intent.data` field). **On-chain read.**
 
 - **Argument:** `<execId>` — the queued execution id (decimal).
-- **Env:** requires `WARD_QUEUE`; reads `SOMNIA_TESTNET_RPC`.
+- **Env:** requires `WARD_QUEUE`; reads `FUJI_RPC`.
 - **Output:** a `# queue record execId=<id>` block: `state` (`None`/`Pending`/`Committed`/`Vetoed`/`Expired`), `tier` (`IMMEDIATE`/`DELAYED`/`VETO_REQUIRED`), `policyId`, `asker`, `target`, `selector`, `value`, `requestId`, `enqueuedAt`, `earliestCommit`, `deadline`, and a `timing` line. The reader tolerates both the canonical and a legacy `RecordHeader` layout.
 
 ```bash
@@ -1887,7 +1887,7 @@ Submit an Intent to `WardQueue` under a `policyId` (for `DELAYED` / `VETO_REQUIR
 
 - **Arguments:** `<intent.json>` — Intent JSON file; `<policyId>` — 32-byte hex (`0x` + 64 hex chars).
 - **Flag:** `--spent-today <wei>` — the caller's running spent-today in wei as a decimal string (default `0`). For accurate cap enforcement, pass your wallet's real daily-spent total.
-- **Env:** requires `PRIVATE_KEY` and `WARD_QUEUE`; reads `SOMNIA_TESTNET_RPC`.
+- **Env:** requires `PRIVATE_KEY` and `WARD_QUEUE`; reads `FUJI_RPC`.
 - **Behaviour:** validates the policyId shape, reshapes the JSON intent into the `enqueue` tuple, **simulates first** (surfacing oracle rejections like `REQUIRES_DELAY` as `enqueue would revert: <reason>`), then submits. The contract reverts `IMMEDIATE_NO_QUEUE_NEEDED` for tier `IMMEDIATE` intents — those are dispatched synchronously and must never touch the queue. On success it prints `enqueued OK` and a hint to read `queue:status <execId>` once the `Enqueued` event is indexed.
 
 ```bash
@@ -1900,7 +1900,7 @@ Mark a queued intent `Committed`; with `--execute` also send the intent's transa
 
 - **Argument:** `<execId>` — the queued execution id (decimal).
 - **Flag:** `--execute` — after `dispatch` succeeds, send the returned intent (`to=target`, `data`, `value`) from this wallet. Off by default, because `dispatch` alone is non-destructive (it only transitions state to `Committed`); the external call is what moves funds.
-- **Env:** requires `PRIVATE_KEY` and `WARD_QUEUE`; reads `SOMNIA_TESTNET_RPC`.
+- **Env:** requires `PRIVATE_KEY` and `WARD_QUEUE`; reads `FUJI_RPC`.
 - **Behaviour:** simulates `dispatch` first (capturing the returned Intent calldata and surfacing reverts as `dispatch would revert: <reason>`), submits the `dispatch` tx, and — only with `--execute` — sends the follow-up intent transaction. Without `--execute` it prints `dispatched OK — caller now executes the intent themselves`.
 
 ```bash
@@ -1912,7 +1912,7 @@ pnpm ward queue:dispatch 7 --execute
 Veto a pending queued intent (policy owner only; ≤ 32-byte reason). **On-chain write.**
 
 - **Arguments:** `<execId>` — the queued execution id (decimal); `<reason>` — an ASCII reason, at most 32 bytes (right-padded to `bytes32`).
-- **Env:** requires `PRIVATE_KEY` and `WARD_QUEUE`; reads `SOMNIA_TESTNET_RPC`.
+- **Env:** requires `PRIVATE_KEY` and `WARD_QUEUE`; reads `FUJI_RPC`.
 - **Behaviour:** rejects an over-long reason locally, then calls `veto(execId, reason)`. On a revert it notes the likely cause (`not policy owner, or already terminal`).
 
 ```bash
@@ -1924,7 +1924,7 @@ pnpm ward queue:veto 7 "policy changed"
 Mark a stale pending queued intent `Expired` (anyone can call after the deadline). **On-chain write.**
 
 - **Argument:** `<execId>` — the queued execution id (decimal).
-- **Env:** requires `PRIVATE_KEY` and `WARD_QUEUE`; reads `SOMNIA_TESTNET_RPC`.
+- **Env:** requires `PRIVATE_KEY` and `WARD_QUEUE`; reads `FUJI_RPC`.
 - **Behaviour:** calls `expireIfStale(execId)`. On a revert it notes the likely cause (`still in window, or already terminal`).
 
 ```bash
@@ -1939,7 +1939,7 @@ Print operator handoff guidance for a queued execution. **On-chain read.**
 - **Flags:**
   - `--agent <addr>` — integrator agent address; used when its ABI exposes `dispatchQueued(uint256)`.
   - `--abi <path>` — agent ABI JSON or Foundry artifact JSON, scanned for `dispatchQueued(uint256)`.
-- **Env:** requires `WARD_QUEUE`; for a `VETO_REQUIRED` record it also reads `policyOwner` from `WARD_ORACLE`. Reads `SOMNIA_TESTNET_RPC`.
+- **Env:** requires `WARD_QUEUE`; for a `VETO_REQUIRED` record it also reads `policyOwner` from `WARD_ORACLE`. Reads `FUJI_RPC`.
 - **Output:** a `# queue handoff execId=<id>` block with state, tier, policyId, requester, target, optional policy owner / agent / ABI detection, a recommendation summary and detail, and — when applicable — a ready-to-run `cast` command for the dispatcher to execute.
 
 `handoff` is a direct alias of `queue:handoff` with identical flags.
@@ -1978,9 +1978,9 @@ pnpm ward tui --json
 
 Exhaustive reference for Ward's on-chain surface: the three core contracts, their data types, the integration base contracts and library, and the network constants. Every signature, event, error, and constant below is copied from `contracts/src/`.
 
-### Canonical addresses (Somnia Shannon, chain id 50312)
+### Canonical addresses (Avalanche Fuji, chain id 43113)
 
-Use the canonical table in §1. Contract-specific ABI details start below; RPC and chain constants are defined in [`SomniaTestnet`](#somniatestnet-constants).
+Use the canonical table in §1. Contract-specific ABI details start below; RPC and chain constants are defined in [`AvalancheTestnet`](#avalanchetestnet-constants).
 
 ### Import paths & remapping
 
@@ -1999,7 +1999,7 @@ import "ward/PolicyTypes.sol";          // Intent, Policy structs, tier constant
 import "ward/integration/WardAgentBase.sol";
 import "ward/integration/QueueAgentBase.sol";
 import "ward/integration/WardCall.sol";
-import "ward/constants/SomniaTestnet.sol";
+import "ward/constants/AvalancheTestnet.sol";
 ```
 
 All sources compile with `pragma solidity 0.8.26;`.
@@ -2015,7 +2015,7 @@ The modifier guards the agent's *own* selector under the entrypoint-policy model
 
 ### WardOracle
 
-Pure on-chain policy registry. A publisher calls `publishPolicy` once and hard-codes the returned `policyId` in the consuming agent; the agent calls `checkIntent` / `checkSelector` synchronously before dispatching. No custody, no async, no Somnia agent-platform involvement.
+Pure on-chain policy registry. A publisher calls `publishPolicy` once and hard-codes the returned `policyId` in the consuming agent; the agent calls `checkIntent` / `checkSelector` synchronously before dispatching. No custody, no async, no Avalanche agent-platform involvement.
 
 `checkIntent` and `checkSelector` are safe-by-default: they return `ok == true` only for `TIER_IMMEDIATE` selectors. `TIER_DELAYED` and `TIER_VETO_REQUIRED` are surfaced as `ok == false` with reason `REQUIRES_DELAY` / `REQUIRES_VETO`, so a naive consumer cannot silently bypass the policy author's queue intent.
 
@@ -2464,14 +2464,14 @@ error NotRegistrar();
 error InvalidAgent();
 ```
 
-### SomniaTestnet constants
+### AvalancheTestnet constants
 
-Network and agent-platform constants used by deploy scripts and integration code (`contracts/src/constants/SomniaTestnet.sol`).
+Network and agent-platform constants used by deploy scripts and integration code (`contracts/src/constants/AvalancheTestnet.sol`).
 
 ```solidity
-library SomniaTestnet {
-    uint256 internal constant CHAIN_ID = 50312;
-    string  internal constant RPC_URL = "https://dream-rpc.somnia.network";
+library AvalancheTestnet {
+    uint256 internal constant CHAIN_ID = 43113;
+    string  internal constant RPC_URL = "https://api.avax-test.network/ext/bc/C/rpc";
 
     address internal constant AGENT_PLATFORM = 0x037Bb9C718F3f7fe5eCBDB0b600D607b52706776;
 
@@ -2482,7 +2482,7 @@ library SomniaTestnet {
 }
 ```
 
-`AGENT_PLATFORM` is the real Somnia Agents platform; its ABI is in `contracts/src/interfaces/ISomniaAgentPlatform.sol`. Ward's core contracts do not depend on the agent platform — the interface and these agent-id constants exist only for agents that additionally call the Somnia platform (the oracle gate is independent of it).
+`AGENT_PLATFORM` is the real Avalanche Agents platform; its ABI is in `contracts/src/interfaces/IAvalancheAgentPlatform.sol`. Ward's core contracts do not depend on the agent platform — the interface and these agent-id constants exist only for agents that additionally call the Avalanche platform (the oracle gate is independent of it).
 
 ---
 
@@ -2491,7 +2491,7 @@ library SomniaTestnet {
 
 Day-two operations for a live policy: update it, kill it, hand it off, and keep its queue clean.
 
-This section assumes you have already published a policy and know its `policyId`. Every operation here is an owner-only write against the canonical v2 `WardOracle` or its `WardQueue` on Somnia Shannon (chain id `50312`, RPC `https://dream-rpc.somnia.network`). Use the addresses in §1; substitute v1 only if the policy was published against the v1 oracle.
+This section assumes you have already published a policy and know its `policyId`. Every operation here is an owner-only write against the canonical v2 `WardOracle` or its `WardQueue` on Avalanche Fuji (chain id `43113`, RPC `https://api.avax-test.network/ext/bc/C/rpc`). Use the addresses in §1; substitute v1 only if the policy was published against the v1 oracle.
 
 ### Which operations the SDK client covers
 
@@ -2636,7 +2636,7 @@ None of these three has a CLI command or an SDK client method — drive them wit
 cast send 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c \
   "transferPolicyOwnership(bytes32,address)" \
   0x<policyId> 0x<newOwner> \
-  --rpc-url https://dream-rpc.somnia.network --private-key $PRIVATE_KEY
+  --rpc-url https://api.avax-test.network/ext/bc/C/rpc --private-key $PRIVATE_KEY
 ```
 
 Then from the new owner's wallet:
@@ -2645,7 +2645,7 @@ Then from the new owner's wallet:
 cast send 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c \
   "acceptPolicyOwnership(bytes32)" \
   0x<policyId> \
-  --rpc-url https://dream-rpc.somnia.network --private-key $NEW_OWNER_PK
+  --rpc-url https://api.avax-test.network/ext/bc/C/rpc --private-key $NEW_OWNER_PK
 ```
 
 ### Queue housekeeping
@@ -2774,7 +2774,7 @@ The TUI runs against the canonical v2 deployment by default — no flags or conf
 | --- | --- | --- |
 | Oracle | `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c` | `WARD_ORACLE` |
 | Queue | `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4` | `WARD_QUEUE` |
-| RPC | `https://dream-rpc.somnia.network` (chain `50312`) | `SOMNIA_TESTNET_RPC` |
+| RPC | `https://api.avax-test.network/ext/bc/C/rpc` (chain `43113`) | `FUJI_RPC` |
 | Queue lookback | `50000` blocks | `WARD_QUEUE_LOOKBACK_BLOCKS` |
 
 On launch the TUI backfills the recent queue window, then goes live. The header status reads `SYNCING` during backfill and `LIVE` once `store.init()` resolves.
@@ -2794,7 +2794,7 @@ The screen is a single live surface, top to bottom. Layout switches to a two-col
 
 #### Header + health scope
 
-The double-bordered header carries the `WARD / SOMNIA` banner, the current block (`cursor()`), and the connected oracle/queue/wallet/RPC. Its raster "scope" animates from queue activity, and three meters track `pending`, `expired` (expirable), and `events`. The status label is derived, not cosmetic:
+The double-bordered header carries the `WARD / AVALANCHE` banner, the current block (`cursor()`), and the connected oracle/queue/wallet/RPC. Its raster "scope" animates from queue activity, and three meters track `pending`, `expired` (expirable), and `events`. The status label is derived, not cosmetic:
 
 | Label | Condition |
 | --- | --- |
@@ -2883,12 +2883,12 @@ Loaded from `.env` in the current working directory (KEY=VALUE lines, `#` commen
 | `PRIVATE_KEY`                     | unset (read-only)                              | Enables `expireIfStale` writes.                                      |
 | `WARD_ORACLE`                   | `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`   | Oracle address.                                                     |
 | `WARD_QUEUE`                    | `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4`   | Queue address.                                                      |
-| `SOMNIA_TESTNET_RPC`              | `https://dream-rpc.somnia.network`             | RPC endpoint (chain id `50312`, Somnia Testnet).                   |
+| `FUJI_RPC`              | `https://api.avax-test.network/ext/bc/C/rpc`             | RPC endpoint (chain id `43113`, Avalanche Fuji).                   |
 | `WARD_QUEUE_LOOKBACK_BLOCKS`    | `50000`                                        | Queue event backfill window.                                        |
 | `WARD_TUI_ORACLE_DEPLOY_BLOCK`  | unset                                          | Start block for a deep policy backfill.                             |
 | `WARD_TUI_DEEP_BACKFILL`        | unset                                          | `1`/`true`/`yes` opts into the shared `WARD_ORACLE_DEPLOY_BLOCK`. |
 
-The `--help` text additionally references `WARD_RPC` as an env hint; the resolver reads `SOMNIA_TESTNET_RPC` and falls back to the chain's default RPC.
+The `--help` text additionally references `WARD_RPC` as an env hint; the resolver reads `FUJI_RPC` and falls back to the chain's default RPC.
 
 ### When to use the TUI vs the dashboard Queue tab
 
@@ -2909,7 +2909,7 @@ Use the **TUI** when you are an operator sweeping stale records, running headles
 
 ## 24. Using Ward with AI assistants — phased onboarding flow + `ai:init`
 
-Ward ships one self-contained skill (this very `SKILL.md`) and one CLI command (`ward ai:init`) so an AI coding agent can do the work — discover your agent's call surface, draft a `POLICY.md`, publish it on Somnia, and apply the integration diff — without you reading the spec by hand.
+Ward ships one self-contained skill (this very `SKILL.md`) and one CLI command (`ward ai:init`) so an AI coding agent can do the work — discover your agent's call surface, draft a `POLICY.md`, publish it on Avalanche, and apply the integration diff — without you reading the spec by hand.
 
 ### Install the skill
 
@@ -2924,13 +2924,13 @@ Then, in any session opened in *your agent's* repo (not necessarily Ward's), inv
 
 > `/ward-integration` &nbsp;or&nbsp; "onboard this agent to ward"
 
-The assistant reads this `SKILL.md`, discovers your agent's call surface, drafts a `POLICY.md`, compiles and publishes it on Somnia, and applies the Solidity diff.
+The assistant reads this `SKILL.md`, discovers your agent's call surface, drafts a `POLICY.md`, compiles and publishes it on Avalanche, and applies the Solidity diff.
 
 The flow expects you to have:
 
 1. The Ward repo cloned somewhere on disk (for the CLI).
 2. `pnpm install` + `pnpm -C cli run build` run in the Ward repo.
-3. A `.env` in the Ward repo with `PRIVATE_KEY` set to a Somnia testnet wallet with STT ([faucet](https://testnet.somnia.network/)).
+3. A `.env` in the Ward repo with `PRIVATE_KEY` set to a Avalanche Fuji wallet with AVAX ([faucet](https://faucet.avax.network/)).
 4. Your agent contract source open in the workspace.
 
 The skill handles everything else — including verifying the precomputed `policyId` matches the published one, surfacing label-encoding mistakes, and only running real on-chain transactions after explicit confirmation.
@@ -2943,7 +2943,7 @@ Reach for `ward-integration` for any Ward task end-to-end. The phased onboarding
 
 ### Phased onboarding flow
 
-The orchestrated end-to-end CLI flow: discover your agent's call surface → draft `POLICY.md` → compile → publish on Somnia → wire the gate into the agent contract. It is structured as **five phases**, and the dev confirms before every on-chain action:
+The orchestrated end-to-end CLI flow: discover your agent's call surface → draft `POLICY.md` → compile → publish on Avalanche → wire the gate into the agent contract. It is structured as **five phases**, and the dev confirms before every on-chain action:
 
 | Phase | Step | What happens |
 |---|---|---|
@@ -2970,13 +2970,13 @@ Invoke this skill when the user says any of:
 - "write a POLICY.md for X"
 - "publish my policy" / "register my policy on ward"
 - pastes a Solidity agent contract and asks "what would the Ward policy look like?"
-- mentions Somnia + agent + policy in the same breath
+- mentions Avalanche + agent + policy in the same breath
 
 Do NOT auto-invoke if the user is asking conceptual questions about Ward ("how does it work?") — answer those directly.
 
 ### Background — what the skill knows
 
-#### Ward contracts (live on Shannon testnet, chainId 50312)
+#### Ward contracts (live on Fuji testnet, chainId 43113)
 
 Use the canonical table in §1. The v2 oracle is the default for new integrations because it adds `checkSelector`; v1 remains live for inline `checkIntent` callers. Neither contract holds funds, owns agents, or executes calls. The dev's agent remains the executor of `target.call(...)`.
 
@@ -2991,7 +2991,7 @@ Use the canonical table in §1. The v2 oracle is the default for new integration
 | `inspect <intent.json>` | Pretty-print an Intent JSON with calldata decoded |
 | `queue:status <execId>` | Read a WardQueue record header (operator-side, not needed for onboarding) |
 
-The dev needs the Ward repo cloned + `pnpm install`'d + `pnpm -C cli run build`. Their `.env` needs `PRIVATE_KEY` (a Somnia testnet key with STT) and optionally `WARD_ORACLE` / `WARD_QUEUE` overrides (defaults match the addresses above). Use `pnpm ward` for the guided menu or `pnpm ward <command>` for direct commands.
+The dev needs the Ward repo cloned + `pnpm install`'d + `pnpm -C cli run build`. Their `.env` needs `PRIVATE_KEY` (a Avalanche Fuji key with AVAX) and optionally `WARD_ORACLE` / `WARD_QUEUE` overrides (defaults match the addresses above). Use `pnpm ward` for the guided menu or `pnpm ward <command>` for direct commands.
 
 #### POLICY.md format (v0.1) — short form
 
@@ -3033,7 +3033,7 @@ Schema rules (short form — full reference in [§19](#19-policymd-spec--authori
 
 #### Reference Solidity integration (verbatim from the canonical sample)
 
-The minimal integration is: **build an `Intent`, call `oracle.checkIntent`, branch on the answer.** Pattern below is the canonical entrypoint-policy shape — equivalent to `examples/ward-counter/src/CounterAgent.sol` and verified to work on Shannon:
+The minimal integration is: **build an `Intent`, call `oracle.checkIntent`, branch on the answer.** Pattern below is the canonical entrypoint-policy shape — equivalent to `examples/ward-counter/src/CounterAgent.sol` and verified to work on Fuji:
 
 ```solidity
 // Import paths follow YOUR foundry remappings. The reference repo remaps
@@ -3050,7 +3050,7 @@ contract MyAgent {
         bytes4(keccak256("doThing(uint256,string)"));
 
     constructor(WardOracle _oracle, bytes32 _policyId) {
-        oracle    = _oracle;          // 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c on Shannon (v2 — canonical for new integrations); 0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf for pre-v0.11.0 v1-bound agents
+        oracle    = _oracle;          // 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c on Fuji (v2 — canonical for new integrations); 0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf for pre-v0.11.0 v1-bound agents
         POLICY_ID = _policyId;
     }
 
@@ -3059,7 +3059,7 @@ contract MyAgent {
 
         // ============ WARD INTEGRATION ============
         Intent memory intent = Intent({
-            agentId:    /* your Somnia agentId or 0 if non-LLM */ 0,
+            agentId:    /* your Avalanche agentId or 0 if non-LLM */ 0,
             requestId:  reqId,
             target:     address(targetContract),
             selector:   DO_THING_SELECTOR,
@@ -3142,11 +3142,11 @@ Run preflight first:
 pnpm ward preflight
 ```
 
-If wallet balance is low, point the dev at the [Somnia faucet](https://testnet.somnia.network/) and STOP. Do not try to publish a no-balance wallet.
+If wallet balance is low, point the dev at the [Avalanche faucet](https://faucet.avax.network/) and STOP. Do not try to publish a no-balance wallet.
 
 If preflight is clean, ask explicitly:
 
-> "Publish this policy with label `<label>` to WardOracle at `0x3C7b...` (v2, canonical for new integrations) using your wallet at `0x<dev-address>` on Somnia testnet? This is a real on-chain transaction (~0.001 STT)."
+> "Publish this policy with label `<label>` to WardOracle at `0x3C7b...` (v2, canonical for new integrations) using your wallet at `0x<dev-address>` on Avalanche Fuji? This is a real on-chain transaction (~0.001 AVAX)."
 
 Wait for explicit confirmation. On "yes":
 
@@ -3156,7 +3156,7 @@ pnpm ward push <absolute-path-to-POLICY.md> --label <label>
 
 Capture from the output:
 - The final `policyId` — **verify it matches the precomputed one from Phase 3** (if not, stop and diagnose label encoding)
-- The tx hash — show the dev the explorer link: `https://shannon-explorer.somnia.network/tx/<hash>`
+- The tx hash — show the dev the explorer link: `https://testnet.snowtrace.io/tx/<hash>`
 
 #### Phase 5 — Wire the integration into the agent contract
 
@@ -3184,7 +3184,7 @@ Produce the integration diff against the dev's actual agent file, matching the c
 +
 +     // ============ WARD INTEGRATION ============
 +     Intent memory _intent = Intent({
-+         agentId:    <somnia agentId or 0>,
++         agentId:    <avalanche agentId or 0>,
 +         requestId:  <unique-per-dispatch id>,
 +         target:     <target-address>,
 +         selector:   <SEL_NAME>,
@@ -3214,15 +3214,15 @@ Notes when generating the diff:
 If the dev says "apply it", use Edit to land the diff in their actual file. Then:
 1. Run their existing test suite. Fix any breakage (typically: tests that hit a now-blocked selector — those are now tests of the policy itself, which the dev should keep as expected-revert tests).
 2. Re-deploy the agent contract (constructor changed).
-3. Smoke a single happy-path call against the new agent on Shannon to confirm `checkIntent` passes for an allowed intent.
+3. Smoke a single happy-path call against the new agent on Fuji to confirm `checkIntent` passes for an allowed intent.
 
 ### Common pitfalls — call these out as you hit them
 
 - **Label encoding.** Labels are encoded as `padHex({size:32, dir:"right"}, stringToBytes(label))` — i.e. the UTF-8 bytes right-padded with zeros to 32 bytes. **Never `keccak256(label)`.** The CLI handles this; if the dev rolls their own publish path and uses keccak, their `policyId` will not match what `policyid <label>` precomputed.
-- **Deposit sizing for LLM agents.** If the agent uses Somnia's `inferString` / `inferToolsChat`, `getRequestDeposit()` returns ONLY the validator-reward budget — it does NOT include the LLM execution cost. Empirically 1 STT works for short prompts; 0.12 STT returns the validator response `"insufficient budget for execution cost"`. Document this in the agent.
+- **Deposit sizing for LLM agents.** If the agent uses Avalanche's `inferString` / `inferToolsChat`, `getRequestDeposit()` returns ONLY the validator-reward budget — it does NOT include the LLM execution cost. Empirically 1 AVAX works for short prompts; 0.12 AVAX returns the validator response `"insufficient budget for execution cost"`. Document this in the agent.
 - **DELAYED vs VETO_REQUIRED dispatcher mismatch.** `DELAYED` is dispatched by the **asker**; `VETO_REQUIRED` is dispatched by `oracle.policyOwner(policyId)`. If the policy owner is a multisig that doesn't have a path to call into the agent's execution surface, `VETO_REQUIRED` calls revert at dispatch even after the delay window. Use DELAYED unless the dev confirms the policy-owner address can actually execute.
 - **`policyId` is stable for `(publisher, label)`, not content-addressed.** Editing POLICY.md and running `pnpm ward push` with the same wallet + label updates the existing policy under the same id. Changing the label or publisher wallet creates a new id. This is convenient for iteration, but a compromised policy owner can also update rules in place; use a multisig/timelock owner for production.
-- **Caps in wei, not STT.** The markdown says `"1 ether"` — the compiler normalizes to `10^18` wei. Don't hand-write hex caps.
+- **Caps in wei, not AVAX.** The markdown says `"1 ether"` — the compiler normalizes to `10^18` wei. Don't hand-write hex caps.
 - **CLI tier check.** `compile` accepts `delaySeconds: 0` on IMMEDIATE/VETO_REQUIRED, and rejects `delaySeconds > 0` on those tiers with a clear error. If the dev writes `delaySeconds: 60` for an IMMEDIATE selector, surface that to them — they probably meant DELAYED.
 - **Lost publisher key?** `transferPolicyOwnership(bytes32 policyId, address newOwner)` on WardOracle. Only the current policy owner can call it; reverts on zero address. If the user's wallet is compromised or migrated, this is the recovery path — no policy re-publish needed.
 
@@ -3247,12 +3247,12 @@ The final hand-off:
 ```yaml
 policyId: 0x...
 publishTxHash: 0x...
-explorerLink: https://shannon-explorer.somnia.network/tx/...
+explorerLink: https://testnet.snowtrace.io/tx/...
 agentFile: <path>
 agentDiffApplied: true|false
 nextSteps:
   - re-deploy the agent contract
-  - run smoke test on Shannon
+  - run smoke test on Fuji
   - (optional) start `pnpm ward tui` to monitor live policy events
 ```
 
@@ -3417,9 +3417,9 @@ targets:
         delaySeconds: 0
 ```
 
-#### Metering is native-STT-only
+#### Metering is native-AVAX-only
 
-Both `dailySpendWeiCap` and `valueCapPerCall` meter the **native token forwarded** (`intent.value`), denominated in **wei** — not STT, and not any ERC-20 the agent moves through calldata. The markdown shorthand `"1 ether"` normalizes to `10^18` wei; do not hand-write hex caps. An ERC-20 `transfer` carries `value = 0`, so it consumes **none** of the daily cap regardless of token amount. If you need to cap ERC-20 spend, the cap must live in your agent's logic, not in Ward's native metering.
+Both `dailySpendWeiCap` and `valueCapPerCall` meter the **native token forwarded** (`intent.value`), denominated in **wei** — not AVAX, and not any ERC-20 the agent moves through calldata. The markdown shorthand `"1 ether"` normalizes to `10^18` wei; do not hand-write hex caps. An ERC-20 `transfer` carries `value = 0`, so it consumes **none** of the daily cap regardless of token amount. If you need to cap ERC-20 spend, the cap must live in your agent's logic, not in Ward's native metering.
 
 **Rules.**
 
@@ -3461,7 +3461,7 @@ If this skill doesn't cover your case:
 
 ## Provenance
 
-- Ward contracts deployed on Somnia Shannon (chainId 50312), addresses verified on-chain — canonical addresses are listed in §1.
+- Ward contracts deployed on Avalanche Fuji (chainId 43113), addresses verified on-chain — canonical addresses are listed in §1.
 - Canonical sample: `examples/ward-counter/` (CounterAgent on WardAgentBase + the `wardGuarded` modifier).
 - The `Intent` struct shape, integration template, CLI commands, and POLICY.md schema in this skill were validated against the canonical `examples/ward-counter` sample. If you suspect drift — e.g. `ward compile` errors that contradict this doc — read `contracts/src/PolicyTypes.sol` and `sdk/src/policy-compiler.ts` directly; those are the source of truth.
 - Ward contracts are unaudited; integration patterns here mirror what runs on testnet.

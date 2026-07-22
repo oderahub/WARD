@@ -24,7 +24,7 @@ import {
 import { useUrlState } from "../hooks/useUrlState";
 import { useEventStore, type RehydrateFailure } from "../hooks/useEventStore";
 import { useWallet } from "../hooks/useWallet";
-import { SOMNIA_CHAIN_ID, getNetwork } from "../lib/networks";
+import { ACTIVE_CHAIN_ID, getNetwork } from "../lib/networks";
 import { ownerIndexThrottleKey } from "../lib/owner-index-throttle";
 import { setWithLruCap } from "../lib/lru";
 import {
@@ -392,7 +392,7 @@ function DocumentFrontMatter({
   onRefresh,
   errors,
 }: FrontMatterProps) {
-  const net = getNetwork(SOMNIA_CHAIN_ID);
+  const net = getNetwork(ACTIVE_CHAIN_ID);
   const lastPolledText = lastPolledAt === null ? null : formatRelative(lastPolledAt);
   const hasErrors = errors.length > 0;
 
@@ -402,7 +402,7 @@ function DocumentFrontMatter({
         Registry · Document {DASHBOARD_VERSION}
       </div>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-text md:text-4xl">
-        Ward-watched agents on Somnia Shannon
+        Ward-watched agents on Avalanche Fuji
       </h1>
 
       <dl className="mt-6 grid max-w-[640px] grid-cols-[140px_1fr] gap-y-1.5 gap-x-6 text-[13px]">
@@ -414,7 +414,7 @@ function DocumentFrontMatter({
         <dd className="text-text">
           {net?.name ?? "—"}
           <span className="ml-2 font-mono text-[12px] text-text-muted">
-            chain id {SOMNIA_CHAIN_ID}
+            chain id {ACTIVE_CHAIN_ID}
           </span>
         </dd>
         <dt className="text-text-muted">RPC</dt>
@@ -908,7 +908,7 @@ function ViolationRow({ violation }: ViolationRowProps) {
       <span className="flex items-center justify-end gap-2">
         <span className="font-mono tabular-nums text-text">
           {formatWeiCompact(violation.valueWei)}
-          <span className="ml-1 text-[10px] text-text-muted">STT</span>
+          <span className="ml-1 text-[10px] text-text-muted">AVAX</span>
         </span>
         <ExplorerLink txHash={violation.txHash} />
       </span>
@@ -993,7 +993,7 @@ function MyPoliciesPanel() {
 
   useEffect(() => {
     if (!isConnected || !walletAddress || !store) return;
-    const scopeKey = ownerIndexThrottleKey(SOMNIA_CHAIN_ID, oracle, walletAddress);
+    const scopeKey = ownerIndexThrottleKey(ACTIVE_CHAIN_ID, oracle, walletAddress);
     const lastAt = lastAutoScanAtRef.current.get(scopeKey);
     if (lastAt !== undefined && Date.now() - lastAt < AUTO_SCAN_INTERVAL_MS) return;
     setWithLruCap(lastAutoScanAtRef.current, scopeKey, Date.now(), AUTO_SCAN_LRU_CAP);
@@ -1303,7 +1303,7 @@ function SubscriptionsPanel() {
   useEffect(() => {
     let cancelled = false;
     setState({ kind: "loading" });
-    void loadAllWatchSubscriptions(SOMNIA_CHAIN_ID)
+    void loadAllWatchSubscriptions(ACTIVE_CHAIN_ID)
       .then((rows) => {
         if (cancelled) return;
         const sorted = [...rows].sort((a, b) => b.createdAt - a.createdAt);
@@ -1330,7 +1330,7 @@ function SubscriptionsPanel() {
       next.add(key);
       return next;
     });
-    void removeWatchSubscription(SOMNIA_CHAIN_ID, agent)
+    void removeWatchSubscription(ACTIVE_CHAIN_ID, agent)
       .catch(() => {
         // best-effort
       })

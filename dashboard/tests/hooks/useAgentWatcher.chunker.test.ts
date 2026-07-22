@@ -9,7 +9,7 @@ import {
 } from "../../src/hooks/useAgentWatcher";
 
 // chunkOwnerScanRange paginates a (floor..head) block window into
-// Shannon-safe getLogs requests. Shannon's RPC caps eth_getLogs at 1000
+// Fuji-safe getLogs requests. Fuji's RPC caps eth_getLogs at 1000
 // blocks per call (see sdk/src/event-store.ts:247), so each emitted
 // {fromBlock, toBlock} must span <= 1000 blocks INCLUSIVE.
 //
@@ -35,13 +35,13 @@ describe("chunkOwnerScanRange", () => {
   });
 
   it("walks backwards in 999-block chunks, never spanning more than 1000 blocks", () => {
-    // head=10_000, floor=0 → ~10 chunks. Verify each chunk is Shannon-safe.
+    // head=10_000, floor=0 → ~10 chunks. Verify each chunk is Fuji-safe.
     const out = chunkOwnerScanRange(10_000n, 0n);
     // First chunk should be the newest end.
     expect(out[0]!.toBlock).toBe(10_000n);
     // Last chunk should reach the floor.
     expect(out[out.length - 1]!.fromBlock).toBe(0n);
-    // Chunks should be contiguous (no gaps, no overlap) and Shannon-safe.
+    // Chunks should be contiguous (no gaps, no overlap) and Fuji-safe.
     for (let i = 0; i < out.length; i++) {
       const span = out[i]!.toBlock - out[i]!.fromBlock;
       expect(span).toBeLessThanOrEqual(999n);
@@ -103,7 +103,7 @@ describe("chunkOwnerScanRange", () => {
 });
 
 // fetchAgentEventsViaRpc is the RPC-first replacement for the Blockscout
-// txlist endpoint that the watch flow relied on. Shannon Blockscout was
+// txlist endpoint that the watch flow relied on. Fuji Blockscout was
 // lagging the chain head by ~4.3M blocks (~5 days) so txlist returned
 // "no transactions" for verified contracts with recent activity — making
 // the watcher structurally broken. The new helper reads logs straight from
@@ -144,7 +144,7 @@ describe("fetchAgentEventsViaRpc", () => {
     expect(out).toHaveLength(1);
   });
 
-  it("chunks a range > 1000 blocks into Shannon-safe windows", async () => {
+  it("chunks a range > 1000 blocks into Fuji-safe windows", async () => {
     // 3000-block span → 4 chunks of ≤1000 blocks each (chunkSize=999 means
     // each chunk covers at most 1000 blocks inclusive).
     const calls: Array<{ fromBlock: bigint; toBlock: bigint }> = [];
@@ -308,7 +308,7 @@ describe("fetchNewTxsViaRpc", () => {
 });
 
 // computeEmptyBatchCursor pins the "advance vs hold" decision for the
-// empty-batch poll path. Shannon's Blockscout lags the RPC node by ~5
+// empty-batch poll path. Fuji's Blockscout lags the RPC node by ~5
 // days, so when an agent is idle BOTH the RPC log fetch and the explorer
 // fallback come back empty every poll. Without the right advancement
 // rule the cursor stays put forever and the same range is re-scanned
@@ -334,7 +334,7 @@ describe("computeEmptyBatchCursor", () => {
   });
 
   it("advances to head when BOTH RPC and explorer succeeded but returned empty", () => {
-    // The Shannon-idle case: RPC ok with 0 logs → fallback explorer ok
+    // The Fuji-idle case: RPC ok with 0 logs → fallback explorer ok
     // with 0 txs → still advance so the next poll starts past `head`.
     const out = computeEmptyBatchCursor({
       lastChecked: 100n,

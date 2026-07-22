@@ -34,15 +34,12 @@ interface IWardAgent {
 ///                             (required; must be owned by the broadcaster).
 ///         LABEL             — ASCII label (≤32 bytes); padded to bytes32
 ///                             (default: "default").
-///         ORACLE_ADDR       — WardOracle deployment (default:
-///                             0x3C7bF90f243d670a01f512221d9546e09fEaCC9c, the
-///                             v2 (modifier-compatible) Shannon testnet oracle
-///                             from contracts/deployments/50312.json. v1
-///                             (0x68d4B045…) stays live and can still be
-///                             targeted by overriding ORACLE_ADDR — it lacks
-///                             `checkSelector` and so cannot back the
-///                             `wardGuarded` modifier, but `checkIntent` is
-///                             unchanged).
+///         ORACLE_ADDR       — WardOracle deployment (required; no default).
+///                             Take it from contracts/deployments/$CHAINID.json
+///                             after running script/Deploy.s.sol. The oracle
+///                             must expose `checkSelector` to back `wardGuarded`
+///                             modifier policies; a `checkIntent`-only oracle
+///                             can still be targeted for the legacy flow.
 ///         DEPLOYER_PK       — broadcaster's private key (required).
 ///
 ///         === Usage ===
@@ -57,16 +54,17 @@ interface IWardAgent {
 ///         (different contracts, no shared dispatcher), but the operator
 ///         only signs once and the second tx auto-fires on success.
 contract PublishAndBind is Script {
-    /// @notice Live Shannon testnet v2 oracle from `contracts/deployments/50312.json`.
-    ///         v2 carries `checkSelector` so it can back `wardGuarded` modifier
-    ///         policies as well as the original `checkIntent` flow. Override
-    ///         ORACLE_ADDR to target the v1 oracle (0x68d4B045…) for legacy
-    ///         `checkIntent`-only publishes against pre-v0.11.0 agents.
-    address internal constant DEFAULT_ORACLE = 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c;
+    /// @notice No canonical Avalanche oracle is deployed yet, so there is no
+    ///         address to default to. Set ORACLE_ADDR from
+    ///         `contracts/deployments/$CHAINID.json`; leaving it unset resolves
+    ///         to address(0) and reverts below rather than silently targeting a
+    ///         contract that does not exist on this chain.
+    address internal constant DEFAULT_ORACLE = address(0);
 
     function run() external returns (bytes32 policyId) {
         uint256 pk = vm.envUint("DEPLOYER_PK");
         address oracleAddr = vm.envOr("ORACLE_ADDR", DEFAULT_ORACLE);
+        require(oracleAddr != address(0), "ORACLE_ADDR unset (no default oracle on this chain)");
         address agentAddr = vm.envAddress("AGENT_ADDR");
         bytes32 label = _readLabel();
         PolicyInput memory input = _readPolicy();

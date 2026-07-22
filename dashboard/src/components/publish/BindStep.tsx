@@ -15,8 +15,8 @@ import { toast } from "sonner";
 
 import { WARD_AGENT_BASE_ABI } from "../../lib/agent-base-abi";
 import { humanizeWeb3Error } from "../../lib/humanizeError";
-import { SOMNIA_CHAIN_ID } from "../../lib/networks";
-import { shannonSafeGas } from "../../lib/shannonGas";
+import { ACTIVE_CHAIN_ID } from "../../lib/networks";
+import { fujiSafeGas } from "../../lib/fujiGas";
 import { useWrongNetwork } from "../../hooks/useWrongNetwork";
 import { probeAgent, type ProbeState } from "../../lib/agent-probe";
 
@@ -254,9 +254,9 @@ export function BindStep({
   }, [prefilledAgentAddress, addressInput, onChangeAddress]);
 
   useEffect(() => {
-    // Hard-gate the probe on Somnia chainId. A probe
+    // Hard-gate the probe on Avalanche chainId. A probe
     // against the wrong chain's RPC would report kind:"eoa" for a contract
-    // that's only deployed on Somnia, which is misleading. Keep probe idle so
+    // that's only deployed on Avalanche, which is misleading. Keep probe idle so
     // the wrong-network Alert renders instead.
     if (wrongNetwork) {
       setProbe({ kind: "idle" });
@@ -373,7 +373,7 @@ export function BindStep({
   const disablingReason: string | null = (() => {
     if (!isConnected) return "Connect your wallet to bind.";
     if (wrongNetwork) {
-      return `Switch your wallet to Somnia testnet (chain ${expectedChainId}). Currently on chain ${currentChainId ?? "?"}.`;
+      return `Switch your wallet to Avalanche Fuji (chain ${expectedChainId}). Currently on chain ${currentChainId ?? "?"}.`;
     }
     if (!validation) return null; // pre-input; button is hidden anyway
     if (!validation.ok) return validation.error;
@@ -434,7 +434,7 @@ export function BindStep({
         account: connectedAddress,
       });
 
-      const gas = await shannonSafeGas(publicClient, {
+      const gas = await fujiSafeGas(publicClient, {
         address: agent,
         abi: WARD_AGENT_BASE_ABI,
         functionName: "setPolicyId",
@@ -448,7 +448,7 @@ export function BindStep({
         functionName: "setPolicyId",
         args: [publishedPolicyId],
         gas,
-        chainId: SOMNIA_CHAIN_ID,
+        chainId: ACTIVE_CHAIN_ID,
       });
 
       setBindResult({ kind: "tx", tx: { kind: "mining", hash: txHash } });
@@ -593,7 +593,7 @@ export function BindStep({
         </div>
         <div className="mt-3">
           <Alert variant="warn" title="Wrong network">
-            Switch your wallet to Somnia testnet (chain {expectedChainId}).
+            Switch your wallet to Avalanche Fuji (chain {expectedChainId}).
             Currently on chain {currentChainId ?? "?"}.
           </Alert>
         </div>
@@ -800,7 +800,7 @@ function ProbeReport({
   if (probe.kind === "eoa") {
     return (
       <Alert variant="danger" title="That's a wallet, not a contract">
-        Somnia has no contract code at this address — it looks like a plain
+        Avalanche has no contract code at this address — it looks like a plain
         wallet (EOA). Paste the address of a deployed agent contract instead.
       </Alert>
     );

@@ -50,7 +50,7 @@ export interface OnChainPolicySnapshot {
 
 const ZERO_ADDR = "0x0000000000000000000000000000000000000000" as const;
 
-// Shannon RPC caps eth_getLogs at 1000 blocks per call. Scan recent history
+// Fuji RPC caps eth_getLogs at 1000 blocks per call. Scan recent history
 // in chunks of CHUNK_SIZE walking backwards from `latest`. STOP after either:
 //   - finding the event (single hit by policyId topic)
 //   - hitting MAX_BACK_BLOCKS without a hit (the policy is older than this
@@ -97,7 +97,7 @@ async function findPublishedEvent(
 }
 
 // Block depth trimmed from `toBlock` so we never persist a checkpoint inside
-// the reorg-unsafe tail. Mirrors persistence.ts REORG_DEPTH (12n on Shannon);
+// the reorg-unsafe tail. Mirrors persistence.ts REORG_DEPTH (12n on Fuji);
 // duplicated to keep this file dependency-free of the persistence module.
 const REORG_DEPTH_BLOCKS = 12n;
 
@@ -121,7 +121,7 @@ export interface LookupPoliciesByOwnerArgs {
   fromBlock: bigint;
   /** Inclusive upper bound. Typically `await publicClient.getBlockNumber()`. */
   toBlock: bigint;
-  /** Chunk width passed to getContractEvents. Defaults to 1000 (Shannon cap). */
+  /** Chunk width passed to getContractEvents. Defaults to 1000 (Fuji cap). */
   chunkSize?: bigint;
   /** Fired after every chunk attempt (success OR failure). Errors thrown by
    *  the callback are swallowed so a buggy subscriber can't abort the scan. */
@@ -166,7 +166,7 @@ export interface LookupPoliciesByOwnerResult {
 /**
  * Owner-keyed scan of PolicyPublished. Topic-filtered eth_getLogs across the
  * reorg-safe window `[fromBlock, toBlock - REORG_DEPTH_BLOCKS]` in chunks
- * of `chunkSize` (default 1000, matching Shannon's RPC cap), returning the
+ * of `chunkSize` (default 1000, matching Fuji's RPC cap), returning the
  * discovered policyIds plus a reorg-safe checkpoint for the next resume.
  * The unsafe tail is never scanned so a reorg there can't leave a phantom
  * entry in the caller's owner index.

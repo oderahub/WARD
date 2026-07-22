@@ -189,7 +189,7 @@ function parseEtherFlexible(input: string): bigint {
   const hint = suggestEtherFix(trimmed);
   if (hint !== null) {
     throw new Error(
-      `Unrecognized unit in "${input}" — did you mean "${hint}"? (Supported: plain wei integer, or "N ether" for native STT.)`,
+      `Unrecognized unit in "${input}" — did you mean "${hint}"? (Supported: plain wei integer, or "N ether" for native AVAX.)`,
     );
   }
   return BigInt(trimmed);

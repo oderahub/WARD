@@ -13,7 +13,7 @@ via_ir = true
 # Symlinks `lib/` → `../../contracts/lib` and `ward-src/` → `../../contracts/src`
 # expose forge-std + the live Ward sources without copying. We never deploy
 # the Ward contracts from this sub-project — we just import the Intent
-# struct + WardOracle interface and reference the live Shannon address.
+# struct + WardOracle interface and reference the live Fuji address.
 remappings = [
     "ward/=ward-src/",
     "forge-std/=lib/forge-std/src/",

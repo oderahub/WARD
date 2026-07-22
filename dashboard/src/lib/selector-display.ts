@@ -127,7 +127,7 @@ export function humanizeTier(
  * consumer.
  */
 export const FIELD_HUMAN_LABELS: Record<string, string> = {
-  dailySpendWeiCap: "Daily native (STT) spend cap",
+  dailySpendWeiCap: "Daily native (AVAX) spend cap",
   maxSlippageBps: "Max slippage (adapter metadata)",
   expiresAt: "Valid until",
   paused: "Paused",

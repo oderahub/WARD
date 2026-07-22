@@ -214,7 +214,7 @@ export function CancelTransferModal({
 
         {wrongNetwork && (
           <Alert variant="warn" title="Wrong network" className="mb-3">
-            {`Connected to chain ${currentChainId ?? "?"}. Switch to Somnia Shannon (${expectedChainId}) before submitting.`}
+            {`Connected to chain ${currentChainId ?? "?"}. Switch to Avalanche Fuji (${expectedChainId}) before submitting.`}
           </Alert>
         )}
 

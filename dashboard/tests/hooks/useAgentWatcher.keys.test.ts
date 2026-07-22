@@ -31,20 +31,20 @@ describe("policyCacheKey", () => {
     "0x2222222222222222222222222222222222222222222222222222222222222222" as Hex;
 
   it("includes chainId, oracle, and policyId components", () => {
-    const key = policyCacheKey(50312, oracleA, policy1);
-    expect(key).toContain("50312");
+    const key = policyCacheKey(43113, oracleA, policy1);
+    expect(key).toContain("43113");
     expect(key).toContain(oracleA.toLowerCase());
     expect(key).toContain(policy1.toLowerCase());
   });
 
   it("is case-insensitive on the hex inputs", () => {
     const lower = policyCacheKey(
-      50312,
+      43113,
       oracleA.toLowerCase() as Address,
       policy1.toLowerCase() as Hex,
     );
     const upper = policyCacheKey(
-      50312,
+      43113,
       oracleA.toUpperCase().replace(/^0X/, "0x") as Address,
       policy1.toUpperCase().replace(/^0X/, "0x") as Hex,
     );
@@ -53,27 +53,27 @@ describe("policyCacheKey", () => {
 
   it("distinguishes different chains for the same policyId+oracle", () => {
     const a = policyCacheKey(1, oracleA, policy1);
-    const b = policyCacheKey(50312, oracleA, policy1);
+    const b = policyCacheKey(43113, oracleA, policy1);
     expect(a).not.toBe(b);
   });
 
   it("distinguishes different oracles for the same chain+policyId", () => {
-    const a = policyCacheKey(50312, oracleA, policy1);
-    const b = policyCacheKey(50312, oracleB, policy1);
+    const a = policyCacheKey(43113, oracleA, policy1);
+    const b = policyCacheKey(43113, oracleB, policy1);
     expect(a).not.toBe(b);
   });
 
   it("distinguishes different policyIds for the same chain+oracle", () => {
-    const a = policyCacheKey(50312, oracleA, policy1);
-    const b = policyCacheKey(50312, oracleA, policy2);
+    const a = policyCacheKey(43113, oracleA, policy1);
+    const b = policyCacheKey(43113, oracleA, policy2);
     expect(a).not.toBe(b);
   });
 
   it("does not collide with similarly-shaped strings (component boundaries are unambiguous)", () => {
-    // Without a separator, "50312" + "0xabc..." and "5031" + "20xabc..." could
+    // Without a separator, "43113" + "0xabc..." and "5031" + "20xabc..." could
     // collide. The key uses ":" to delimit components, so adjacent
     // chainId/oracle combinations stay distinct.
-    const a = policyCacheKey(50312, oracleA, policy1);
+    const a = policyCacheKey(43113, oracleA, policy1);
     const b = policyCacheKey(5031, ("0x2" + oracleA.slice(2)) as Address, policy1);
     expect(a).not.toBe(b);
   });

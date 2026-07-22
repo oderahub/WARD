@@ -47,7 +47,7 @@ contract DeployAgent is Script {
             console2.log("POLICY_ID NOT bound -- agent is running ungated.");
             console2.log("Bind later via:");
             console2.log("   cast send", address(agent), '"setPolicyId(bytes32)" 0xYOURPOLICY \\');
-            console2.log("     --private-key $DEPLOYER_PK --rpc-url $SOMNIA_TESTNET_RPC");
+            console2.log("     --private-key $DEPLOYER_PK --rpc-url $FUJI_RPC");
         } else {
             console2.log("Bound to policyId", vm.toString(policyId));
         }

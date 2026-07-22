@@ -112,7 +112,7 @@ export function PostPublishChecklist({
       <section className="space-y-3 rounded-lg border border-rule bg-surface p-4">
         <ChecklistHeader />
         <Alert variant="warn" title="Wrong network">
-          Switch your wallet to Somnia testnet (chain {expectedChainId}). Currently on
+          Switch your wallet to Avalanche Fuji (chain {expectedChainId}). Currently on
           chain {currentChainId ?? "?"}. Binding + registering are disabled until
           you switch.
         </Alert>
@@ -121,7 +121,7 @@ export function PostPublishChecklist({
   }
 
   // Defensive: a chain entry without a registry address means the second
-  // step can't function. This is unreachable today (Somnia ships with one)
+  // step can't function. This is unreachable today (Avalanche ships with one)
   // but the type allows it, so surface a soft warning rather than crash.
   const registerStepAvailable = registryAddress !== undefined;
 

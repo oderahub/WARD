@@ -26,7 +26,7 @@ function tierName(tier: number): string {
 function weiLabel(value: bigint): string {
   if (value === 0n) return "0";
   if (value < 1_000_000_000_000_000n) return `${value}w`;
-  return `${Number(value / 1_000_000_000_000_000n) / 1000} STT`;
+  return `${Number(value / 1_000_000_000_000_000n) / 1000} AVAX`;
 }
 
 function overdueLabel(deadline: bigint, now: bigint): string {

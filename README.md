@@ -5,11 +5,11 @@
   <img alt="Ward" src="design/logo/ward-wordmark-light.png" width="420">
 </picture>
 
-<h3>On-chain policy oracle + opt-in delay/veto queue for Somnia agents</h3>
+<h3>On-chain policy oracle + opt-in delay/veto queue for Avalanche agents</h3>
 
 <p>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href="https://shannon-explorer.somnia.network/address/0x3C7bF90f243d670a01f512221d9546e09fEaCC9c"><img alt="Network: Somnia Shannon" src="https://img.shields.io/badge/Somnia-Shannon%20testnet-blueviolet"></a>
+  <a href="https://testnet.snowtrace.io/address/0x3C7bF90f243d670a01f512221d9546e09fEaCC9c"><img alt="Network: Avalanche Fuji" src="https://img.shields.io/badge/Avalanche-Fuji%20testnet-blueviolet"></a>
   <a href="#test-surface"><img alt="Tests: 950+ passing" src="https://img.shields.io/badge/tests-950%2B%20passing-brightgreen"></a>
   <a href="verification/lean/"><img alt="Lean 4: 10 theorems, no sorry" src="https://img.shields.io/badge/Lean%204-10%20theorems%2C%20no%20sorry-informational"></a>
 </p>
@@ -19,18 +19,18 @@
   <a href="SKILL.md"><b>Docs</b></a> ·
   <a href="#integrate-into-your-agent"><b>Integrate</b></a> ·
   <a href="sdk/README.md"><b>SDK</b></a> ·
-  <a href="#live-on-shannon-testnet"><b>Contracts</b></a>
+  <a href="#live-on-fuji-testnet"><b>Contracts</b></a>
 </p>
 
 </div>
 
 ---
 
-**Ward is the policy gate for autonomous Solidity agents on Somnia — live on Shannon testnet.** Declare what your agent is allowed to do — in one short `POLICY.md` you compile and publish — and an on-chain modifier enforces it on every entrypoint, in the same transaction as the call. Replaces ad-hoc `onlyOwner` checks + per-call `require` lines with a single declarative policy you can version, pause, expire, or revoke without redeploying the agent. Ward does not hold funds, does not execute, and does not own anything it gates.
+**Ward is the policy gate for autonomous Solidity agents on Avalanche — live on Fuji testnet.** Declare what your agent is allowed to do — in one short `POLICY.md` you compile and publish — and an on-chain modifier enforces it on every entrypoint, in the same transaction as the call. Replaces ad-hoc `onlyOwner` checks + per-call `require` lines with a single declarative policy you can version, pause, expire, or revoke without redeploying the agent. Ward does not hold funds, does not execute, and does not own anything it gates.
 
-All three Ward contracts are deployed on **Somnia Shannon testnet (chainId 50312)** and listed in Ward's own on-chain `WardAgentRegistry` — any agent or tool that walks `findWardAgents()` discovers them by name (`WardOracle (v2)`, `WardQueue (v2)`, `WardAgentRegistry`) plus the canonical sample (`CounterAgent (canonical dual-layer sample)`).
+All three Ward contracts are deployed on **Avalanche Fuji testnet (chainId 43113)** and listed in Ward's own on-chain `WardAgentRegistry` — any agent or tool that walks `findWardAgents()` discovers them by name (`WardOracle (v2)`, `WardQueue (v2)`, `WardAgentRegistry`) plus the canonical sample (`CounterAgent (canonical dual-layer sample)`).
 
-It is a Somnia-native set of three no-custody contracts:
+It is a Avalanche-native set of three no-custody contracts:
 
 - **`WardOracle`** — policy registry + synchronous validator. Publish a `POLICY.md` once, get a stable `policyId`. An agent calls `checkIntent` / `checkSelector` inline before dispatching and aborts on `(false, reason)`. The v2 contract additionally exposes `checkSelector`, used by the `wardGuarded` modifier.
 - **`WardQueue`** *(opt-in)* — coordination for `TIER_DELAYED` and `TIER_VETO_REQUIRED` intents. The asker enqueues; after the delay the dispatcher pulls the intent back and executes it. No custody, no execution by the queue.
@@ -42,7 +42,7 @@ It is a Somnia-native set of three no-custody contracts:
 - [What a policy controls](#what-a-policy-controls)
 - [Why not Safe modules / Zodiac / session keys?](#why-not-safe-modules--zodiac--session-keys)
 - [Safe by default](#safe-by-default-reading-only-ok-cannot-bypass-the-policy)
-- [Why Somnia-native](#why-somnia-native-same-chain-same-transaction-as-the-dispatch)
+- [Why Avalanche-native](#why-avalanche-native-same-chain-same-transaction-as-the-dispatch)
 - [The surfaces](#the-surfaces)
 - [The audiences](#the-audiences)
 - [What Ward deliberately is not](#what-ward-deliberately-is-not)
@@ -51,7 +51,7 @@ It is a Somnia-native set of three no-custody contracts:
   - [Dashboard](#quickstart--dashboard)
   - [CLI + TUI](#quickstart--cli--tui)
 - [Integrate into your agent](#integrate-into-your-agent)
-- [Live on Shannon testnet](#live-on-shannon-testnet)
+- [Live on Fuji testnet](#live-on-fuji-testnet)
 - [Using the dashboard](#using-the-dashboard)
 - [Worked examples](#worked-examples)
 - [Prior art](#prior-art)
@@ -63,7 +63,7 @@ It is a Somnia-native set of three no-custody contracts:
 
 ## The problem this exists to solve
 
-An autonomous agent's job is to turn a goal into on-chain action. On Somnia, `inferToolsChat` lets an LLM return executable calldata at validator consensus — the model's output *is* a transaction the agent can dispatch. The agent reads `(target, selector, value, data)` and calls it.
+An autonomous agent's job is to turn a goal into on-chain action. On Avalanche, `inferToolsChat` lets an LLM return executable calldata at validator consensus — the model's output *is* a transaction the agent can dispatch. The agent reads `(target, selector, value, data)` and calls it.
 
 Nothing in that path asks "should this call be allowed?" The bytes came from a probabilistic model; the dispatch is a state mutation that does not roll back. A prompt injection, a hallucinated target, or a value an order of magnitude too large all execute exactly like a legitimate action. Once the transaction lands there is no undo — only post-hoc cleanup.
 
@@ -84,7 +84,7 @@ A single `POLICY.md` (compiled to one on-chain `policyId`) lets you express:
 - Write selectors as human-readable signatures (`"transfer(address,uint256)"`) or raw 4-byte hex — typos caught at compile time.
 
 **How much money any single call can move**
-- Cap the maximum native-token (STT/ETH) value any single call to a given function may carry (`valueCapPerCall: "0.1 ether"`). Reverts with `VALUE_CAP`.
+- Cap the maximum native-token (AVAX/ETH) value any single call to a given function may carry (`valueCapPerCall: "0.1 ether"`). Reverts with `VALUE_CAP`.
 
 **How much money the agent can move over time**
 - One rolling per-UTC-day ceiling on total native token across every allowed function combined (`dailySpendWeiCap: "5 ether"`). Reverts with `DAILY_CAP`. *Single global budget — no per-contract daily caps.*
@@ -141,11 +141,11 @@ Two more defaults reinforce this:
 
 A consumer can still opt in to the queue: read the `reason`, recognize `REQUIRES_DELAY` / `REQUIRES_VETO`, and enqueue the intent in `WardQueue` to honor the tier. But that is opt-*in* coordination layered on top of a gate that already defaults to refusal.
 
-## Why Somnia-native: same chain, same transaction as the dispatch
+## Why Avalanche-native: same chain, same transaction as the dispatch
 
-The reason Ward can be a *gate* and not just a *monitor* is that the policy decision and the dispatch share one execution context. Three properties follow from being Somnia-native:
+The reason Ward can be a *gate* and not just a *monitor* is that the policy decision and the dispatch share one execution context. Three properties follow from being Avalanche-native:
 
-- **Same place the calldata was produced.** On Somnia, the calldata comes from deterministic LLM consensus (`inferToolsChat`). The policy check runs at that same validator consensus. An off-chain enforcer structurally cannot sit inside that step; an on-chain enforcer on a different L1 cannot use deterministic LLM consensus. The author validates the bytes where the bytes were minted.
+- **Same place the calldata was produced.** On Avalanche, the calldata comes from deterministic LLM consensus (`inferToolsChat`). The policy check runs at that same validator consensus. An off-chain enforcer structurally cannot sit inside that step; an on-chain enforcer on a different L1 cannot use deterministic LLM consensus. The author validates the bytes where the bytes were minted.
 - **Same transaction as the dispatch.** The agent calls `oracle.checkIntent(...)` and then dispatches in one transaction. Either the call passes the policy and executes, or the policy says no and the whole transaction reverts. There is no window between "checked" and "executed" for state to drift, and no separate signer that can be skipped — anyone who bypasses your dApp or your tooling still hits the same on-chain revert.
 - **No custody, no extra trust surface.** `WardOracle` is a pure policy registry plus synchronous validator. No Ward contract holds funds, owns agents, or executes external calls. The gate adds a `view` call to the agent's own dispatch, not a custodial intermediary that funds must pass through.
 
@@ -171,9 +171,9 @@ Ward serves three distinct entry points, each with a different amount of integra
 
 1. **Greenfield agent authors.** Write a new agent contract that inherits `WardAgentBase` and tags its entrypoint with the `wardGuarded(selector, value)` modifier (or, for multi-outbound functions, gates each call inline with `_wardCheck` + `_call`). You get policy enforcement before the first dispatch. The scaffolder generates this shape for you.
 
-2. **Operators of already-deployed agents (any author).** Paste any deployed Somnia agent address into the Watch Wizard (`?tab=watch-wizard`). The wizard discovers the agent on chain, recommends a deterministic policy tier, publishes and registers it in `WardAgentRegistry`, and wires a Slack alert — in under 60 seconds, with no integration code. Ward is honest about the boundary: agents that aren't Ward-aware get observation alerts, not real-time gating.
+2. **Operators of already-deployed agents (any author).** Paste any deployed Avalanche agent address into the Watch Wizard (`?tab=watch-wizard`). The wizard discovers the agent on chain, recommends a deterministic policy tier, publishes and registers it in `WardAgentRegistry`, and wires a Slack alert — in under 60 seconds, with no integration code. Ward is honest about the boundary: agents that aren't Ward-aware get observation alerts, not real-time gating.
 
-3. **Fleet operators.** Monitor and act on the queue. The TUI handles sweep / expire / dispatch from the terminal; the dashboard's Queue tab shows pending intents and the Watched tab shows watch-subscriptions and the violation feed. Raw chain history lives on Shannon Explorer; Ward's surfaces scope themselves to the operator's own work.
+3. **Fleet operators.** Monitor and act on the queue. The TUI handles sweep / expire / dispatch from the terminal; the dashboard's Queue tab shows pending intents and the Watched tab shows watch-subscriptions and the violation feed. Raw chain history lives on Fuji Explorer; Ward's surfaces scope themselves to the operator's own work.
 
 ## What Ward deliberately is not
 
@@ -182,8 +182,8 @@ These are architectural choices, not gaps to be filled later:
 - **It never holds user funds.** Ward is no-custody by design and will never custody assets.
 - **It never executes calls itself.** Even the queue only coordinates timing; the dispatcher executes. The oracle only answers.
 - **It is not a wallet-level off-chain enforcer.** The policy decision lives on the same chain as the call and runs in the same transaction as the dispatch — anyone bypassing a dApp's frontend check hits the same on-chain revert.
-- **It is not cross-chain** in this release — Somnia Shannon only.
-- **It is not a server-side alert relay.** The dashboard polls Shannon while open; a 24/7 relay is future work.
+- **It is not cross-chain** in this release — Avalanche Fuji only.
+- **It is not a server-side alert relay.** The dashboard polls Fuji while open; a 24/7 relay is future work.
 - **It is not mobile-first.** A desktop dev workstation is the assumed surface.
 
 ## Architecture
@@ -199,9 +199,9 @@ contracts/src/
 ├── WardQueue.sol             # opt-in coordination for TIER_DELAYED / TIER_VETO_REQUIRED — enqueue / dispatch / veto / expireIfStale
 ├── WardAgentRegistry.sol     # ownerless permissionless directory of Ward-watched agents — register / update / agentsPaginated (v0.10.0)
 ├── constants/
-│   └── SomniaTestnet.sol       # verified mainnet/testnet platform + LLM agentId constants (for integrators)
+│   └── AvalancheTestnet.sol       # verified mainnet/testnet platform + LLM agentId constants (for integrators)
 └── interfaces/
-    └── ISomniaAgentPlatform.sol # mirrors createRequest + AgentResponse/Request/Status shape (for integrators)
+    └── IAvalancheAgentPlatform.sol # mirrors createRequest + AgentResponse/Request/Status shape (for integrators)
 ```
 
 `script/Deploy.s.sol` deploys WardOracle + WardQueue in one broadcast; `script/DeployRegistry.s.sol` deploys WardAgentRegistry separately (added in v0.10.0). Both write per-chain artifacts to `contracts/deployments/$CHAINID.json` and `$CHAINID-registry.json` respectively.
@@ -211,7 +211,7 @@ No mocks, demo agents, vaults, custody-bearing contracts, or showcase code ship 
 ### WardOracle — the single contract
 
 ```
-                  asking agent (any Somnia contract)
+                  asking agent (any Avalanche contract)
                             │
                             │   bytes32 policyId; Intent intent; uint256 mySpentToday
                             ▼
@@ -310,7 +310,7 @@ Hybrid intentional: enumeration during `publishPolicy` / `updatePolicy` (which i
                          │ posts inferToolsChat payload + deposit
                          ▼
           ┌─────────────────────────┐
-          │  ISomniaAgentPlatform   │
+          │  IAvalancheAgentPlatform   │
           │  .createRequest         │
           └────────────┬────────────┘
                        │ subcommittee runs LLM, returns response bytes
@@ -335,9 +335,9 @@ Hybrid intentional: enumeration during `publishPolicy` / `updatePolicy` (which i
 
 The oracle is a single view call in the middle of *your* dispatch. It returns; you decide what to do. Ward never holds your funds, never sees your private key, never executes anything.
 
-### Somnia testnet gas note
+### Avalanche Fuji gas note
 
-Somnia Shannon testnet under-reports actual on-chain gas consumption by ~15x vs forge's `eth_estimateGas` simulation. Without compensation every CREATE OOGs. Deploy with `--legacy --gas-estimate-multiplier 2000`; for writes from viem use `type: "legacy"` and an explicit `gas` limit. `script/Deploy.s.sol` does two CREATEs (WardOracle + WardQueue), so a full deploy costs ~0.2-0.3 STT.
+Avalanche Fuji testnet under-reports actual on-chain gas consumption by ~15x vs forge's `eth_estimateGas` simulation. Without compensation every CREATE OOGs. Deploy with `--legacy --gas-estimate-multiplier 2000`; for writes from viem use `type: "legacy"` and an explicit `gas` limit. `script/Deploy.s.sol` does two CREATEs (WardOracle + WardQueue), so a full deploy costs ~0.2-0.3 AVAX.
 
 ### Trust model
 
@@ -348,7 +348,7 @@ Somnia Shannon testnet under-reports actual on-chain gas consumption by ~15x vs 
 | `WardQueue` | The on-chain code itself + the 3 Lean WardQueue theorems pinning the state-transition timing. |
 | `WardAgentRegistry` | The on-chain code itself — ownerless and permissionless. First-writer-wins; no admin override. Trust the first registrar to have entered the right (agent, oracle, policyId) tuple. |
 | Your agent's `handleResponse` | Your own code — Ward can only protect you if you actually call `checkIntent` before dispatching. |
-| The Somnia agent platform's validator consensus | Whatever you'd already trust for `inferToolsChat`. Ward is orthogonal — it runs in your asking-agent transaction, not in the validator subcommittee. |
+| The Avalanche agent platform's validator consensus | Whatever you'd already trust for `inferToolsChat`. Ward is orthogonal — it runs in your asking-agent transaction, not in the validator subcommittee. |
 
 The biggest "trust gap" in the oracle model is **integrator discipline**: nothing in `WardOracle` forces you to call `checkIntent` before dispatching. The same is true of any guardrails library. The mitigation is straightforward: keep the integration to a single, conspicuous line in your `handleResponse` (or its equivalent), and review the code path that follows a positive verdict.
 
@@ -360,28 +360,28 @@ Two-minute tutorials — pick a lane.
 
 1. `git submodule update --init --recursive` then `pnpm install` *(one-time; the recursive submodule init pulls `forge-std`, which the contracts workspace needs)*
 2. `pnpm quickstart` — builds + serves the dashboard at <http://localhost:4173>
-3. Open the URL, connect a wallet on Somnia testnet (if you don't have STT, follow the **Get STT** link in the TopBar), pick a template, fill in your contract address, click **Publish**.
+3. Open the URL, connect a wallet on Avalanche Fuji (if you don't have AVAX, follow the **Get AVAX** link in the TopBar), pick a template, fill in your contract address, click **Publish**.
 
 Total time: **~2 minutes** after `pnpm install` finishes.
 
-The hosted build is at **<https://ward.vercel.app>**. To run it locally instead of the production build, use `pnpm -C dashboard run dev` (Vite dev server). The default deployment targets the canonical Shannon contracts; point the dashboard at a different oracle/queue/RPC per-session with URL params — `?oracle=0x…&queue=0x…&rpc=https://…` — which is how share links carry a non-default deployment.
+The hosted build is at **<https://ward.vercel.app>**. To run it locally instead of the production build, use `pnpm -C dashboard run dev` (Vite dev server). The default deployment targets the canonical Fuji contracts; point the dashboard at a different oracle/queue/RPC per-session with URL params — `?oracle=0x…&queue=0x…&rpc=https://…` — which is how share links carry a non-default deployment.
 
 ### Quickstart — CLI + TUI
 
 Publish your first on-chain policy and watch it live, entirely from the terminal — no browser required.
 
-This tutorial takes you end to end against the canonical Ward v2 oracle on the Somnia Shannon testnet (`0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`, chain id `50312`). You will install the tools, run a preflight check, compile and publish the policy that ships with the `ward-counter` example, and open the live TUI monitor. By the end you will have a real `policyId` on-chain and know how to bind it to an agent.
+This tutorial takes you end to end against the canonical Ward v2 oracle on the Avalanche Fuji testnet (`0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`, chain id `43113`). You will install the tools, run a preflight check, compile and publish the policy that ships with the `ward-counter` example, and open the live TUI monitor. By the end you will have a real `policyId` on-chain and know how to bind it to an agent.
 
 #### Before you start
 
 You need:
 
 - **Node + pnpm**, and a clone of this repo.
-- **A funded Somnia testnet wallet.** Bring your own private key with a little STT in it. Faucets (manual; no programmatic API as of this release):
-  - <https://testnet.somnia.network/>
-  - <https://faucet.somnia.network/>
+- **A funded Avalanche Fuji wallet.** Bring your own private key with a little AVAX in it. Faucets (manual; no programmatic API as of this release):
+  - <https://faucet.avax.network/>
+  - <https://core.app/tools/testnet-faucet/>
 
-  Recommend at least `0.5 STT` for a full live run (deploy + publish).
+  Recommend at least `0.5 AVAX` for a full live run (deploy + publish).
 
 The only sample in this repo is [`examples/ward-counter/`](examples/ward-counter/) — a two-contract pair (a dumb `Counter` and a Ward-aware `CounterAgent`). This tutorial publishes the policy that gates it.
 
@@ -411,7 +411,7 @@ Set these in `.env` (the rest already point at the canonical live deployments):
 |---|---|
 | `PRIVATE_KEY` | Your funded testnet key, used by the CLI to sign. |
 | `DEPLOYER_PK` | Same key, the name `forge` scripts read. Copy `PRIVATE_KEY` here. |
-| `SOMNIA_TESTNET_RPC` | Leave as `https://dream-rpc.somnia.network` unless you run a private node. |
+| `FUJI_RPC` | Leave as `https://api.avax-test.network/ext/bc/C/rpc` unless you run a private node. |
 | `WARD_ORACLE` | Leave as `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c` (v2). |
 
 The CLI auto-loads `.env` from the directory you run it in, so anything you set here is picked up automatically.
@@ -424,14 +424,14 @@ Confirm your environment, network, and balance are good *before* spending gas:
 pnpm ward preflight
 ```
 
-It reports the RPC, the chain id, your wallet address and balance, the Somnia agent platform and LLM-inference agent id, and the configured oracle/queue, then prints a verdict:
+It reports the RPC, the chain id, your wallet address and balance, the Avalanche agent platform and LLM-inference agent id, and the configured oracle/queue, then prints a verdict:
 
 ```
 # ward preflight
-  rpc            https://dream-rpc.somnia.network
-  chainId        50312
+  rpc            https://api.avax-test.network/ext/bc/C/rpc
+  chainId        43113
   wallet         0x....
-  balance        ... STT
+  balance        ... AVAX
   platform       0x037Bb9C718F3f7fe5eCBDB0b600D607b52706776
   agentId        12847293847561029384
   ward oracle  0x3C7bF90f243d670a01f512221d9546e09fEaCC9c
@@ -440,7 +440,7 @@ It reports the RPC, the chain id, your wallet address and balance, the Somnia ag
   preflight: OK
 ```
 
-If you see `preflight: NOT READY`, fix the `ERROR` lines (usually a missing or malformed `PRIVATE_KEY`) and re-run. A low balance is a `WARN`, not a blocker — preflight prints faucet links when your balance is under the recommended `0.5 STT`. Raise the threshold with `--min-balance <eth>`.
+If you see `preflight: NOT READY`, fix the `ERROR` lines (usually a missing or malformed `PRIVATE_KEY`) and re-run. A low balance is a `WARN`, not a blocker — preflight prints faucet links when your balance is under the recommended `0.5 AVAX`. Raise the threshold with `--min-balance <eth>`.
 
 #### 3. Read the policy you are about to publish
 
@@ -524,17 +524,17 @@ cd examples/ward-counter
 
 # deploy the counter + the (initially ungated) agent
 forge script script/DeployCounter.s.sol \
-  --rpc-url "$SOMNIA_TESTNET_RPC" --broadcast --legacy --gas-estimate-multiplier 2000
+  --rpc-url "$FUJI_RPC" --broadcast --legacy --gas-estimate-multiplier 2000
 forge script script/DeployAgent.s.sol \
-  --rpc-url "$SOMNIA_TESTNET_RPC" --broadcast --legacy --gas-estimate-multiplier 2000
+  --rpc-url "$FUJI_RPC" --broadcast --legacy --gas-estimate-multiplier 2000
 
 # bind the policy you just published
 export AGENT=$(jq -r '.agent' deployments/agent.json)
 cast send "$AGENT" "setPolicyId(bytes32)" 0x<policyId> \
-  --private-key "$DEPLOYER_PK" --rpc-url "$SOMNIA_TESTNET_RPC" --legacy
+  --private-key "$DEPLOYER_PK" --rpc-url "$FUJI_RPC" --legacy
 ```
 
-`--gas-estimate-multiplier 2000` is required: Shannon's RPC under-reports gas by roughly 15×, and this multiplier is baked into every deploy in the repo.
+`--gas-estimate-multiplier 2000` is required: Fuji's RPC under-reports gas by roughly 15×, and this multiplier is baked into every deploy in the repo.
 
 One caveat for real use: the policy's `target` must be the **agent address you just deployed** (from `deployments/agent.json`), not the `0xdeadbeef…` placeholder. Edit `policy.md`, re-run `push` (it will `updatePolicy` under the same label), then bind.
 
@@ -599,15 +599,15 @@ contract CounterAgent is WardAgentBase {
 
 Modifier order is deliberate: Solidity runs modifiers left-to-right, so `onlyOperator` rejects unauthorized callers *before* the agent makes the external oracle call — gas saved on doomed calls. `POLICY_ID` is inherited and late-bound via `setPolicyId(0xNEW)`; while unbound the Ward layer short-circuits, so the agent can ship to testnet before a policy exists (`setPolicyId(0)` is the Ward kill switch). For **multi-outbound** functions (e.g. `approve` + `swap`), use the inline `oracle.checkIntent` / `_wardCheck` + `_call` path instead — see the integration models + integration guide in **[SKILL.md](SKILL.md)**. Canonical sample: **[`examples/ward-counter/`](examples/ward-counter/)**.
 
-## Live on Shannon testnet
+## Live on Fuji testnet
 
-Canonical (v2) deployment — chain id `50312`:
+Canonical (v2) deployment — chain id `43113`:
 
 | Contract | Address |
 |---|---|
-| `WardOracle` | [`0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`](https://shannon-explorer.somnia.network/address/0x3C7bF90f243d670a01f512221d9546e09fEaCC9c) |
-| `WardQueue` | [`0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4`](https://shannon-explorer.somnia.network/address/0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4) |
-| `WardAgentRegistry` | [`0x97F743A9AAa5AcAA73075C1B8F1921274755CF70`](https://shannon-explorer.somnia.network/address/0x97F743A9AAa5AcAA73075C1B8F1921274755CF70) |
+| `WardOracle` | [`0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`](https://testnet.snowtrace.io/address/0x3C7bF90f243d670a01f512221d9546e09fEaCC9c) |
+| `WardQueue` | [`0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4`](https://testnet.snowtrace.io/address/0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4) |
+| `WardAgentRegistry` | [`0x97F743A9AAa5AcAA73075C1B8F1921274755CF70`](https://testnet.snowtrace.io/address/0x97F743A9AAa5AcAA73075C1B8F1921274755CF70) |
 
 The v1 oracle (`0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf`) and v1 queue (`0x98A3f7C38D19edF1ddA7E3bc38fa4B935aD590D5`) stay live for policies published before the v2 deploy; new `wardGuarded` agents bind to **v2** (it adds the `checkSelector` view the modifier uses). v1 lacks `checkSelector`, so it backs inline `checkIntent` callers only, not the `wardGuarded` modifier. Full history: **[CHANGELOG](CHANGELOG.md)**.
 
@@ -618,36 +618,36 @@ All three Ward contracts are themselves registered as entries in `WardAgentRegis
 ```bash
 # Walk the registry for everything named "ward-core"
 cast call 0x97F743A9AAa5AcAA73075C1B8F1921274755CF70 "agentCount()(uint256)" \
-  --rpc-url https://dream-rpc.somnia.network
+  --rpc-url https://api.avax-test.network/ext/bc/C/rpc
 # → 8 (4 historical demo agents + 3 ward-core meta-entries + the canonical CounterAgent sample)
 
 # Read one of the entries
 cast call 0x97F743A9AAa5AcAA73075C1B8F1921274755CF70 \
   "getAgent(address)((address,address,address,bytes32,uint64,uint64,bool,string,string,string[]))" \
   0x3C7bF90f243d670a01f512221d9546e09fEaCC9c \
-  --rpc-url https://dream-rpc.somnia.network
+  --rpc-url https://api.avax-test.network/ext/bc/C/rpc
 # → name: "WardOracle (v2)", tags: ["ward-core","oracle"], metadataURI: github link
 ```
 
-The canonical sample agent (`CounterAgent (canonical dual-layer sample)` at [`0x809F01268B718Ea6d17438b94190749159Eee311`](https://shannon-explorer.somnia.network/address/0x809F01268B718Ea6d17438b94190749159Eee311)) is also in the registry — `findWardAgents()` SDK helpers surface it alongside Ward's own contracts.
+The canonical sample agent (`CounterAgent (canonical dual-layer sample)` at [`0x809F01268B718Ea6d17438b94190749159Eee311`](https://testnet.snowtrace.io/address/0x809F01268B718Ea6d17438b94190749159Eee311)) is also in the registry — `findWardAgents()` SDK helpers surface it alongside Ward's own contracts.
 
-Source verification on Shannon Blockscout is the one remaining discoverability gap — pending a working `forge verify-contract` config for the Somnia explorer's API.
+Source verification on Fuji Blockscout is the one remaining discoverability gap — pending a working `forge verify-contract` config for the Avalanche explorer's API.
 
 ## Using the dashboard
 
-The dashboard is a four-tab operator console for Somnia Shannon (chain id 50312):
+The dashboard is a four-tab operator console for Avalanche Fuji (chain id 43113):
 **Publish** a policy, watch the **Queue**, inspect **Watched** agents and your own
 policies, and run the **Watch wizard** to bind alerts to an agent. Every write is
 signed by your connected wallet; Ward never takes custody.
 
-This section assumes you have a wallet (e.g. MetaMask) with a little STT on
-Shannon. The hosted build is at **<https://ward.vercel.app>** or run it
+This section assumes you have a wallet (e.g. MetaMask) with a little AVAX on
+Fuji. The hosted build is at **<https://ward.vercel.app>** or run it
 locally with `pnpm -C dashboard run dev` (Vite dev server).
 
 Connect your wallet from the top-right of the **TopBar**. If you are on the wrong
-network the TopBar shows a **"Wrong network. Switch to Somnia"** button; click it
-to switch to chain id 50312. When your balance is low or zero the TopBar surfaces a
-**"Get STT →"** link to `https://testnet.somnia.network/`. The connected address
+network the TopBar shows a **"Wrong network. Switch to Avalanche"** button; click it
+to switch to chain id 43113. When your balance is low or zero the TopBar surfaces a
+**"Get AVAX →"** link to `https://faucet.avax.network/`. The connected address
 becomes the **publisher** of any policy you publish.
 
 The left **Sidebar** has the four tabs:
@@ -657,13 +657,13 @@ The left **Sidebar** has the four tabs:
 | Publish | Compile and publish a policy on-chain |
 | Queue | Pending intents and recent oracle events |
 | Watched | Watch-mode violations from immutable agents |
-| Watch wizard | Discover a Somnia agent and set up Slack alerts in 60 seconds |
+| Watch wizard | Discover a Avalanche agent and set up Slack alerts in 60 seconds |
 
 ### Publish tab: author and publish a policy
 
 The Publish tab opens on the **Publish a policy** document. Its front matter shows
-the **Publisher** (your wallet, or "not connected"), **Namespace** (Somnia Shannon,
-chain id 50312), the **WardOracle** address, the block the dashboard is indexed
+the **Publisher** (your wallet, or "not connected"), **Namespace** (Avalanche Fuji,
+chain id 43113), the **WardOracle** address, the block the dashboard is indexed
 through, and the current **Mode**.
 
 **Pick a mode.** The TopBar exposes an **Enforce | Watch** toggle while you are on
@@ -762,7 +762,7 @@ For the operator workflow around the queue and policy lifecycle, see the
 
 ### Watched tab: the agent and policy catalog
 
-The Watched tab is titled **Ward-watched agents on Somnia Shannon**. Its front
+The Watched tab is titled **Ward-watched agents on Avalanche Fuji**. Its front
 matter shows the **Registry contract** (`WardAgentRegistry`), network, RPC, the
 indexed-through block, and how many agents are watched. It contains:
 
@@ -792,7 +792,7 @@ indexed-through block, and how many agents are watched. It contains:
 
 ### Watch wizard: bind alerts to an agent
 
-The Watch wizard is a three-step flow to discover a Somnia agent and bind alerts. Its
+The Watch wizard is a three-step flow to discover a Avalanche agent and bind alerts. Its
 front matter tracks the registry contract, your wallet, the target agent, and an
 elapsed-seconds counter.
 
@@ -838,9 +838,9 @@ everything else builds on the pattern it shows.
 Both examples share the same setup:
 
 - `pnpm install` at the repo root.
-- A funded Somnia Shannon wallet. `pnpm ward preflight` checks this for you.
-- For the contract example, a `.env` populated with `DEPLOYER_PK`, `SOMNIA_TESTNET_RPC`, and `WARD_ORACLE`.
-- For the frontend example, an injected wallet (MetaMask, Rabby, etc.) with the Somnia Testnet network configured.
+- A funded Avalanche Fuji wallet. `pnpm ward preflight` checks this for you.
+- For the contract example, a `.env` populated with `DEPLOYER_PK`, `FUJI_RPC`, and `WARD_ORACLE`.
+- For the frontend example, an injected wallet (MetaMask, Rabby, etc.) with the Avalanche Fuji network configured.
 
 ### `ward-counter` — the canonical contract integration
 
@@ -883,7 +883,7 @@ cd examples/ward-counter
 
 # 1. Deploy the dumb counter.
 forge script script/DeployCounter.s.sol \
-  --rpc-url "$SOMNIA_TESTNET_RPC" \
+  --rpc-url "$FUJI_RPC" \
   --broadcast --legacy --gas-estimate-multiplier 2000
 export COUNTER=$(jq -r '.counter' deployments/counter.json)
 
@@ -891,13 +891,13 @@ export COUNTER=$(jq -r '.counter' deployments/counter.json)
 #    succeeds, every reset succeeds, nothing consults WardOracle.
 unset POLICY_ID
 forge script script/DeployAgent.s.sol \
-  --rpc-url "$SOMNIA_TESTNET_RPC" \
+  --rpc-url "$FUJI_RPC" \
   --broadcast --legacy --gas-estimate-multiplier 2000
 export AGENT=$(jq -r '.agent' deployments/agent.json)
 
 # 3. Exercise the agent freely while you figure out the right policy.
 cast send "$AGENT" "bump(uint256)" 5 \
-  --private-key "$DEPLOYER_PK" --rpc-url "$SOMNIA_TESTNET_RPC" --legacy
+  --private-key "$DEPLOYER_PK" --rpc-url "$FUJI_RPC" --legacy
 
 # 4. Author + publish the policy when you're ready.
 pnpm ward push ./policy.md --label counter-demo
@@ -905,10 +905,10 @@ export POLICY_ID=0x... # from the publish output
 
 # 5. Bind it. From now on every bump / reset is gated.
 cast send "$AGENT" "setPolicyId(bytes32)" "$POLICY_ID" \
-  --private-key "$DEPLOYER_PK" --rpc-url "$SOMNIA_TESTNET_RPC" --legacy
+  --private-key "$DEPLOYER_PK" --rpc-url "$FUJI_RPC" --legacy
 ```
 
-The `--gas-estimate-multiplier 2000` is required because Shannon's RPC under-reports gas by roughly 15×; this multiplier is baked into every deploy in this repo.
+The `--gas-estimate-multiplier 2000` is required because Fuji's RPC under-reports gas by roughly 15×; this multiplier is baked into every deploy in this repo.
 
 **Alternative: publish first, deploy bound in one go:**
 
@@ -919,13 +919,13 @@ pnpm ward push ./policy.md --label counter-demo
 export POLICY_ID=0x...
 
 forge script script/DeployCounter.s.sol \
-  --rpc-url "$SOMNIA_TESTNET_RPC" \
+  --rpc-url "$FUJI_RPC" \
   --broadcast --legacy --gas-estimate-multiplier 2000
 export COUNTER=$(jq -r '.counter' deployments/counter.json)
 
 # POLICY_ID env is set → DeployAgent calls setPolicyId() in the same broadcast.
 forge script script/DeployAgent.s.sol \
-  --rpc-url "$SOMNIA_TESTNET_RPC" \
+  --rpc-url "$FUJI_RPC" \
   --broadcast --legacy --gas-estimate-multiplier 2000
 ```
 
@@ -937,7 +937,7 @@ forge script script/DeployAgent.s.sol \
 
 `reset()` is gated the same way, but the bundled policy authorizes only `bump(uint256)` — it deliberately omits `reset()`. So under the published policy, `reset()` reverts with `WardRejected("SELECTOR_NOT_ALLOWED")` and `bump(by)` lands. The end-to-end smoke run therefore captures one allow and one deny across two transactions; the deny-path proof is the typed revert, not an emitted event.
 
-Watch the calls land in the dashboard's [Queue tab](http://localhost:5174/?tab=queue) (or `:5173` if your dev server took the default port). Raw chain history lives on Shannon Explorer.
+Watch the calls land in the dashboard's [Queue tab](http://localhost:5174/?tab=queue) (or `:5173` if your dev server took the default port). Raw chain history lives on Fuji Explorer.
 
 **Operational primitives:**
 
@@ -951,7 +951,7 @@ Watch the calls land in the dashboard's [Queue tab](http://localhost:5174/?tab=q
 
 ### `ward-react-app` — the React/wagmi frontend gate
 
-A single-page React + wagmi demo that gates one `CounterAgent` write with `useWardGuardedWrite` from `@ward/react`. The preflight reads the live Somnia Shannon Testnet `WardOracle`, so the decision the UI shows is the same one the on-chain agent will see.
+A single-page React + wagmi demo that gates one `CounterAgent` write with `useWardGuardedWrite` from `@ward/react`. The preflight reads the live Avalanche Fuji `WardOracle`, so the decision the UI shows is the same one the on-chain agent will see.
 
 The on-chain gate still does the heavy lifting. If a user bypasses this UI and calls the agent directly, the contract reverts on the same policy. The frontend gate is for fast feedback and a clean wallet popup, not for security.
 
@@ -964,16 +964,16 @@ pnpm --filter ward-react-app-example dev
 
 `predev` builds `@ward/sdk` and `@ward/react` first so the workspace deps resolve to real `dist/` output.
 
-Open the URL Vite prints. Connect an injected wallet (MetaMask, Rabby, etc.) that has the Somnia Testnet network configured.
+Open the URL Vite prints. Connect an injected wallet (MetaMask, Rabby, etc.) that has the Avalanche Fuji network configured.
 
 **What the demo does:**
 
-- Connects an injected wallet and confirms you are on chain `50312`.
+- Connects an injected wallet and confirms you are on chain `43113`.
 - Lets you edit the agent address and the policy ID. Sane defaults:
   - agent `0x14F7271Dec889acC152101674A4fb4C52388f517`
   - policy `0x5cb2578abeb7f3fd1cec125b589721e6fd474901d49a4ffd1ab1b05f4754bd9e`
 - "Bump counter" calls `useWardGuardedWrite` with `source.kind = "chain"`.
-- The hook reads `WardOracle.checkIntent` on Somnia and surfaces the decision (`Allowed`, `Source`, `Reason code`, `Reason`).
+- The hook reads `WardOracle.checkIntent` on Avalanche and surfaces the decision (`Allowed`, `Source`, `Reason code`, `Reason`).
 - On a reject the wallet popup never opens. On allow, wagmi submits `CounterAgent.bump` and the panel shows the tx hash.
 
 > **Heads up — re-deploy needed.** The default `agent` / `policy` above were published against the pre-v0.12.0 `tryBump(uint256,uint256)` / `tryReset(uint256)` ABI. The simplified `bump(uint256)` / `reset()` shape (current at HEAD) does not match the live contract until an operator redeploys via `examples/ward-counter/script/DeployAgent.s.sol`, republishes `examples/ward-counter/policy.md`, and updates these defaults.
@@ -986,7 +986,7 @@ Do not paste a random non-existent hex string. The oracle reverts with the `Poli
 
 - `src/App.tsx` owns wallet, chain, and form state. It only mounts the panel once the wallet is connected and the public client is ready.
 - `src/GuardedBumpPanel.tsx` is the gated panel. The `useWardGuardedWrite` call sits at the top.
-- `src/wagmi.ts` holds the Somnia chain definition and the `WardOracle` address.
+- `src/wagmi.ts` holds the Avalanche chain definition and the `WardOracle` address.
 - `src/abi.ts` is the minimal ABI fragment for `CounterAgent.bump`.
 
 **Tests:**
@@ -1017,8 +1017,8 @@ Ward did not invent policy-bounded agent execution. The intent-policy enforcemen
 
 ### What Ward adds
 
-- **Validator-consensus authorization.** The policy decision runs at the same place that produced the calldata (Somnia's deterministic LLM consensus). Off-chain enforcers structurally cannot match this; on-chain enforcers on other L1s cannot use deterministic LLM consensus.
-- **AgentRegistry-native identity.** Ward uses Somnia's built-in `AgentRegistry` (`0xaD3101C37F091593fEe7cb471e92b5E9A1205194` mainnet) for canonical `agentId`s. No external identity standard is required.
+- **Validator-consensus authorization.** The policy decision runs at the same place that produced the calldata (Avalanche's deterministic LLM consensus). Off-chain enforcers structurally cannot match this; on-chain enforcers on other L1s cannot use deterministic LLM consensus.
+- **AgentRegistry-native identity.** Ward uses Avalanche's built-in `AgentRegistry` (`0xaD3101C37F091593fEe7cb471e92b5E9A1205194` mainnet) for canonical `agentId`s. No external identity standard is required.
 - **Selector-granular policy.** Per-target / per-selector tier, value cap, and delay. Lets an author authorize `approve(spender, X)` IMMEDIATE while keeping `transfer(to, *)` on `VETO_REQUIRED`.
 - **`POLICY.md` format.** Plain markdown wrapper around a fenced YAML block; SDK ships a deterministic compiler to `PolicyInput`. The format is the human-authoring surface; the compiler is the bridge.
 - **Namespaced shared registry.** `WardOracle.publishPolicy(label, …)` keys policies by `keccak256(publisher, label)`, so multiple agents share one deployed oracle without colliding. Publishers can iterate on their policy (`updatePolicy`) without changing the `policyId` integrators reference — same `policyId` is stable across updates.
@@ -1026,7 +1026,7 @@ Ward did not invent policy-bounded agent execution. The intent-policy enforcemen
 ### Where Ward deliberately does NOT compete
 
 - **Prompt-injection scanning.** Out of scope; an off-chain enforcer (e.g. Mandate's Venice.ai integration) can sit upstream of Ward. Ward trusts what `inferToolsChat` consensus delivers.
-- **Off-chain reputation/identity standards (ERC-8004, x402).** Somnia provides agent identity natively; Ward does not depend on these. Apps that want to interop with external chains can layer those above Ward's receipts.
+- **Off-chain reputation/identity standards (ERC-8004, x402).** Avalanche provides agent identity natively; Ward does not depend on these. Apps that want to interop with external chains can layer those above Ward's receipts.
 
 ### License compatibility
 

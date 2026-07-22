@@ -241,7 +241,7 @@ targets:
   const readme = `# ${ctx.contractName}
 
 Scaffolded by \`create-ward-agent\`. Three steps to a live, policy-gated
-agent on Somnia Shannon:
+agent on Avalanche Fuji:
 
 ## 1. Build
 
@@ -273,14 +273,14 @@ The late-binding flow (recommended for new agents):
 \`\`\`bash
 # Deploy ungated first — POLICY_ID env unset.
 forge script script/Deploy.s.sol \\
-  --rpc-url "$SOMNIA_TESTNET_RPC" \\
+  --rpc-url "$FUJI_RPC" \\
   --broadcast --legacy --gas-estimate-multiplier 2000
 
 # Bind once you trust the policy.
 export AGENT=$(jq -r '.agent' deployments/agent.json)
 export POLICY_ID=0x...
 forge script script/Bind.s.sol \\
-  --rpc-url "$SOMNIA_TESTNET_RPC" \\
+  --rpc-url "$FUJI_RPC" \\
   --broadcast --legacy --gas-estimate-multiplier 2000
 \`\`\`
 
@@ -546,12 +546,12 @@ pnpm ward push ./POLICY.md --label ${ctx.dirName}
 ## 3. Deploy + bind
 
 \`\`\`bash
-forge script script/Deploy.s.sol --rpc-url "$SOMNIA_TESTNET_RPC" \\
+forge script script/Deploy.s.sol --rpc-url "$FUJI_RPC" \\
   --broadcast --legacy --gas-estimate-multiplier 2000
 
 export AGENT=$(jq -r '.agent' deployments/agent.json)
 export POLICY_ID=0x...
-forge script script/Bind.s.sol --rpc-url "$SOMNIA_TESTNET_RPC" \\
+forge script script/Bind.s.sol --rpc-url "$FUJI_RPC" \\
   --broadcast --legacy --gas-estimate-multiplier 2000
 \`\`\`
 `;

@@ -247,7 +247,7 @@ export function Landing() {
       <div className="mx-auto grid min-h-screen max-w-[1240px] grid-cols-1 items-center gap-10 px-12 py-12 md:grid-cols-2">
         <div className="text-center md:text-left">
           <div className="font-mono text-[11px] uppercase tracking-[0.3em] text-accent">
-            Somnia Shannon
+            Avalanche Fuji
           </div>
 
           <div className="mt-4 flex items-center justify-center gap-4 md:justify-start">

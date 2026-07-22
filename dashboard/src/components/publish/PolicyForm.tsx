@@ -175,10 +175,10 @@ export function PolicyForm({ draft, setDraft, compileResult, shouldShowError, to
       </fieldset>
 
       <fieldset className="space-y-2 border-0 p-0">
-        <legend className={LEGEND}>native (STT) spending limits</legend>
+        <legend className={LEGEND}>native (AVAX) spending limits</legend>
 
         <Field
-          label="daily native (STT) spend cap"
+          label="daily native (AVAX) spend cap"
           htmlFor="policy-daily-cap"
           error={gated("dailySpendWeiCap")}
         >
@@ -192,7 +192,7 @@ export function PolicyForm({ draft, setDraft, compileResult, shouldShowError, to
               value={draft.dailySpendWeiCap}
               onChange={(e) => setDraft({ ...draft, dailySpendWeiCap: e.target.value })}
               onBlur={() => touch("dailySpendWeiCap")}
-              title="Caps native STT (msg.value) spent per UTC day across all calls. ERC20 token transfers (e.g. USDC) are NOT counted here. Gate token spend by adding the token contract as a target and allowlisting `transfer(address,uint256)`. Use 0 to block all native spend (the contract treats 0 as zero cap, not unlimited)."
+              title="Caps native AVAX (msg.value) spent per UTC day across all calls. ERC20 token transfers (e.g. USDC) are NOT counted here. Gate token spend by adding the token contract as a target and allowlisting `transfer(address,uint256)`. Use 0 to block all native spend (the contract treats 0 as zero cap, not unlimited)."
             />
           )}
         </Field>

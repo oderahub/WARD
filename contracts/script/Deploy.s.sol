@@ -15,7 +15,7 @@ contract Deploy is Script {
         address deployer = vm.addr(pk);
         require(deployer.balance >= 0.1 ether, "LOW_STT_BALANCE");
         console2.log("Deployer:", deployer);
-        console2.log("STT balance:", deployer.balance);
+        console2.log("AVAX balance:", deployer.balance);
 
         vm.startBroadcast(pk);
         oracle = new WardOracle();

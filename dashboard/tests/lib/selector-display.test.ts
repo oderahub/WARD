@@ -105,7 +105,7 @@ describe("selector-display.humanizeTier", () => {
 describe("selector-display.FIELD_HUMAN_LABELS", () => {
   it("translates the POLICY.md scalar field names used in PolicyDiff", () => {
     expect(FIELD_HUMAN_LABELS.dailySpendWeiCap).toBe(
-      "Daily native (STT) spend cap",
+      "Daily native (AVAX) spend cap",
     );
     expect(FIELD_HUMAN_LABELS.expiresAt).toBe("Valid until");
     expect(FIELD_HUMAN_LABELS.paused).toBe("Paused");

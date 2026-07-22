@@ -85,7 +85,7 @@ export function humanizeWeb3Error(
 
   if (/insufficient funds/i.test(message)) {
     return {
-      headline: 'Not enough STT for gas. Top up your wallet from the Somnia faucet.',
+      headline: 'Not enough AVAX for gas. Top up your wallet from the Avalanche faucet.',
     };
   }
 
@@ -132,7 +132,7 @@ export function humanizeWeb3Error(
   }
 
   if (/chain mismatch|wrong network/i.test(message)) {
-    return { headline: 'Switch your wallet to Somnia testnet.' };
+    return { headline: 'Switch your wallet to Avalanche Fuji.' };
   }
 
   if (/nonce too low/i.test(message)) {

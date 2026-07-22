@@ -83,7 +83,7 @@ export function RasterHeader(props: Props) {
     <Box borderStyle="double" borderColor={color} paddingX={1} flexDirection={props.compact ? "column" : "row"}>
       <Box flexDirection="column" width={props.compact ? undefined : 42}>
         {props.compact ? (
-          <Text bold color={color}>WARD / SOMNIA OPS</Text>
+          <Text bold color={color}>WARD / AVALANCHE OPS</Text>
         ) : (
           LOGO_LINES.map((line) => (
             <Text key={line} color={color}>{line}</Text>

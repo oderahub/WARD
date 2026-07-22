@@ -9,7 +9,7 @@ import { useEventStore } from "../../hooks/useEventStore";
 import { useFocusTrapAndEsc } from "../../hooks/useFocusTrapAndEsc";
 import { useWrongNetwork } from "../../hooks/useWrongNetwork";
 import { humanizeWeb3Error } from "../../lib/humanizeError";
-import { SOMNIA_CHAIN_ID } from "../../lib/networks";
+import { ACTIVE_CHAIN_ID } from "../../lib/networks";
 import { cachePublished, readPublished } from "../../lib/publishedCache";
 import { formatExpiresAtForModal } from "../../lib/policy-render";
 import {
@@ -90,7 +90,7 @@ export function ExtendExpiryModal({
 }: Props) {
   const { address: account } = useAccount();
   const walletChainId = useChainId();
-  const chainId = walletChainId || SOMNIA_CHAIN_ID;
+  const chainId = walletChainId || ACTIVE_CHAIN_ID;
   const { wrong: wrongNetwork, current: currentChainId, expected: expectedChainId } = useWrongNetwork();
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
@@ -302,7 +302,7 @@ export function ExtendExpiryModal({
         <div className="space-y-3">
           {wrongNetwork && (
             <Alert variant="warn" title="Wrong network">
-              {`Connected to chain ${currentChainId ?? "?"}. Switch to Somnia Shannon (${expectedChainId}) before submitting.`}
+              {`Connected to chain ${currentChainId ?? "?"}. Switch to Avalanche Fuji (${expectedChainId}) before submitting.`}
             </Alert>
           )}
 

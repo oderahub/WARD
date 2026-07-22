@@ -1,9 +1,9 @@
 import type { Abi, Address, Hex, PublicClient } from "viem";
 
 /**
- * Shannon-testnet-safe gas limit for contract writes.
+ * Fuji-testnet-safe gas limit for contract writes.
  *
- * Shannon's `eth_estimateGas` undershoots dramatically — often returns 0 for
+ * Fuji's `eth_estimateGas` undershoots dramatically — often returns 0 for
  * non-trivial contract calls (publishPolicy, queue.enqueue, queue.dispatch,
  * etc.). MetaMask then rejects the tx because the resulting gas limit is
  * below the 21000 EVM minimum ("Gas limit is less than 21000. Transaction
@@ -20,7 +20,7 @@ import type { Abi, Address, Hex, PublicClient } from "viem";
  *      to `GAS_FALLBACK` (3_000_000) — same ceiling as the forge scripts.
  *
  * The 4x multiplier + 500k floor is overpay relative to actual gas used, but
- * unused gas is refunded on Somnia (standard EVM behavior); the failure mode
+ * unused gas is refunded on Avalanche (standard EVM behavior); the failure mode
  * we're guarding against (rejected tx) is strictly worse than overestimating.
  */
 
@@ -28,7 +28,7 @@ const SAFETY_MULTIPLIER = 4n;
 const GAS_FLOOR = 500_000n;
 const GAS_FALLBACK = 3_000_000n;
 
-export interface ShannonGasParams {
+export interface FujiGasParams {
   address: Address;
   abi: Abi;
   functionName: string;
@@ -37,9 +37,9 @@ export interface ShannonGasParams {
   value?: bigint;
 }
 
-export async function shannonSafeGas(
+export async function fujiSafeGas(
   client: PublicClient,
-  params: ShannonGasParams,
+  params: FujiGasParams,
 ): Promise<bigint> {
   let estimated: bigint;
   try {

@@ -3,14 +3,14 @@ import type { Hex } from "viem";
 import type { PolicyMeta } from "@ward/sdk";
 
 // `WatchedPage.tsx` indirectly imports `src/main.tsx` (via the
-// `useEventStore` hook reaching for the `somniaTestnet` chain export),
+// `useEventStore` hook reaching for the `avalancheFuji` chain export),
 // which calls `ReactDOM.createRoot(document.getElementById("root")!)` at
 // module-load time. In a Node vitest run with no DOM environment, that
 // line throws ReferenceError before any test code runs. Stubbing the
 // module here keeps the load side-effect-free so the pure-helper export
 // we actually want to test can be imported in isolation.
 vi.mock("../../src/main", () => ({
-  somniaTestnet: { id: 50312 },
+  avalancheFuji: { id: 43113 },
 }));
 
 import { mergePolicyDisplayRows } from "../../src/pages/WatchedPage";

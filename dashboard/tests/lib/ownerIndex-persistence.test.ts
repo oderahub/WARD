@@ -20,7 +20,7 @@ const ALICE_UPPER = "0x000000000000000000000000000000000000A11C".toUpperCase() a
 const BOB = "0x000000000000000000000000000000000000B0B0" as Address;
 const POLICY_A = ("0x" + "aa".repeat(32)) as Hex;
 const POLICY_B = ("0x" + "bb".repeat(32)) as Hex;
-const CHAIN_ID = 50312;
+const CHAIN_ID = 43113;
 
 beforeEach(async () => {
   await new Promise<void>((resolve, reject) => {

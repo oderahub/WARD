@@ -42,7 +42,7 @@ describe("humanizeErrorPath", () => {
     expect(humanizeErrorPath("name", baseDraft)).toBe("Policy name");
     expect(humanizeErrorPath("label", baseDraft)).toBe("Short id");
     expect(humanizeErrorPath("dailySpendWeiCap", baseDraft)).toBe(
-      "Daily native (STT) spend cap",
+      "Daily native (AVAX) spend cap",
     );
     expect(humanizeErrorPath("expiresAtISO", baseDraft)).toBe("Valid until");
     expect(humanizeErrorPath("paused", baseDraft)).toBe("Paused");

@@ -21,13 +21,13 @@ import { privateKeyToAccount } from "viem/accounts";
   }
 })();
 
-export const somniaTestnet = defineChain({
-  id: 50312,
-  name: "Somnia Testnet",
-  nativeCurrency: { name: "Somnia Test Token", symbol: "STT", decimals: 18 },
-  rpcUrls: { default: { http: ["https://dream-rpc.somnia.network"] } },
+export const avalancheFuji = defineChain({
+  id: 43113,
+  name: "Avalanche Fuji",
+  nativeCurrency: { name: "Avalanche Test Token", symbol: "AVAX", decimals: 18 },
+  rpcUrls: { default: { http: ["https://api.avax-test.network/ext/bc/C/rpc"] } },
   blockExplorers: {
-    default: { name: "Shannon", url: "https://shannon-explorer.somnia.network" },
+    default: { name: "Fuji", url: "https://testnet.snowtrace.io" },
   },
 });
 
@@ -38,25 +38,30 @@ export interface ResolvedEnv {
   privateKey?: `0x${string}`;
 }
 
-const DEFAULT_ORACLE: Address = "0x3C7bF90f243d670a01f512221d9546e09fEaCC9c";
-const DEFAULT_QUEUE: Address = "0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4";
+/**
+ * Ward has no canonical Avalanche deployment yet, so there is no address to
+ * default to. The zero address makes an unconfigured run fail visibly rather
+ * than silently reading a contract that isn't there. Set WARD_ORACLE /
+ * WARD_QUEUE from contracts/deployments/43113.json.
+ */
+const UNSET_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 
 export function resolveEnv(overrides: Partial<ResolvedEnv> = {}): ResolvedEnv {
   return {
-    rpc: overrides.rpc ?? process.env.SOMNIA_TESTNET_RPC ?? somniaTestnet.rpcUrls.default.http[0],
-    oracleAddress: overrides.oracleAddress ?? (process.env.WARD_ORACLE as Address | undefined) ?? DEFAULT_ORACLE,
-    queueAddress: overrides.queueAddress ?? (process.env.WARD_QUEUE as Address | undefined) ?? DEFAULT_QUEUE,
+    rpc: overrides.rpc ?? process.env.FUJI_RPC ?? avalancheFuji.rpcUrls.default.http[0],
+    oracleAddress: overrides.oracleAddress ?? (process.env.WARD_ORACLE as Address | undefined) ?? UNSET_ADDRESS,
+    queueAddress: overrides.queueAddress ?? (process.env.WARD_QUEUE as Address | undefined) ?? UNSET_ADDRESS,
     privateKey: overrides.privateKey ?? (process.env.PRIVATE_KEY as `0x${string}` | undefined),
   };
 }
 
 export function makePublicClient(rpc: string) {
-  return createPublicClient({ chain: somniaTestnet, transport: http(rpc) });
+  return createPublicClient({ chain: avalancheFuji, transport: http(rpc) });
 }
 
 export function makeWalletClient(privateKey: `0x${string}`, rpc: string) {
   const account = privateKeyToAccount(privateKey);
-  return createWalletClient({ account, chain: somniaTestnet, transport: http(rpc) });
+  return createWalletClient({ account, chain: avalancheFuji, transport: http(rpc) });
 }
 
 function envBigInt(name: string): bigint | undefined {

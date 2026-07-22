@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-/** Side-effecting Shannon testnet smoke check for event-store backfill. */
+/** Side-effecting Fuji testnet smoke check for event-store backfill. */
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { createPublicClient, defineChain, http } from "viem";
@@ -22,26 +22,26 @@ import { createEventStore } from "../src/event-store.js";
   }
 })();
 
-const RPC = process.env.SOMNIA_TESTNET_RPC ?? "https://dream-rpc.somnia.network";
-const ORACLE = (process.env.WARD_ORACLE ?? "0x3C7bF90f243d670a01f512221d9546e09fEaCC9c") as `0x${string}`;
-const QUEUE = (process.env.WARD_QUEUE ?? "0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4") as `0x${string}`;
+const RPC = process.env.FUJI_RPC ?? "https://api.avax-test.network/ext/bc/C/rpc";
+const ORACLE = (process.env.WARD_ORACLE ?? "0x0000000000000000000000000000000000000000") as `0x${string}`;
+const QUEUE = (process.env.WARD_QUEUE ?? "0x0000000000000000000000000000000000000000") as `0x${string}`;
 const ORACLE_DEPLOY = 403805414n;
 
-const somniaTestnet = defineChain({
-  id: 50312,
-  name: "Somnia Testnet",
-  nativeCurrency: { name: "Somnia Test Token", symbol: "STT", decimals: 18 },
+const avalancheTestnet = defineChain({
+  id: 43113,
+  name: "Avalanche Fuji",
+  nativeCurrency: { name: "Avalanche Test Token", symbol: "AVAX", decimals: 18 },
   rpcUrls: { default: { http: [RPC] } },
 });
 
-const publicClient = createPublicClient({ chain: somniaTestnet, transport: http(RPC) });
+const publicClient = createPublicClient({ chain: avalancheTestnet, transport: http(RPC) });
 
 const store = createEventStore({
   publicClient,
   oracleAddress: ORACLE,
   queueAddress: QUEUE,
   oracleDeploymentBlock: ORACLE_DEPLOY,
-  chunkSize: 1000n, // Shannon RPC caps getLogs at 1000-block range
+  chunkSize: 1000n, // Fuji RPC caps getLogs at 1000-block range
   onProgress: ({ phase, current, total, message }) => {
     const pct = total > 0n ? ((Number(current) / Number(total)) * 100).toFixed(1) : "—";
     process.stdout.write(`\r[${phase.padEnd(18)}] ${current}/${total} (${pct}%) ${message ?? ""}      `);

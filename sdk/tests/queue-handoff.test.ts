@@ -51,7 +51,7 @@ describe("queue handoff helpers", () => {
     expect(cmd).not.toContain("--private-key");
     expect(cmd).not.toContain("$DEPLOYER_PK");
     expect(cmd).toContain(`${QUEUE} "dispatch(uint256)" 42`);
-    expect(cmd).toContain("--rpc-url $SOMNIA_TESTNET_RPC");
+    expect(cmd).toContain("--rpc-url $FUJI_RPC");
   });
 
   it("detects dispatchQueued(uint256) in raw ABIs and artifact JSON", () => {

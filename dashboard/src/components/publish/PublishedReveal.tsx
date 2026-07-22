@@ -11,7 +11,7 @@ import { AddressChip } from "../primitives";
 import type { PublishedResult } from "./PublishButton";
 import { WatchAgentBinding } from "./WatchAgentBinding";
 import { serializeDeploymentParams, useUrlState } from "../../hooks/useUrlState";
-import { SOMNIA_CHAIN_ID } from "../../lib/networks";
+import { ACTIVE_CHAIN_ID } from "../../lib/networks";
 import type { PublishMode } from "./ModeToggle";
 import type { OnChainPolicySnapshot } from "../../lib/onChainPolicyLookup";
 import { formatExpiresAtForReveal, isLegacyZeroExpiry } from "../../lib/policy-render";
@@ -55,7 +55,7 @@ interface Props {
 export function PublishedReveal({ result, yamlText, mode, policyInputJSON, chainSnapshot }: Props) {
   const { rpc, oracle, queue } = useUrlState();
   const walletChainId = useChainId();
-  const chainId = walletChainId || SOMNIA_CHAIN_ID;
+  const chainId = walletChainId || ACTIVE_CHAIN_ID;
 
   // Prefer the chainSnapshot's tx hash when result's is missing — the
   // on-chain lookup recovers it via topic-filtered getLogs.
@@ -66,11 +66,11 @@ export function PublishedReveal({ result, yamlText, mode, policyInputJSON, chain
         ? chainSnapshot.txHash
         : null;
   const hasTx = effectiveTxHash !== null;
-  const explorerTx = hasTx ? `https://shannon-explorer.somnia.network/tx/${effectiveTxHash}` : null;
+  const explorerTx = hasTx ? `https://testnet.snowtrace.io/tx/${effectiveTxHash}` : null;
   // Preserve non-default deployment params (rpc/oracle/queue/mode) so a
   // recipient on a different oracle/queue lands on the SAME deployment the
   // sender was using — otherwise the recipient silently falls back to the
-  // Shannon defaults and may render "not found" or the wrong policy.
+  // Fuji defaults and may render "not found" or the wrong policy.
   //
   // Use the `mode` prop (the mode the policy was PUBLISHED under), NOT the
   // current URL mode — otherwise a watch-mode publish shared from an

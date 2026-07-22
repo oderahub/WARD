@@ -31,7 +31,7 @@ export function computePerCallExceedsDailyWarnings(
         const path = `targets.${ti}.selectors.${si}.valueCapPerCall`;
         out.set(
           path,
-          `Per-call native cap (${formatEther(s.valueCapPerCall)} STT) exceeds daily native cap (${formatEther(daily)} STT). Only the first such payable call per day will succeed.`,
+          `Per-call native cap (${formatEther(s.valueCapPerCall)} AVAX) exceeds daily native cap (${formatEther(daily)} AVAX). Only the first such payable call per day will succeed.`,
         );
       }
     });
@@ -64,7 +64,7 @@ export function computeAggregateCapNote(
   }
   if (sum <= daily) return { note: null };
   return {
-    note: `Sum of per-call native caps (${formatEther(sum)} STT) exceeds daily native cap (${formatEther(daily)} STT). Only a subset of payable calls can succeed per day.`,
+    note: `Sum of per-call native caps (${formatEther(sum)} AVAX) exceeds daily native cap (${formatEther(daily)} AVAX). Only a subset of payable calls can succeed per day.`,
   };
 }
 

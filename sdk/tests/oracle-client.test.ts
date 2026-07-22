@@ -4,7 +4,7 @@ import { policyIdFor } from "../src/oracle-client.js";
 describe("oracle-client", () => {
   it("policyIdFor mirrors the on-chain `keccak256(abi.encode(address, bytes32))` derivation", () => {
     // Reference vector computed via `cast call wardOracle policyIdFor(...)` against the
-    // live Shannon testnet deployment in CP35.
+    // live Fuji testnet deployment in CP35.
     const publisher = "0x000000000000000000000000000000000000dEaD" as const;
     const label = ("0x" + "00".repeat(31) + "78") as `0x${string}`; // 0x...78 = ascii 'x'
     const expected = "0x9611a5e450f26b6f4884e44af599629f71281c664507dc84866a88e854375bb4";

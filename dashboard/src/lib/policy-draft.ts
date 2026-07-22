@@ -7,7 +7,7 @@ import {
   type PolicyInput,
   type Tier as SdkTier,
 } from "@ward/sdk";
-import { NETWORKS } from "./networks";
+import { NETWORKS, UNSET_ADDRESS } from "./networks";
 
 /**
  * Schema for the in-form draft of a POLICY.md. Mirrors the v0.1 spec the SDK
@@ -90,7 +90,7 @@ const weiOrEtherRegex = /^(0|[1-9][0-9]*)(\.[0-9]+)?( ether)?$|^[0-9]+$/;
  * for well-formed inputs is unchanged, but upgrades the message from the
  * generic "wei integer or `N ether` shorthand" when a typo is detectable.
  *
- * Native-only by design: STT (chain native value) is the only metering Ward
+ * Native-only by design: AVAX (chain native value) is the only metering Ward
  * does on-chain; ERC20 token amounts encoded in calldata are not parsed. So we
  * deliberately do NOT accept `gwei` / `wei` / `eth` here, and the caller
  * messaging makes that explicit on the form.
@@ -99,7 +99,7 @@ function validateCapString(s: string): string | null {
   if (weiOrEtherRegex.test(s)) return null;
   const hint = suggestEtherFix(s);
   if (hint !== null) {
-    return `Unrecognized unit. Did you mean "${hint}"? (Only "N ether" or a plain wei integer is accepted; spending caps gate native STT only.)`;
+    return `Unrecognized unit. Did you mean "${hint}"? (Only "N ether" or a plain wei integer is accepted; spending caps gate native AVAX only.)`;
   }
   return "wei integer or `N ether` shorthand (e.g. `0.5 ether` or `1000000000000000000`)";
 }
@@ -172,8 +172,11 @@ const PRECOMPILE_ADDRESSES: readonly number[] = [
 function buildReservedTargets(): Set<string> {
   const set = new Set<string>();
   for (const net of Object.values(NETWORKS)) {
-    set.add(net.oracleAddress.toLowerCase());
-    set.add(net.queueAddress.toLowerCase());
+    // Skip UNSET_ADDRESS: a network whose deployment isn't configured yet
+    // carries the zero address, and adding it here would shadow the friendlier
+    // placeholder-specific message described above.
+    if (net.oracleAddress !== UNSET_ADDRESS) set.add(net.oracleAddress.toLowerCase());
+    if (net.queueAddress !== UNSET_ADDRESS) set.add(net.queueAddress.toLowerCase());
   }
   for (const n of PRECOMPILE_ADDRESSES) {
     set.add(`0x${n.toString(16).padStart(40, "0")}`);

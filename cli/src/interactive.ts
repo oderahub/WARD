@@ -120,7 +120,7 @@ const CHOICES: Choice[] = [
     key: "2",
     label: "Preflight",
     run: async (io) => {
-      const min = await io.ask("Minimum STT balance", "0.5");
+      const min = await io.ask("Minimum AVAX balance", "0.5");
       await preflightCmd({ minBalance: parseEther(min) });
     },
   },

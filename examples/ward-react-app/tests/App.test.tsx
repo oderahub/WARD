@@ -24,7 +24,7 @@ vi.mock("wagmi", async () => {
       address: "0x1111111111111111111111111111111111111111",
       isConnected: true,
     }),
-    useChainId: () => 50312,
+    useChainId: () => 43113,
     useConnect: () => ({
       connect: vi.fn(),
       connectors: [],

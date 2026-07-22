@@ -1,6 +1,6 @@
 /**
  * Centralized wrong-network detection. Returns `wrong = true` when the wallet
- * reports a chainId other than Somnia's. Every modal that submits an on-chain
+ * reports a chainId other than Avalanche's. Every modal that submits an on-chain
  * write reads this and renders a top warning Alert + disables submit, so the
  * guard doesn't have to be duplicated (and kept in sync) per modal.
  *
@@ -10,7 +10,7 @@
  * address is also undefined.
  */
 import { useChainId } from "wagmi";
-import { SOMNIA_CHAIN_ID } from "../lib/networks";
+import { ACTIVE_CHAIN_ID } from "../lib/networks";
 
 export interface WrongNetworkState {
   wrong: boolean;
@@ -21,8 +21,8 @@ export interface WrongNetworkState {
 export function useWrongNetwork(): WrongNetworkState {
   const current = useChainId();
   return {
-    wrong: current !== undefined && current !== SOMNIA_CHAIN_ID,
+    wrong: current !== undefined && current !== ACTIVE_CHAIN_ID,
     current,
-    expected: SOMNIA_CHAIN_ID,
+    expected: ACTIVE_CHAIN_ID,
   };
 }

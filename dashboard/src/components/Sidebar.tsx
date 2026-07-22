@@ -40,7 +40,7 @@ const NAV: ReadonlyArray<NavItem> = [
   { tab: "publish",      label: "Publish",      hint: "Compile and publish a policy on-chain", icon: Upload },
   { tab: "queue",        label: "Queue",        hint: "Pending intents and recent oracle events", icon: ClockClockwise },
   { tab: "watched",      label: "Watched",      hint: "Watch-mode violations from immutable agents", icon: Eye },
-  { tab: "watch-wizard", label: "Watch wizard", hint: "Discover a Somnia agent and set up Slack alerts in 60 seconds", icon: MagicWand },
+  { tab: "watch-wizard", label: "Watch wizard", hint: "Discover a Avalanche agent and set up Slack alerts in 60 seconds", icon: MagicWand },
 ];
 
 export function Sidebar() {
@@ -89,11 +89,11 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Footer — Shannon testnet context, mono key/value to echo StatusBar */}
+      {/* Footer — Fuji testnet context, mono key/value to echo StatusBar */}
       <div className="border-t border-rule px-6 py-3 font-mono text-[11px] text-text-muted">
         <div className="flex items-center gap-2">
           <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-success" />
-          <span className="whitespace-nowrap">Shannon testnet</span>
+          <span className="whitespace-nowrap">Fuji testnet</span>
         </div>
       </div>
     </aside>

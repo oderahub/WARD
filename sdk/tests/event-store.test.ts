@@ -7,8 +7,8 @@ import { createEventStore } from "../src/event-store.js";
  * publicClient is stubbed so we only exercise the store's own logic
  * (state transitions, hydration scheduling, subscriber dispatch, cursor).
  *
- * A separate live-RPC smoke test against Shannon is in `event-store.smoke.test.ts`
- * (vitest.skip by default; run with VITEST_SHANNON_SMOKE=1).
+ * A separate live-RPC smoke test against Fuji is in `event-store.smoke.test.ts`
+ * (vitest.skip by default; run with VITEST_FUJI_SMOKE=1).
  */
 
 const ORACLE: Address = "0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf";

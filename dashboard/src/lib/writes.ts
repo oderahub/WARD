@@ -9,9 +9,9 @@
  * paths:
  *   1. simulate via the public client so revert reasons surface in the UI
  *      before the wallet popup opens;
- *   2. for wagmi-path writes, compute a Shannon-safe gas override via
- *      `shannonSafeGas` (Shannon's eth_estimateGas undershoots to ~0, which
- *      MetaMask rejects below the 21000 minimum — see `shannonGas.ts`);
+ *   2. for wagmi-path writes, compute a Fuji-safe gas override via
+ *      `fujiSafeGas` (Fuji's eth_estimateGas undershoots to ~0, which
+ *      MetaMask rejects below the 21000 minimum — see `fujiGas.ts`);
  *   3. return the tx hash. The caller is responsible for waiting on the
  *      receipt if it needs post-mine state.
  *
@@ -34,7 +34,7 @@ import {
   type PolicyInput,
 } from "@ward/sdk";
 
-import { shannonSafeGas } from "./shannonGas";
+import { fujiSafeGas } from "./fujiGas";
 import { encodeBytes32Label } from "./encoding";
 
 /**
@@ -48,7 +48,7 @@ import { encodeBytes32Label } from "./encoding";
  * before the wallet popup opens.
  *
  * Returns the gas override alongside the tx hash so the caller can avoid a
- * second `shannonSafeGas` call — simulate has already vetted the args, so the
+ * second `fujiSafeGas` call — simulate has already vetted the args, so the
  * gas estimate happens here as part of the same code path.
  */
 export async function simulateAndWritePublish(opts: {
@@ -59,7 +59,7 @@ export async function simulateAndWritePublish(opts: {
   labelHex: Hex;
   policyInput: PolicyInput;
   /** Optional chainId override — when set, wagmi aborts at the network boundary
-   *  if the wallet is on the wrong chain. Pass SOMNIA_CHAIN_ID to enforce the
+   *  if the wallet is on the wrong chain. Pass ACTIVE_CHAIN_ID to enforce the
    *  testnet check at the SDK layer instead of only at the UI guard. */
   chainId?: number;
 }): Promise<{ txHash: Hex }> {
@@ -73,7 +73,7 @@ export async function simulateAndWritePublish(opts: {
     account,
   });
 
-  const gas = await shannonSafeGas(publicClient, {
+  const gas = await fujiSafeGas(publicClient, {
     address: oracleAddress,
     abi: WARD_ORACLE_ABI,
     functionName: "publishPolicy",
@@ -96,7 +96,7 @@ export async function simulateAndWritePublish(opts: {
 /**
  * Simulate `register(agent, oracle, policyId, name, metadataURI, tags)` on
  * WardAgentRegistry, then submit via wagmi's writeContractAsync. Mirrors
- * `simulateAndWritePublish` line-for-line — same simulate-first / shannonSafeGas
+ * `simulateAndWritePublish` line-for-line — same simulate-first / fujiSafeGas
  * / chainId-pinned pattern — so the wizard's Step 3 register sub-card surfaces
  * NotRegistrar (or any other registry revert) before the wallet popup opens.
  *
@@ -142,7 +142,7 @@ export async function simulateAndWriteRegisterAgent(opts: {
     account,
   });
 
-  const gas = await shannonSafeGas(publicClient, {
+  const gas = await fujiSafeGas(publicClient, {
     address: registryAddress,
     abi: WARD_AGENT_REGISTRY_ABI,
     functionName: "register",
@@ -305,7 +305,7 @@ const POLICY_UPDATED_EVENT = parseAbiItem(
   "event PolicyUpdated(bytes32 indexed policyId, address indexed owner)",
 );
 
-// Shannon RPC caps eth_getLogs at 1000 blocks per call. Walk backwards from
+// Fuji RPC caps eth_getLogs at 1000 blocks per call. Walk backwards from
 // `latest` and early-return on the first hit. MAX_BACK_BLOCKS bounds the scan
 // so a probe for a long-dormant policy doesn't spin the RPC indefinitely.
 const PROBE_CHUNK_SIZE = 999n;
@@ -314,7 +314,7 @@ const PROBE_MAX_BACK_BLOCKS = 5_000_000n;
  * Cap on the FORWARD probe range when an `expectedLastUpdatedBlock` is
  * supplied. The probe's job is detecting CONCURRENT edits during the modal's
  * open window (seconds-to-minutes of wall-clock), NOT backfilling chain
- * history. On Shannon (~0.5s blocks) 10_000 blocks ≈ 1.4 hours, which
+ * history. On Fuji (~0.5s blocks) 10_000 blocks ≈ 1.4 hours, which
  * comfortably exceeds any realistic modal lifetime. If the modal sat open
  * longer than that, the user has bigger problems than a concurrency race
  * (their wallet is probably disconnected, etc.) and the simulate above
@@ -415,7 +415,7 @@ interface PolicyWriteCommon {
   account: Address;
   /** Optional chainId override — when set, wagmi aborts at the network
    *  boundary if the wallet is on the wrong chain. The modals pass the
-   *  expected Somnia chainId here so a wrong-network submission is rejected
+   *  expected Avalanche chainId here so a wrong-network submission is rejected
    *  at the SDK layer (in addition to the UI guard from `useWrongNetwork`). */
   chainId?: number;
 }
@@ -423,7 +423,7 @@ interface PolicyWriteCommon {
 /**
  * Shared simulate-then-write path for the oracle policy-management functions.
  * Simulates first so reverts surface before the wallet popup opens, then
- * computes a Shannon-safe gas override (see `shannonGas.ts`) and submits
+ * computes a Fuji-safe gas override (see `fujiGas.ts`) and submits
  * through wagmi's `writeContractAsync`. The ABI is widened to `unknown` at
  * the simulate/estimate boundary so this helper can dispatch all four policy
  * functions through a single code path without duplicating per-function
@@ -433,7 +433,7 @@ interface PolicyWriteCommon {
  * chain-merge read (e.g. `readChainHealth` in `setPolicyPaused`/
  * `setPolicyExpiry`) lives inside the same async flow as simulate+write. This
  * shrinks the TOCTOU window between the chain read and the tx-submit to the
- * cost of one simulate + one gas estimate (sub-second on Shannon). It does
+ * cost of one simulate + one gas estimate (sub-second on Fuji). It does
  * NOT eliminate the race: another browser's `updatePolicy` can still mine
  * between our simulate and our write. See the JSDoc on
  * `setPolicyPaused`/`setPolicyExpiry` for the residual risk.
@@ -484,7 +484,7 @@ async function simulateAndWritePolicy(opts: {
     account,
   });
 
-  const gas = await shannonSafeGas(publicClient, {
+  const gas = await fujiSafeGas(publicClient, {
     address: oracleAddress,
     abi: WARD_ORACLE_ABI,
     functionName,
@@ -600,7 +600,7 @@ export async function readChainHealth(
  *
  * KNOWN LIMITATION: optimistic concurrency via lastUpdatedBlock closes the
  * wallet-popup window; the sub-second tx-broadcast → tx-mining window (~1-3s
- * on Shannon) remains as the residual race — another tx can land in the same
+ * on Fuji) remains as the residual race — another tx can land in the same
  * block range and our `updatePolicy` still overwrites it because there's no
  * on-chain compare-and-swap. Dedicated contract entry points
  * (`pausePolicy(bool)` / `setExpiry(uint64)` plus per-policy nonce) would

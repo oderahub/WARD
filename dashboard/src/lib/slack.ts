@@ -74,7 +74,7 @@ function sanitizeMrkdwn(input: string, maxLen = 500): string {
 function buildPayload(opts: SendTestAlertOpts, isoTimestamp: string): object {
   const tierUpper = opts.tier.toUpperCase();
   const reason = sanitizeMrkdwn(opts.recommendationReason);
-  const chainId = opts.chainId ?? 50312;
+  const chainId = opts.chainId ?? 43113;
 
   return {
     text: `[Ward watch wizard · test] Test alert from Ward watch wizard. agent ${opts.agent} · policy ${opts.policyId} · recommendation ${tierUpper}`,
@@ -101,7 +101,7 @@ function buildPayload(opts: SendTestAlertOpts, isoTimestamp: string): object {
         elements: [
           {
             type: 'mrkdwn',
-            text: `Sent ${isoTimestamp} · Somnia Shannon (chain ${chainId}) · This is a wizard self-test, not a real alert.`,
+            text: `Sent ${isoTimestamp} · Avalanche Fuji (chain ${chainId}) · This is a wizard self-test, not a real alert.`,
           },
         ],
       },

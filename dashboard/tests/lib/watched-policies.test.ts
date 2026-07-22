@@ -21,7 +21,7 @@ function sample(overrides: Partial<WatchedPolicy> = {}): WatchedPolicy {
     policyId: POLICY_ID,
     watchedAgentAddress: AGENT,
     label: "counter-agent",
-    chainId: 50312,
+    chainId: 43113,
     oracleAddress: ORACLE_A,
     addedAtMs: 1_700_000_000_000,
     lastCheckedBlock: "0",
@@ -73,7 +73,7 @@ describe("watched-policies registry", () => {
     await addWatchedPolicy(sample());
     const otherChain = await listWatchedPolicies(1, ORACLE_A);
     expect(otherChain).toEqual([]);
-    const otherOracle = await listWatchedPolicies(50312, ORACLE_B);
+    const otherOracle = await listWatchedPolicies(43113, ORACLE_B);
     expect(otherOracle).toEqual([]);
   });
 
@@ -141,18 +141,18 @@ describe("watched-policies registry", () => {
   });
 
   it("chain isolation: chain A entry does not appear in chain B list", async () => {
-    await addWatchedPolicy(sample({ chainId: 50312 }));
+    await addWatchedPolicy(sample({ chainId: 43113 }));
     await addWatchedPolicy(
       sample({
         policyId: "0xdef0000000000000000000000000000000000000000000000000000000000002" as Hex,
         chainId: 1,
       }),
     );
-    const a = await listWatchedPolicies(50312, ORACLE_A);
+    const a = await listWatchedPolicies(43113, ORACLE_A);
     const b = await listWatchedPolicies(1, ORACLE_A);
     expect(a).toHaveLength(1);
     expect(b).toHaveLength(1);
-    expect(a[0].chainId).toBe(50312);
+    expect(a[0].chainId).toBe(43113);
     expect(b[0].chainId).toBe(1);
   });
 });

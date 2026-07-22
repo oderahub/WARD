@@ -39,7 +39,7 @@ const TOP_LEVEL_LABELS: Record<string, string> = {
   name: "Policy name",
   label: "Short id",
   description: "Notes",
-  dailySpendWeiCap: FIELD_HUMAN_LABELS.dailySpendWeiCap ?? "Daily native (STT) spend cap",
+  dailySpendWeiCap: FIELD_HUMAN_LABELS.dailySpendWeiCap ?? "Daily native (AVAX) spend cap",
   expiresAtISO: FIELD_HUMAN_LABELS.expiresAt ?? "Valid until",
   paused: FIELD_HUMAN_LABELS.paused ?? "Paused",
   targets: "Targets",

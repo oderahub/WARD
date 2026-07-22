@@ -1,16 +1,6 @@
 import { defineChain, createPublicClient, createWalletClient, http, type Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
-export const somniaTestnet = defineChain({
-  id: 50312,
-  name: "Somnia Testnet",
-  nativeCurrency: { name: "Somnia Test Token", symbol: "STT", decimals: 18 },
-  rpcUrls: { default: { http: ["https://dream-rpc.somnia.network"] } },
-  blockExplorers: {
-    default: { name: "Shannon", url: "https://shannon-explorer.somnia.network" },
-  },
-});
-
 export const avalancheFuji = defineChain({
   id: 43113,
   name: "Avalanche Fuji",
@@ -22,15 +12,25 @@ export const avalancheFuji = defineChain({
   testnet: true,
 });
 
-const CHAINS = { somnia: somniaTestnet, fuji: avalancheFuji } as const;
+export const avalanche = defineChain({
+  id: 43114,
+  name: "Avalanche",
+  nativeCurrency: { name: "Avalanche", symbol: "AVAX", decimals: 18 },
+  rpcUrls: { default: { http: ["https://api.avax.network/ext/bc/C/rpc"] } },
+  blockExplorers: {
+    default: { name: "SnowTrace", url: "https://snowtrace.io" },
+  },
+});
+
+const CHAINS = { fuji: avalancheFuji, avalanche } as const;
 export type ChainKey = keyof typeof CHAINS;
 
-/// Selects the target chain from WARD_CHAIN. Defaults to Somnia when unset or
-/// unrecognized so existing single-chain workflows are unchanged.
+/// Selects the target chain from WARD_CHAIN. Defaults to Fuji when unset or
+/// unrecognized, so a fresh clone targets testnet rather than mainnet.
 export function activeChainKey(): ChainKey {
   const v = (process.env.WARD_CHAIN ?? "").trim().toLowerCase();
-  if (v === "fuji" || v === "avalanche" || v === "avalanche-fuji" || v === "43113") return "fuji";
-  return "somnia";
+  if (v === "avalanche" || v === "mainnet" || v === "c-chain" || v === "43114") return "avalanche";
+  return "fuji";
 }
 
 export function activeChain() {
@@ -40,7 +40,7 @@ export function activeChain() {
 /// Default RPC for the active chain, honoring the chain-specific override env var.
 export function activeRpc(): string {
   const chain = activeChain();
-  const override = chain.id === avalancheFuji.id ? process.env.FUJI_RPC : process.env.SOMNIA_TESTNET_RPC;
+  const override = chain.id === avalanche.id ? process.env.AVALANCHE_RPC : process.env.FUJI_RPC;
   return override ?? chain.rpcUrls.default.http[0];
 }
 

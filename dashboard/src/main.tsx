@@ -10,15 +10,6 @@ import App from "./App";
 import { Landing } from "./pages/Landing";
 import "./index.css";
 
-export const somniaTestnet = defineChain({
-  id: 50312,
-  name: "Somnia Testnet",
-  nativeCurrency: { name: "Somnia Test Token", symbol: "STT", decimals: 18 },
-  rpcUrls: {
-    default: { http: ["https://dream-rpc.somnia.network"] },
-  },
-});
-
 export const avalancheFuji = defineChain({
   id: 43113,
   name: "Avalanche Fuji",
@@ -36,15 +27,31 @@ export const avalancheFuji = defineChain({
   testnet: true,
 });
 
+export const avalanche = defineChain({
+  id: 43114,
+  name: "Avalanche",
+  nativeCurrency: { name: "Avalanche", symbol: "AVAX", decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: [
+        import.meta.env.VITE_AVALANCHE_RPC?.trim() || "https://api.avax.network/ext/bc/C/rpc",
+      ],
+    },
+  },
+  blockExplorers: {
+    default: { name: "SnowTrace", url: "https://snowtrace.io" },
+  },
+});
+
 // Both chains are registered so wagmi can read from, and switchChain into,
 // whichever one networks.ts resolves as active. Which one the UI targets is
 // decided there (VITE_WARD_CHAIN), not here.
 const wagmiConfig = createConfig({
-  chains: [somniaTestnet, avalancheFuji],
+  chains: [avalancheFuji, avalanche],
   connectors: [injected()],
   transports: {
-    [somniaTestnet.id]: http(undefined, { timeout: 8_000 }),
     [avalancheFuji.id]: http(undefined, { timeout: 8_000 }),
+    [avalanche.id]: http(undefined, { timeout: 8_000 }),
   },
 });
 

@@ -41,7 +41,7 @@ import {
 } from "../../src/lib/publishedCache";
 
 const DB_NAME = "ward-store";
-const CHAIN_ID = 50312;
+const CHAIN_ID = 43113;
 const ORACLE = "0x1111111111111111111111111111111111111111" as Address;
 const POLICY_ID = "0xabc0000000000000000000000000000000000000000000000000000000000001" as Hex;
 const POLICY_ID_2 = "0xabc0000000000000000000000000000000000000000000000000000000000002" as Hex;
@@ -88,7 +88,7 @@ describe("publishedCache — parseLegacyKey", () => {
   });
 
   it("returns null for keys without the prefix", () => {
-    expect(parseLegacyKey("other:50312:0x1111111111111111111111111111111111111111:0xabc")).toBeNull();
+    expect(parseLegacyKey("other:43113:0x1111111111111111111111111111111111111111:0xabc")).toBeNull();
   });
 
   it("returns null for malformed chainId", () => {

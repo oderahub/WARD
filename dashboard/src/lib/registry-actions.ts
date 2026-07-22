@@ -18,7 +18,7 @@
  * `simulateAndWriteRegisterAgent`:
  *   1. simulates via the public client so registry-revert reasons (e.g.
  *      `NotRegistrar`) surface in the UI before the wallet popup opens;
- *   2. computes a Shannon-safe gas override via `shannonSafeGas`;
+ *   2. computes a Fuji-safe gas override via `fujiSafeGas`;
  *   3. submits through wagmi's `writeContractAsync`, optionally pinned to
  *      `chainId` so the wallet aborts at the network boundary instead of
  *      submitting to the wrong chain.

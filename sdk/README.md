@@ -89,7 +89,7 @@ import { createPublicClient, http } from "viem";
 import { createOracleClient } from "@ward/sdk";
 
 const oracle = createOracleClient({
-  publicClient: createPublicClient({ transport: http("https://dream-rpc.somnia.network") }),
+  publicClient: createPublicClient({ transport: http("https://api.avax-test.network/ext/bc/C/rpc") }),
   // v2 oracle (canonical for new integrations; v0.11.0+).
   // Pass "0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf" if you're reading a pre-v0.11.0 policy on the v1 oracle.
   oracleAddress: "0x3C7bF90f243d670a01f512221d9546e09fEaCC9c",
@@ -102,20 +102,20 @@ const { ok, reason } = await oracle.checkIntent(policyId, intent, spentToday);
 
 ## Find Ward-watched agents
 
-Other agents and services on Somnia can discover agents protected by Ward by reading the on-chain WardAgentRegistry directly — no indexer required.
+Other agents and services on Avalanche can discover agents protected by Ward by reading the on-chain WardAgentRegistry directly — no indexer required.
 
 ```ts
 import { createPublicClient, http } from 'viem';
 import { findWardAgents } from '@ward/sdk';
 
-const somnia = {
-  id: 50312,
-  name: 'Somnia Shannon Testnet',
-  nativeCurrency: { name: 'STT', symbol: 'STT', decimals: 18 },
-  rpcUrls: { default: { http: ['https://dream-rpc.somnia.network'] } },
+const avalanche = {
+  id: 43113,
+  name: 'Avalanche Fuji',
+  nativeCurrency: { name: 'AVAX', symbol: 'AVAX', decimals: 18 },
+  rpcUrls: { default: { http: ['https://api.avax-test.network/ext/bc/C/rpc'] } },
 } as const;
 
-const publicClient = createPublicClient({ chain: somnia, transport: http(somnia.rpcUrls.default.http[0], { timeout: 8_000 }) });
+const publicClient = createPublicClient({ chain: avalanche, transport: http(avalanche.rpcUrls.default.http[0], { timeout: 8_000 }) });
 
 const result = await findWardAgents({
   publicClient,
@@ -356,7 +356,7 @@ oracle.
 [`examples/ward-react-app/`](../examples/ward-react-app/) is a single-page
 React + wagmi demo that gates one `CounterAgent` write with
 `useWardGuardedWrite` using `source.kind = "chain"`. The preflight reads the
-live Somnia Shannon Testnet `WardOracle`, so the decision the UI shows is the
+live Avalanche Fuji `WardOracle`, so the decision the UI shows is the
 same one the on-chain agent will see.
 
 Run it from the repo root:
@@ -366,7 +366,7 @@ pnpm install
 pnpm --filter ward-react-app-example dev
 ```
 
-The demo confirms you are on chain `50312`, lets you edit the agent address and
+The demo confirms you are on chain `43113`, lets you edit the agent address and
 policy ID, and on allow submits `CounterAgent.bump` and shows the tx hash. On
 a reject the wallet popup never opens. To see the reject path, point the policy
 ID at a policy that exists on the oracle but omits the `bump(uint256)`
@@ -378,7 +378,7 @@ Where to look:
 
 - `src/GuardedBumpPanel.tsx` — the gated panel; the `useWardGuardedWrite` call
   sits at the top.
-- `src/wagmi.ts` — the Somnia chain definition and the `WardOracle` address.
+- `src/wagmi.ts` — the Avalanche chain definition and the `WardOracle` address.
 - `src/abi.ts` — the minimal ABI fragment for `CounterAgent.bump`.
 
 ## Reference (exhaustive API)
@@ -417,7 +417,7 @@ export * from "./queue-handoff.js";
 export * from "./account-decorator.js";
 ```
 
-Deployed contract addresses are not exported by the SDK; pass them in explicitly. The canonical Shannon (chain id 50312) addresses and RPC live in the contracts reference section of [SKILL.md](../SKILL.md).
+Deployed contract addresses are not exported by the SDK; pass them in explicitly. The canonical Fuji (chain id 43113) addresses and RPC live in the contracts reference section of [SKILL.md](../SKILL.md).
 
 ### Core types
 
@@ -535,7 +535,7 @@ function parseEtherFlexible(input: string): bigint
 function suggestEtherFix(raw: string): string | null
 ```
 
-`parseEtherFlexible` accepts `"1 ether"`, `"0.5 ether"`, a plain wei integer (`"1000000000000000000"`), or `0x`-prefixed hex wei. Empty string and `"0"` return `0n`. On a near-miss typo for the `ether` suffix (`"0.5ethe"`, `"1 eth"`) it throws with a "did you mean" hint. STT is the only metered native unit — `gwei`/`wei`/`finney` are deliberately not recognized as valid suffixes (they fall through to a raw `BigInt()` failure, not a hint). `suggestEtherFix` returns the suggested canonical form (`"<amount> ether"`) or `null` when no obvious typo is detected.
+`parseEtherFlexible` accepts `"1 ether"`, `"0.5 ether"`, a plain wei integer (`"1000000000000000000"`), or `0x`-prefixed hex wei. Empty string and `"0"` return `0n`. On a near-miss typo for the `ether` suffix (`"0.5ethe"`, `"1 eth"`) it throws with a "did you mean" hint. AVAX is the only metered native unit — `gwei`/`wei`/`finney` are deliberately not recognized as valid suffixes (they fall through to a raw `BigInt()` failure, not a hint). `suggestEtherFix` returns the suggested canonical form (`"<amount> ether"`) or `null` when no obvious typo is detected.
 
 ### Clients
 
@@ -630,7 +630,7 @@ type FindWardAgentsResult =
   | { ok: false; error: string; agents?: RegistryAgent[]; pagesRead?: number };
 ```
 
-Walks `agentsPaginated(offset, limit)` until `agentCount()` is exhausted (a view-call walk, not an event scan — Shannon caps `eth_getLogs` at 1000 blocks). Mixed throw/Result contract: **caller mistakes throw** (missing `publicClient` or `registryAddress`, with a `find-ward-agents:` prefix); **runtime failures return `{ ok: false }`** (an `agentCount`/`agentsPaginated` revert, a pagination inconsistency such as an empty page mid-walk, or a `signal` abort) carrying any partial `agents` + `pagesRead` so a degraded-mode UI can render what it got. Callers that promise "never throws" still need a `try/catch` for the programmer-error throws.
+Walks `agentsPaginated(offset, limit)` until `agentCount()` is exhausted (a view-call walk, not an event scan — Fuji caps `eth_getLogs` at 1000 blocks). Mixed throw/Result contract: **caller mistakes throw** (missing `publicClient` or `registryAddress`, with a `find-ward-agents:` prefix); **runtime failures return `{ ok: false }`** (an `agentCount`/`agentsPaginated` revert, a pagination inconsistency such as an empty page mid-walk, or a `signal` abort) carrying any partial `agents` + `pagesRead` so a degraded-mode UI can render what it got. Callers that promise "never throws" still need a `try/catch` for the programmer-error throws.
 
 Registry ABI functions not covered by `findWardAgents` (call via `WARD_AGENT_REGISTRY_ABI`): `getAgent`, `agents`, `agentList`, `register`, `update`, `setActive`.
 
@@ -789,7 +789,7 @@ In-memory store of Ward on-chain state, backing the dashboard and TUI. Pure TS (
 function createEventStore(config: EventStoreConfig): EventStore
 ```
 
-Key config fields: `publicClient`, `oracleAddress`, `queueAddress`, optional `oracleDeploymentBlock`, `queueLookbackBlocks` (default ~7 days at 1s blocks), `chunkSize` (default 1000 — Shannon caps `eth_getLogs` at 1000 blocks), `eventLogCap` (default 2000), `startBlock`, and an `onProgress` callback. The `EventStore` exposes `init()` (resolves when backfill completes; live watch keeps running), `dispose()`, `subscribe(handler)`, the read accessors (`listPolicies`, `getPolicy`, `listPoliciesByOwner`, `listQueueRecords`, `getQueueRecord`, `listPending`, `listPendingWithExecIds`, `recentEvents`, `cursor`), the `hydrate*` / `hydrate*AndPersist` snapshot-replay methods, and `emitSnapshotUpdated()`. `init()` throws if called after `dispose()`. The store does not persist anything itself — pass a `startBlock` and use the `subscribe`-driven `snapshotUpdated` synthetic to drive your own persistence.
+Key config fields: `publicClient`, `oracleAddress`, `queueAddress`, optional `oracleDeploymentBlock`, `queueLookbackBlocks` (default ~7 days at 1s blocks), `chunkSize` (default 1000 — Fuji caps `eth_getLogs` at 1000 blocks), `eventLogCap` (default 2000), `startBlock`, and an `onProgress` callback. The `EventStore` exposes `init()` (resolves when backfill completes; live watch keeps running), `dispose()`, `subscribe(handler)`, the read accessors (`listPolicies`, `getPolicy`, `listPoliciesByOwner`, `listQueueRecords`, `getQueueRecord`, `listPending`, `listPendingWithExecIds`, `recentEvents`, `cursor`), the `hydrate*` / `hydrate*AndPersist` snapshot-replay methods, and `emitSnapshotUpdated()`. `init()` throws if called after `dispose()`. The store does not persist anything itself — pass a `startBlock` and use the `subscribe`-driven `snapshotUpdated` synthetic to drive your own persistence.
 
 ### Queue handoff helpers
 
@@ -803,7 +803,7 @@ function abiExposesDispatchQueued(abi: unknown): boolean
 function extractAbi(json: unknown): unknown
 ```
 
-`buildQueueHandoffRecommendation` returns a human-readable summary + a ready-to-run `cast send` command tuned to the record's tier (IMMEDIATE → "should not be queued"; DELAYED → agent `dispatchQueued(uint256)` if the supplied ABI exposes it, else raw queue `dispatch(uint256)`; VETO_REQUIRED → policy-owner-only). `castSendCommand` formats a `cast send <addr> "<sig>" <execId> --private-key $DEPLOYER_PK --rpc-url $SOMNIA_TESTNET_RPC` string. These are pure string/shape helpers — none throws on normal input.
+`buildQueueHandoffRecommendation` returns a human-readable summary + a ready-to-run `cast send` command tuned to the record's tier (IMMEDIATE → "should not be queued"; DELAYED → agent `dispatchQueued(uint256)` if the supplied ABI exposes it, else raw queue `dispatch(uint256)`; VETO_REQUIRED → policy-owner-only). `castSendCommand` formats a `cast send <addr> "<sig>" <execId> --private-key $DEPLOYER_PK --rpc-url $FUJI_RPC` string. These are pure string/shape helpers — none throws on normal input.
 
 ### React hooks reference (`@ward/react`)
 

@@ -247,7 +247,7 @@ describe("createWardGuardedWrite", () => {
     allow();
     const writeContract = vi.fn(async () => HASH);
     const config = { id: "config" };
-    const args = writeArgs({ chainId: 50312 });
+    const args = writeArgs({ chainId: 43113 });
     const write = createWardGuardedWrite({ config, source, writeContract });
 
     await write(args);

@@ -202,7 +202,7 @@ export interface EventStore {
   hydrateCursor(block: bigint): void;
 }
 
-// Shannon testnet RPC caps eth_getLogs at 1000 blocks. Empirically the call
+// Fuji testnet RPC caps eth_getLogs at 1000 blocks. Empirically the call
 // fails with "block range exceeds 1000" above that. Keep the default at 1000
 // to work out of the box; consumers on an unrestricted RPC can pass a larger
 // chunkSize via config.

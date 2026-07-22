@@ -26,7 +26,7 @@ vi.mock("@shazow/whatsabi", () => ({
 
 const ADDR = "0xA1601891Da4b60c9311B3A024e3E03C5136460e4";
 const stubClient = {} as Parameters<typeof fetchContractFunctions>[1]["publicClient"];
-const SHANNON = 50312;
+const FUJI = 43113;
 
 function verifiedReturn(abi: unknown[]) {
   return {
@@ -55,7 +55,7 @@ describe("fetchContractFunctions", () => {
         },
       ]),
     );
-    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: SHANNON });
+    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: FUJI });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.source).toBe("verified");
@@ -76,7 +76,7 @@ describe("fetchContractFunctions", () => {
         { type: "event", name: "Transfer", inputs: [] },
       ]),
     );
-    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: SHANNON });
+    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: FUJI });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.functions.map((f) => f.signature)).toEqual(["transfer(address,uint256)"]);
@@ -88,7 +88,7 @@ describe("fetchContractFunctions", () => {
         { type: "function", name: "deposit", inputs: [], stateMutability: "payable" },
       ]),
     );
-    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: SHANNON });
+    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: FUJI });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.functions[0].suggestedTier).toBe("VETO_REQUIRED");
@@ -105,7 +105,7 @@ describe("fetchContractFunctions", () => {
         { type: "function", name: "renounceOwnership", inputs: [], stateMutability: "nonpayable" },
       ]),
     );
-    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: SHANNON });
+    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: FUJI });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     for (const f of r.functions) {
@@ -120,7 +120,7 @@ describe("fetchContractFunctions", () => {
         { type: "function", name: "mint", inputs: [{ type: "address" }, { type: "uint256" }], stateMutability: "nonpayable" },
       ]),
     );
-    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: SHANNON });
+    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: FUJI });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     for (const f of r.functions) {
@@ -131,7 +131,7 @@ describe("fetchContractFunctions", () => {
 
   it("returns {ok:false} when whatsabi throws", async () => {
     autoloadMock.mockRejectedValueOnce(new Error("rpc unreachable"));
-    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: SHANNON });
+    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: FUJI });
     expect(r.ok).toBe(false);
     if (r.ok) return;
     expect(r.error).toMatch(/rpc unreachable/);
@@ -147,7 +147,7 @@ describe("fetchContractFunctions", () => {
         { type: "function", name: "settle", inputs: [{ type: "uint256" }], stateMutability: "nonpayable" },
       ]),
     );
-    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: SHANNON });
+    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: FUJI });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.functions[0].suggestedTier).toBe("IMMEDIATE");
@@ -163,7 +163,7 @@ describe("fetchContractFunctions", () => {
       proxies: [],
       hasCode: true,
     });
-    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: SHANNON });
+    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: FUJI });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.source).toBe("bytecode");
@@ -193,7 +193,7 @@ describe("fetchContractFunctions", () => {
       proxies: [],
       hasCode: true,
     });
-    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: SHANNON });
+    const r = await fetchContractFunctions(ADDR, { publicClient: stubClient, chainId: FUJI });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     const f = r.functions[0];
@@ -205,7 +205,7 @@ describe("fetchContractFunctions", () => {
     expect(f.ambiguousCandidates?.[0]).toBe("transfer(address,uint256)");
   });
 
-  // BUG 1: helper used to hardcode chainId 50312, so wallets on any other
+  // BUG 1: helper used to hardcode chainId 43113, so wallets on any other
   // chain queried the wrong Sourcify shard. The constructor arg must now
   // be whatever opts.chainId is.
   it("passes opts.chainId through to SourcifyABILoader (not hardcoded)", async () => {
@@ -302,7 +302,7 @@ describe("fetchContractAddressViews", () => {
     );
     const r = await fetchContractAddressViews(ADDR, {
       publicClient: stubClient,
-      chainId: SHANNON,
+      chainId: FUJI,
     });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
@@ -360,7 +360,7 @@ describe("fetchContractAddressViews", () => {
     );
     const r = await fetchContractAddressViews(ADDR, {
       publicClient: stubClient,
-      chainId: SHANNON,
+      chainId: FUJI,
     });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
@@ -371,7 +371,7 @@ describe("fetchContractAddressViews", () => {
     autoloadMock.mockRejectedValueOnce(new Error("rpc unreachable"));
     const r = await fetchContractAddressViews(ADDR, {
       publicClient: stubClient,
-      chainId: SHANNON,
+      chainId: FUJI,
     });
     expect(r.ok).toBe(false);
     if (r.ok) return;
@@ -394,7 +394,7 @@ describe("fetchContractAddressViews", () => {
     controller.abort();
     const r = await fetchContractAddressViews(ADDR, {
       publicClient: stubClient,
-      chainId: SHANNON,
+      chainId: FUJI,
       signal: controller.signal,
     });
     expect(r.ok).toBe(false);
@@ -444,7 +444,7 @@ describe("fetchContractAddressViews", () => {
     });
     const client = { call: callMock } as unknown as Parameters<typeof fetchContractAddressViews>[1]["publicClient"];
 
-    const r = await fetchContractAddressViews(ADDR, { publicClient: client, chainId: SHANNON });
+    const r = await fetchContractAddressViews(ADDR, { publicClient: client, chainId: FUJI });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.views.map((v) => v.name)).toEqual(["counter"]);
@@ -469,7 +469,7 @@ describe("fetchContractAddressViews", () => {
     const callMock = vi.fn();
     const client = { call: callMock } as unknown as Parameters<typeof fetchContractAddressViews>[1]["publicClient"];
 
-    const r = await fetchContractAddressViews(ADDR, { publicClient: client, chainId: SHANNON });
+    const r = await fetchContractAddressViews(ADDR, { publicClient: client, chainId: FUJI });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.views.map((v) => v.name)).toEqual(["router"]);

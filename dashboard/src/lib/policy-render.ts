@@ -13,8 +13,8 @@ import { formatEther } from "viem";
 export const LEGACY_ZERO_EXPIRY_LABEL = "expired (legacy 0 sentinel)";
 
 /**
- * Compact "0.5 STT" wei rendering for the diff view. The previous
- * `fmtWei` rendered "0.5 STT (500000000000000000 wei)" which doubled the line
+ * Compact "0.5 AVAX" wei rendering for the diff view. The previous
+ * `fmtWei` rendered "0.5 AVAX (500000000000000000 wei)" which doubled the line
  * length with low information density — the raw wei is debug noise next to
  * the human form. The raw value is preserved via `rawWeiTooltip` (caller
  * threads it into a `title=` attribute) so an operator who needs to sanity-
@@ -34,19 +34,19 @@ export const LEGACY_ZERO_EXPIRY_LABEL = "expired (legacy 0 sentinel)";
  * and the YAML-style edit form.
  */
 export function formatDailyCapCompact(wei: bigint): string {
-  if (wei === 0n) return "0 STT (blocks all native spend)";
-  return `${formatEther(wei)} STT`;
+  if (wei === 0n) return "0 AVAX (blocks all native spend)";
+  return `${formatEther(wei)} AVAX`;
 }
 
 export function formatPerCallCapCompact(wei: bigint): string {
-  if (wei === 0n) return "0 STT (no native value allowed)";
-  return `${formatEther(wei)} STT`;
+  if (wei === 0n) return "0 AVAX (no native value allowed)";
+  return `${formatEther(wei)} AVAX`;
 }
 
 /**
  * Render the raw wei integer as a tooltip body — used by PolicyDiff to
  * thread the exact on-chain value into a `title=` attribute beside the
- * compact STT form. Kept as a separate helper so the caller doesn't have to
+ * compact AVAX form. Kept as a separate helper so the caller doesn't have to
  * remember the "wei" suffix or worry about bigint → string coercion.
  */
 export function formatWeiTooltip(wei: bigint): string {

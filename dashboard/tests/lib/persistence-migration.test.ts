@@ -12,7 +12,7 @@ const WATCHED_STORE = "watched";
 const POLICY_ID = "0xabc0000000000000000000000000000000000000000000000000000000000001" as Hex;
 const AGENT = "0xAAaaaaaaAaAaAAAaaAAaAaaAAAAaAaaAAAaaAaA0" as Hex;
 const ORACLE = "0x1111111111111111111111111111111111111111" as Hex;
-const CHAIN_ID = 50312;
+const CHAIN_ID = 43113;
 
 // Mimic v3's old `${policyId}:${agent}` key shape.
 function legacyKey(policyId: string, agent: string): string {

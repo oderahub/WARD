@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Address, Hex } from "viem";
-import { NETWORKS, getNetwork, ACTIVE_CHAIN_ID, SOMNIA_TESTNET_CHAIN_ID } from "../lib/networks";
+import { NETWORKS, getNetwork, ACTIVE_CHAIN_ID, AVALANCHE_FUJI_CHAIN_ID } from "../lib/networks";
 
 /**
- * Default Ward deployment for the active chain (Shannon unless
+ * Default Ward deployment for the active chain (Fuji unless
  * VITE_WARD_CHAIN selects another). Each can be overridden via
  * `?rpc=…&oracle=…&queue=…`. Addresses are sourced from the NETWORKS registry
  * so adding a chain doesn't require editing this file.
  */
 const DEFAULT_CHAIN_ID = ACTIVE_CHAIN_ID;
 const DEFAULT_NETWORK =
-  getNetwork(DEFAULT_CHAIN_ID) ?? NETWORKS[SOMNIA_TESTNET_CHAIN_ID];
+  getNetwork(DEFAULT_CHAIN_ID) ?? NETWORKS[AVALANCHE_FUJI_CHAIN_ID];
 export const DEFAULT_RPC = DEFAULT_NETWORK.rpc;
 export const DEFAULT_ORACLE: Address = DEFAULT_NETWORK.oracleAddress;
 export const DEFAULT_QUEUE: Address = DEFAULT_NETWORK.queueAddress;
@@ -37,7 +37,7 @@ export interface UrlState {
   revealed: Hex | null;
   /**
    * Off by default to avoid leaking the user's viewed addresses to the
-   * Somnia explorer (each AddressChip would otherwise fire a
+   * Avalanche explorer (each AddressChip would otherwise fire a
    * `getsourcecode` lookup keyed by the address being viewed). Enable
    * per-session via `?explorerNames=1`. With the flag unset, only the
    * hardcoded LOCAL map and the IDB cache populate names; unknown
@@ -132,7 +132,7 @@ function parseExplorerNames(value: string | null): boolean {
  * builder so a recipient lands on the SAME oracle/queue/rpc/mode the sender
  * was using — otherwise a user on a non-default deployment who shares a
  * `?revealed=…` link would have the recipient silently fall back to the
- * Shannon defaults and either render the wrong policy or render "not found".
+ * Fuji defaults and either render the wrong policy or render "not found".
  *
  * Returns a string starting with `&` (so callers can append it after their
  * own params) when any non-default is set, or `""` when everything matches

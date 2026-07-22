@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Demo dApp: gate a CounterAgent.bump write with useWardGuardedWrite (chain source) against the live Somnia testnet WardOracle.",
+  "description": "Demo dApp: gate a CounterAgent.bump write with useWardGuardedWrite (chain source) against the live Avalanche Fuji WardOracle.",
   "scripts": {
     "predev": "pnpm -F @ward/sdk build && pnpm -F @ward/react build",
     "prebuild": "pnpm -F @ward/sdk build && pnpm -F @ward/react build",

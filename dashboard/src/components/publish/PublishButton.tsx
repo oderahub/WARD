@@ -11,7 +11,7 @@ import { Alert, Button, ExplorerLink } from "../primitives";
 import { humanizeWeb3Error } from "../../lib/humanizeError";
 import { PolicyDraftSchema, type PolicyDraft } from "../../lib/policy-draft";
 import { simulateAndWritePublish, type WriteContractAsync } from "../../lib/writes";
-import { SOMNIA_CHAIN_ID, NETWORKS } from "../../lib/networks";
+import { ACTIVE_CHAIN_ID, NETWORKS } from "../../lib/networks";
 
 interface Props {
   oracleAddress: `0x${string}`;
@@ -200,7 +200,7 @@ export function PublishButton({
 
       // Inject the publish into the EventStore so Queue / getPolicy see it
       // immediately, without waiting for the live-watch tick (which has been
-      // observed to occasionally miss the publish entirely on Shannon). The
+      // observed to occasionally miss the publish entirely on Fuji). The
       // *AndPersist variants emit a snapshotUpdated synthetic so the
       // dashboard's IDB writer flushes the new policy + event into the
       // snapshot store — without persistence, a reload between publish and
@@ -249,8 +249,8 @@ export function PublishButton({
       // authoritative artifact). Action links to the chain explorer for the
       // publish tx so operators can verify on-chain without leaving the page.
       const explorerBase =
-        NETWORKS[walletChainId || SOMNIA_CHAIN_ID]?.explorer ??
-        NETWORKS[SOMNIA_CHAIN_ID]?.explorer;
+        NETWORKS[walletChainId || ACTIVE_CHAIN_ID]?.explorer ??
+        NETWORKS[ACTIVE_CHAIN_ID]?.explorer;
       toast.success(`Policy published. id ${onChainId.slice(0, 10)}…`, {
         action: explorerBase
           ? {
@@ -311,7 +311,7 @@ export function PublishButton({
 
       {wrongNetwork && (
         <Alert variant="warn" title="Wrong network">
-          {`Connected to chain ${currentChainId ?? "?"}. Switch to Somnia Shannon (${expectedChainId}) before submitting.`}
+          {`Connected to chain ${currentChainId ?? "?"}. Switch to Avalanche Fuji (${expectedChainId}) before submitting.`}
         </Alert>
       )}
 

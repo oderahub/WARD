@@ -7,7 +7,7 @@ import {
 } from "@phosphor-icons/react";
 import { Alert, Button } from "../primitives";
 import type { SelectorDraft, Tier } from "../../lib/policy-draft";
-import { SOMNIA_CHAIN_ID } from "../../lib/networks";
+import { ACTIVE_CHAIN_ID } from "../../lib/networks";
 import {
   fetchContractFunctions,
   type FunctionInfo,
@@ -98,7 +98,7 @@ export function AbiPicker({ address, onAddSelectors, existingSelectors }: Props)
 
   const addressValid = ADDRESS_RE.test(address);
   const scanDisabled = !addressValid || state.kind === "scanning" || !publicClient;
-  const onWrongChain = chainId !== SOMNIA_CHAIN_ID;
+  const onWrongChain = chainId !== ACTIVE_CHAIN_ID;
   const normalizedAddress = address.toLowerCase();
 
   const onScan = useCallback(async () => {
@@ -183,7 +183,7 @@ export function AbiPicker({ address, onAddSelectors, existingSelectors }: Props)
     <div className="border-t border-ward-border pt-3 mt-3 space-y-2">
       {onWrongChain && (
         <div className="inline-flex items-center gap-1 rounded-full border border-warn bg-warn/20 px-2 py-0.5 text-[11px] text-warn">
-          Wallet is on chainId {chainId} — scanning that chain, not Somnia
+          Wallet is on chainId {chainId} — scanning that chain, not Avalanche
         </div>
       )}
 

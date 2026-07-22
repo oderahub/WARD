@@ -19,14 +19,14 @@ import { WARD_ORACLE_ABI, type PolicyInput } from "@ward/sdk";
  * any contract changes.
  *
  * Strategy: chunked backward walk through the requested block range with the
- * Shannon RPC 1000-block cap. For each chunk, run two topic-filtered
+ * Fuji RPC 1000-block cap. For each chunk, run two topic-filtered
  * `getLogs` calls (one for `PolicyPublished`, one for `PolicyUpdated`) scoped
  * by `policyId`. Short-circuit on the first chunk that returns at least one
  * log; the latest log in that chunk wins (largest blockNumber, then largest
  * logIndex). Then `getTransaction(hash)` and `decodeFunctionData` against the
  * matching ABI item to extract the `PolicyInput`.
  *
- * The search window can be large (millions of blocks on Shannon), so we
+ * The search window can be large (millions of blocks on Fuji), so we
  * serialize chunks and never fan out — first-match-wins finishes fast in the
  * common case where the policy was published or last updated recently.
  *
@@ -51,7 +51,7 @@ const POLICY_UPDATED_EVENT = parseAbiItem(
   "event PolicyUpdated(bytes32 indexed policyId, address indexed owner)",
 );
 
-// Shannon caps eth_getLogs at 1000 blocks per call. Match the same value used
+// Fuji caps eth_getLogs at 1000 blocks per call. Match the same value used
 // by onChainPolicyLookup so we stay safely under the cap.
 const DEFAULT_CHUNK_SIZE = 999n;
 
@@ -71,7 +71,7 @@ export interface RecoverPolicyInputOpts {
   fromBlock: bigint;
   /** Newest block to scan (inclusive). Defaults to `getBlockNumber()`. */
   toBlock?: bigint;
-  /** Chunk width. Defaults to 999 (Shannon RPC cap of 1000). */
+  /** Chunk width. Defaults to 999 (Fuji RPC cap of 1000). */
   chunkSize?: bigint;
   /**
    * Known publishedBlock from the EventStore meta. When provided, the
@@ -93,7 +93,7 @@ export interface RecoverPolicyInputOpts {
    * Known lastUpdatedBlock from the EventStore meta. When equal to
    * `publishedBlockHint`, the policy has never been updated — the publish
    * tx is the canonical PolicyInput and the chunked forward update-scan
-   * (which would otherwise crawl ~head-publish chunks on Shannon) is
+   * (which would otherwise crawl ~head-publish chunks on Fuji) is
    * unnecessary. When strictly greater, fetch the latest update at the
    * hinted block directly (one getLogs call, no chunked walk).
    *
@@ -244,7 +244,7 @@ export async function recoverPolicyInputFromChain(
   // know the exact block of the most-recent state-defining tx. One getLogs
   // call at that block (publish if never updated, otherwise update) replaces
   // the chunked forward update-scan that would otherwise crawl up to ~1M
-  // blocks between publish and head on Shannon. Recovery collapses to two
+  // blocks between publish and head on Fuji. Recovery collapses to two
   // RPC calls (getLogs + getTransaction).
   //
   // Stale-hint rule: when the probe finds nothing at the hinted block, the

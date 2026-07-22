@@ -10,7 +10,7 @@ import { useFocusTrapAndEsc } from "../../hooks/useFocusTrapAndEsc";
 import { useUrlState } from "../../hooks/useUrlState";
 import { useWrongNetwork } from "../../hooks/useWrongNetwork";
 import { humanizeWeb3Error } from "../../lib/humanizeError";
-import { SOMNIA_CHAIN_ID } from "../../lib/networks";
+import { ACTIVE_CHAIN_ID } from "../../lib/networks";
 import {
   computeDestructive,
   policyLifetimeState,
@@ -143,7 +143,7 @@ export function EditPolicyModal({
 }: Props) {
   const { address: account } = useAccount();
   const walletChainId = useChainId();
-  const chainId = walletChainId || SOMNIA_CHAIN_ID;
+  const chainId = walletChainId || ACTIVE_CHAIN_ID;
   const { wrong: wrongNetwork, current: currentChainId, expected: expectedChainId } = useWrongNetwork();
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
@@ -619,7 +619,7 @@ export function EditPolicyModal({
         <div className="flex-1 space-y-4 overflow-y-auto">
           {wrongNetwork && (
             <Alert variant="warn" title="Wrong network">
-              {`Connected to chain ${currentChainId ?? "?"}. Switch to Somnia Shannon (${expectedChainId}) before submitting.`}
+              {`Connected to chain ${currentChainId ?? "?"}. Switch to Avalanche Fuji (${expectedChainId}) before submitting.`}
             </Alert>
           )}
 

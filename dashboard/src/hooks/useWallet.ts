@@ -6,7 +6,7 @@ import {
   useSwitchChain,
   type Connector,
 } from "wagmi";
-import { SOMNIA_CHAIN_ID } from "../lib/networks";
+import { ACTIVE_CHAIN_ID } from "../lib/networks";
 
 export interface WalletState {
   address: `0x${string}` | undefined;
@@ -21,7 +21,7 @@ export interface WalletState {
  * picks the first available one — keeps the call sites trivial. Components
  * that want a chooser can read `connectors` directly.
  *
- * After a successful connect we try to switch to Somnia; wagmi 2.x's
+ * After a successful connect we try to switch to Avalanche; wagmi 2.x's
  * `switchChain` auto-prompts the wallet to add the chain when missing.
  * If it fails (user rejects, connector can't add), the post-connect
  * "Wrong network" button in TopBar remains as the manual fallback.
@@ -40,17 +40,17 @@ export function useWallet(): WalletState {
       return;
     }
     if (autoSwitchedRef.current) return;
-    if (chainId === SOMNIA_CHAIN_ID) {
+    if (chainId === ACTIVE_CHAIN_ID) {
       autoSwitchedRef.current = true;
       return;
     }
     autoSwitchedRef.current = true;
     switchChain(
-      { chainId: SOMNIA_CHAIN_ID },
+      { chainId: ACTIVE_CHAIN_ID },
       {
         onError: (err) => {
           // Fallback: TopBar's wrong-network button stays visible.
-          console.warn("[useWallet] auto switch to Somnia failed:", err);
+          console.warn("[useWallet] auto switch to Avalanche failed:", err);
         },
       },
     );

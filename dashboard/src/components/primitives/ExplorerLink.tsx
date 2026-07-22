@@ -8,7 +8,7 @@ export interface ExplorerLinkProps {
   className?: string;
 }
 
-const BASE_URL = 'https://shannon-explorer.somnia.network';
+const BASE_URL = 'https://testnet.snowtrace.io';
 
 export function ExplorerLink({
   txHash,

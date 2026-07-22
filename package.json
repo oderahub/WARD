@@ -2,7 +2,7 @@
   "name": "ward",
   "version": "0.12.0",
   "private": true,
-  "description": "Policy-enforced safe execution for Somnia agents",
+  "description": "Policy-enforced safe execution for Avalanche agents",
   "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=20"

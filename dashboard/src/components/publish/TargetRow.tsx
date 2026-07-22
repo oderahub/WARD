@@ -130,7 +130,7 @@ export function TargetRow({
             <span className="col-span-3">approval mode</span>
             <span
               className="col-span-2"
-              title="Caps native STT msg.value per call. Does NOT meter ERC20 token amounts inside calldata."
+              title="Caps native AVAX msg.value per call. Does NOT meter ERC20 token amounts inside calldata."
             >
               max native per call
             </span>

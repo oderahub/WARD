@@ -33,7 +33,7 @@ export function castSendCommand(address: Address, signature: string, execId: big
   // Use a foundry keystore account (--account) rather than --private-key, which would
   // expand the raw key into argv and expose it to local process listing (ps).
   // Operators who accept the risk can substitute --private-key $DEPLOYER_PK manually.
-  return `cast send ${address} "${signature}" ${execId.toString()} --account "$CAST_ACCOUNT" --rpc-url $SOMNIA_TESTNET_RPC`;
+  return `cast send ${address} "${signature}" ${execId.toString()} --account "$CAST_ACCOUNT" --rpc-url $FUJI_RPC`;
 }
 
 export function buildQueueHandoffRecommendation(input: QueueHandoffInput): QueueHandoffRecommendation {

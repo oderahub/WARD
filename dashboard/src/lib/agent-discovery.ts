@@ -26,9 +26,9 @@ import type { Hex, Log, PublicClient, TransactionReceipt } from "viem";
  * (every incoming Transfer would be treated as an agent invocation).
  */
 
-const SHANNON_EXPLORER = "https://shannon-explorer.somnia.network";
+const SNOWTRACE_EXPLORER = "https://testnet.snowtrace.io";
 const DEFAULT_MAX_TXS = 50;
-// Shannon's RPC caps eth_getLogs at 1000 blocks per call (see
+// Fuji's RPC caps eth_getLogs at 1000 blocks per call (see
 // useAgentWatcher.ts FETCH_POLICY_CHUNK_SIZE for the matching constant).
 const RPC_LOGS_CHUNK_SIZE = 999n;
 // Small RPC-first window for fresh agents. If no recent logs are found we fall
@@ -172,7 +172,7 @@ async function fetchTxList(
  * forwards from `floor` to `head` in `chunkSize`-block chunks. Mirrors
  * `chunkOwnerScanRange` in useAgentWatcher but iterates ascending so the
  * RPC-first discovery path returns txs in chronological order. Each chunk
- * covers at most `chunkSize + 1` blocks, so callers passing the Shannon
+ * covers at most `chunkSize + 1` blocks, so callers passing the Fuji
  * cap of 999 stay strictly under the 1000-block RPC limit.
  */
 function chunkBlockRangeAsc(
@@ -195,9 +195,9 @@ function chunkBlockRangeAsc(
 
 /**
  * Pull every log emitted BY `agent` between `fromBlock` and `toBlock`
- * inclusive, chunked into Shannon-safe windows. RPC-first replacement for
+ * inclusive, chunked into Fuji-safe windows. RPC-first replacement for
  * the Blockscout txlist endpoint, which has been lagging the RPC node by
- * ~5 days on Shannon (so verified contracts with recent activity return
+ * ~5 days on Fuji (so verified contracts with recent activity return
  * "no transactions"). Logs come straight from the RPC node's index so
  * there's no upstream explorer dependency.
  *
@@ -452,7 +452,7 @@ export async function discoverAgentCallSurface(
     return { ok: false, error: "agentAddress is not a 40-hex address" };
   }
   const agent = agentAddress.toLowerCase() as Hex;
-  const explorerUrl = opts.explorerUrl ?? SHANNON_EXPLORER;
+  const explorerUrl = opts.explorerUrl ?? SNOWTRACE_EXPLORER;
   const maxTxs = opts.maxTxs ?? DEFAULT_MAX_TXS;
 
   // Branch on the agent's account kind. EOAs originate txs (filter
@@ -469,7 +469,7 @@ export async function discoverAgentCallSurface(
     agentKind = "contract";
   }
 
-  // RPC-first tx discovery. Shannon Blockscout lags the RPC node by ~5
+  // RPC-first tx discovery. Fuji Blockscout lags the RPC node by ~5
   // days, so for active contracts txlist returns "no transactions" while
   // the RPC log index is realtime. For contract agents we read the agent's
   // emitted logs and resolve their txs. For EOAs, getLogs returns nothing

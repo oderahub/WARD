@@ -381,7 +381,7 @@ describe("discoverAgentCallSurface", () => {
   });
 
   it("uses the RPC log path for contract agents before touching the explorer", async () => {
-    // Shannon Blockscout was lagging the chain by ~5 days, returning "no
+    // Fuji Blockscout was lagging the chain by ~5 days, returning "no
     // transactions" for active contracts. The RPC-first path reads logs
     // straight from the node so we never hit the explorer when the agent
     // is actively emitting events.

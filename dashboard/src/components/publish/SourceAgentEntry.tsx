@@ -243,7 +243,7 @@ export function SourceAgentEntry({ onApplyDraft }: SourceAgentEntryProps) {
       <div className="space-y-3 border-t border-rule p-4">
         {wrongNetwork && (
           <Alert variant="warn" title="Wrong network">
-            Switch your wallet to Somnia testnet (chain {expectedChainId}).
+            Switch your wallet to Avalanche Fuji (chain {expectedChainId}).
             Currently on chain {currentChainId ?? "?"}. The probe is paused
             until you switch.
           </Alert>

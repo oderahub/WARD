@@ -2,7 +2,7 @@
  * Discovery — single-address structural probe used by the Watch Wizard
  * recommender.
  *
- * Given an arbitrary 0x address on Somnia Shannon (chainId 50312), produces a
+ * Given an arbitrary 0x address on Avalanche Fuji (chainId 43113), produces a
  * `DiscoveryReport` that classifies the account (EOA / ERC-20 / ERC-721 /
  * generic contract), surfaces a token fingerprint when applicable, and
  * answers two Ward-specific questions:
@@ -25,7 +25,7 @@
  * present a stub as a fact. Throws only on programmer error (wrong-chain
  * client, malformed address) so the caller's wrong-network guard catches it.
  *
- * RPC budget (Shannon, no Multicall3):
+ * RPC budget (Fuji, no Multicall3):
  *
  *   - Happy path with registry hit:
  *       3 (head/code/nonce) + 4 (balance + 3 fingerprint reads)
@@ -36,14 +36,14 @@
  *       3 + 4 + 6 (registry chunks) + 6 (queue chunks) + 1 (getAgent fallback) ≈ 20 calls.
  *
  * `RPC_LOGS_CHUNK_SIZE = 999n` means ⌈5000/999⌉ = 6 chunks per event probe.
- * This matches the rest of the dashboard and keeps all chunks under Shannon's
+ * This matches the rest of the dashboard and keeps all chunks under Fuji's
  * 1000-block `eth_getLogs` cap with a 1-block safety buffer.
  *
  * Hard constraints honoured:
- *   - Network pinned to 50312 (throws if `publicClient.chain.id` differs).
+ *   - Network pinned to 43113 (throws if `publicClient.chain.id` differs).
  *   - No `debug_traceTransaction` — call-surface enumeration is out of scope
  *     here; the recommender only needs class signals + ward-aware signal.
- *   - No `client.multicall` — Shannon has no Multicall3 deployment (see
+ *   - No `client.multicall` — Fuji has no Multicall3 deployment (see
  *     `dashboard/src/main.tsx` chain definition, no `contracts.multicall3`).
  *   - No HTTP / no external indexer — every signal comes from the pinned RPC.
  */
@@ -75,7 +75,7 @@ import {
 // out-of-band (after the operator has committed to the agent) without
 // blocking discovery's hot path.
 
-import { getNetwork, SOMNIA_CHAIN_ID } from "./networks";
+import { getNetwork, ACTIVE_CHAIN_ID } from "./networks";
 
 /**
  * Coarse classification used by the recommender to pick rule branches. Token
@@ -157,7 +157,7 @@ export interface DiscoveryProbeError {
 
 export interface DiscoveryReport {
   agent: Address;
-  chainId: typeof SOMNIA_CHAIN_ID;
+  chainId: typeof ACTIVE_CHAIN_ID;
   kind: AgentKind;
   hasCode: boolean;
   /** Runtime bytecode size in bytes (0 for EOA). */
@@ -212,7 +212,7 @@ export interface DiscoverAgentOpts {
 }
 
 /**
- * Ward-aware lookback window in blocks. ~5000 blocks at Shannon's ~1s
+ * Ward-aware lookback window in blocks. ~5000 blocks at Fuji's ~1s
  * block time ≈ 80 minutes. Wide enough to catch any registration that the
  * operator just kicked off in a sibling tab, narrow enough to keep the whole
  * probe under ~2s. The authoritative `alreadyRegistered` answer comes from
@@ -223,7 +223,7 @@ export interface DiscoverAgentOpts {
 export const WARD_AWARE_LOOKBACK_BLOCKS = 5_000n;
 
 /**
- * Shannon caps `eth_getLogs` at 1000 blocks per call. Matches the rest of
+ * Fuji caps `eth_getLogs` at 1000 blocks per call. Matches the rest of
  * the codebase (agent-discovery.ts:33 / onChainPolicyLookup.ts:53 /
  * policyRecovery.ts:56) — value held at 999 (one-block buffer) so a single
  * off-by-one in the chunker never triggers the RPC's `block range too large`
@@ -360,7 +360,7 @@ interface FingerprintResult {
  * Token reads are independently try/caught via Promise.allSettled — a revert
  * just means "not that standard", not "discovery failed". An ERC-20 reverts
  * `supportsInterface` (no ERC-165) and resolves `symbol`/`decimals`; an
- * ERC-721 resolves all three; a generic contract reverts all three. Shannon
+ * ERC-721 resolves all three; a generic contract reverts all three. Fuji
  * has no Multicall3 deployment, so these stay as direct reads.
  */
 async function probeBalanceAndFingerprint(
@@ -496,7 +496,7 @@ interface QueueProbeResult {
  * Walk PolicyRegistry's `AgentRegistered` event for our address, newest-first,
  * breaking on the first chunk that yields a hit. Returns the most recent
  * matching log within that chunk (max blockNumber). Chunked at
- * `RPC_LOGS_CHUNK_SIZE` to honour Shannon's 1000-block getLogs cap.
+ * `RPC_LOGS_CHUNK_SIZE` to honour Fuji's 1000-block getLogs cap.
  *
  * NOTE: this only catches registrations within the lookback window. The
  * canonical "is this agent in the registry at all?" answer comes from the
@@ -780,9 +780,9 @@ export async function discoverAgent(
   if (!publicClient) {
     throw new Error("discoverAgent: publicClient required");
   }
-  if (publicClient.chain?.id !== SOMNIA_CHAIN_ID) {
+  if (publicClient.chain?.id !== ACTIVE_CHAIN_ID) {
     throw new Error(
-      `discoverAgent: chain mismatch — got ${publicClient.chain?.id ?? "undefined"}, expected ${SOMNIA_CHAIN_ID}`,
+      `discoverAgent: chain mismatch — got ${publicClient.chain?.id ?? "undefined"}, expected ${ACTIVE_CHAIN_ID}`,
     );
   }
   if (!address || !isAddress(address)) {
@@ -792,9 +792,9 @@ export async function discoverAgent(
   // Network must have registry + queue + oracle pinned for Ward-aware
   // probes to mean anything. Refusal here is a programmer-config error
   // (missing networks.ts entry), not a runtime failure.
-  const network = getNetwork(SOMNIA_CHAIN_ID);
+  const network = getNetwork(ACTIVE_CHAIN_ID);
   if (!network) {
-    throw new Error(`discoverAgent: no NETWORKS entry for ${SOMNIA_CHAIN_ID}`);
+    throw new Error(`discoverAgent: no NETWORKS entry for ${ACTIVE_CHAIN_ID}`);
   }
   if (!network.registryAddress) {
     throw new Error("discoverAgent: NETWORKS entry missing registryAddress");
@@ -1030,7 +1030,7 @@ export async function discoverAgent(
 
   return {
     agent: checksummed,
-    chainId: SOMNIA_CHAIN_ID,
+    chainId: ACTIVE_CHAIN_ID,
     kind,
     hasCode,
     codeSize,

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { useEventStore } from "../hooks/useEventStore";
 import { useUrlState } from "../hooks/useUrlState";
-import { SOMNIA_CHAIN_ID } from "../lib/networks";
+import { ACTIVE_CHAIN_ID } from "../lib/networks";
 
 const DASHBOARD_VERSION = "v0.10.1";
 
@@ -56,7 +56,7 @@ export default function StatusBar() {
         </span>
         <span className="font-mono">
           <span className="text-text-muted">chain</span>{" "}
-          <span className="tabular-nums text-text">{SOMNIA_CHAIN_ID}</span>
+          <span className="tabular-nums text-text">{ACTIVE_CHAIN_ID}</span>
         </span>
         <span className="min-w-0 flex-1 truncate font-mono" title={rpc}>
           <span className="text-text-muted">rpc</span>{" "}

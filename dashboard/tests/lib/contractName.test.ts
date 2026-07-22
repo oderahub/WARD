@@ -12,8 +12,8 @@ import {
 } from "../../src/lib/persistence";
 
 const DB_NAME = "ward-store";
-const CHAIN_ID = 50312;
-const EXPLORER = "https://shannon-explorer.somnia.network";
+const CHAIN_ID = 43113;
+const EXPLORER = "https://testnet.snowtrace.io";
 
 // WardOracle (v2) from the local map — one of the small set of Ward-
 // canonical addresses that resolve synchronously without an explorer hit.
@@ -165,7 +165,7 @@ describe("resolveContractName", () => {
   });
 
   it("explorer returns empty ContractName (unverified) -> unknown, negative-cached", async () => {
-    // Mirrors the actual Shannon Blockscout response shape for unverified
+    // Mirrors the actual Fuji Blockscout response shape for unverified
     // contracts: 200 OK with result[0] but no ContractName field.
     mockFetchOnce(async () =>
       new Response(

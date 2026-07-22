@@ -355,7 +355,7 @@ describe("ward queue:handoff", () => {
 
     const out = logs.join("\n");
     for (const needle of expected) expect(out).toContain(needle);
-    expect(out).toContain("--private-key $DEPLOYER_PK --rpc-url $SOMNIA_TESTNET_RPC");
+    expect(out).toContain("--private-key $DEPLOYER_PK --rpc-url $FUJI_RPC");
   });
 
   it("falls back to the deployed 11-field header payload, synthesizes policyVersion, and powers status/handoff", async () => {

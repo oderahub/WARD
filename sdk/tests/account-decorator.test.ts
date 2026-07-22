@@ -27,7 +27,7 @@ function wallet() {
   return {
     writeContract: vi.fn(async () => HASH),
     sendTransaction: vi.fn(async () => HASH),
-    getChainId: vi.fn(async () => 50312),
+    getChainId: vi.fn(async () => 43113),
     marker: "wallet",
   } as unknown as WalletClient & {
     writeContract: ReturnType<typeof vi.fn>;
@@ -147,7 +147,7 @@ describe("withWardPreflight", () => {
     });
 
     expect((decorated as typeof decorated & { marker: string }).marker).toBe("wallet");
-    await expect(decorated.getChainId()).resolves.toBe(50312);
+    await expect(decorated.getChainId()).resolves.toBe(43113);
     expect(base.getChainId).toHaveBeenCalledTimes(1);
   });
 

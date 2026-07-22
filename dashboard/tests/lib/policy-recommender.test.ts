@@ -14,7 +14,7 @@ const POLICY_ID = ("0x" + "ab".repeat(32)) as Hex;
 function baseReport(overrides: Partial<DiscoveryReport> = {}): DiscoveryReport {
   return {
     agent: AGENT,
-    chainId: 50312,
+    chainId: 43113,
     kind: "eoa",
     hasCode: false,
     codeSize: 0,

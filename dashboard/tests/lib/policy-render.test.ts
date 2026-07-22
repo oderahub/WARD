@@ -66,30 +66,30 @@ describe("policy-render.isLegacyZeroExpiry", () => {
 });
 
 // Compact wei helpers used by PolicyDiff. The previous diff rendered
-// "0.5 STT (500000000000000000 wei)" on EVERY row which doubled the line
-// length for negligible information. We collapse to "0.5 STT" and thread the
+// "0.5 AVAX (500000000000000000 wei)" on EVERY row which doubled the line
+// length for negligible information. We collapse to "0.5 AVAX" and thread the
 // raw wei through `formatWeiTooltip` into a `title=` attribute. These tests
 // pin the wording (especially the zero arms) because PolicyLib treats
 // dailySpendWeiCap=0 as a hard block — getting "no cap" here would mislead
 // an operator about to sign updatePolicy.
 describe("policy-render.formatDailyCapCompact", () => {
   it("flags zero as blocking all native spend (NOT 'no cap')", () => {
-    expect(formatDailyCapCompact(0n)).toBe("0 STT (blocks all native spend)");
+    expect(formatDailyCapCompact(0n)).toBe("0 AVAX (blocks all native spend)");
   });
 
-  it("renders a non-zero cap as a plain STT value without the raw-wei suffix", () => {
-    expect(formatDailyCapCompact(500_000_000_000_000_000n)).toBe("0.5 STT");
-    expect(formatDailyCapCompact(1_000_000_000_000_000_000n)).toBe("1 STT");
+  it("renders a non-zero cap as a plain AVAX value without the raw-wei suffix", () => {
+    expect(formatDailyCapCompact(500_000_000_000_000_000n)).toBe("0.5 AVAX");
+    expect(formatDailyCapCompact(1_000_000_000_000_000_000n)).toBe("1 AVAX");
   });
 });
 
 describe("policy-render.formatPerCallCapCompact", () => {
   it("flags zero as no native value allowed (matches PolicyLib's per-call enforcement)", () => {
-    expect(formatPerCallCapCompact(0n)).toBe("0 STT (no native value allowed)");
+    expect(formatPerCallCapCompact(0n)).toBe("0 AVAX (no native value allowed)");
   });
 
-  it("renders a non-zero per-call cap as a plain STT value", () => {
-    expect(formatPerCallCapCompact(250_000_000_000_000_000n)).toBe("0.25 STT");
+  it("renders a non-zero per-call cap as a plain AVAX value", () => {
+    expect(formatPerCallCapCompact(250_000_000_000_000_000n)).toBe("0.25 AVAX");
   });
 });
 

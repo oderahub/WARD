@@ -1,6 +1,6 @@
 /**
  * Watch Wizard — 60-second flow for setting up Slack alerts (and optional
- * registry registration) for a Somnia agent.
+ * registry registration) for a Avalanche agent.
  *
  * 3 steps:
  *   1. Paste address → validate → discover (read-only RPC probe).
@@ -75,7 +75,7 @@ import { TxStatusPanel, type TxState } from "../components/write/TxStatusPanel";
 import { useUrlState } from "../hooks/useUrlState";
 import { useWrongNetwork } from "../hooks/useWrongNetwork";
 import { humanizeWeb3Error } from "../lib/humanizeError";
-import { SOMNIA_CHAIN_ID, getNetwork } from "../lib/networks";
+import { ACTIVE_CHAIN_ID, getNetwork } from "../lib/networks";
 import {
   discoverAgent,
   type DiscoveryReport,
@@ -351,7 +351,7 @@ function MetaRow({ label, children, mono }: MetaRowProps) {
 }
 
 export function WatchWizardPage() {
-  const network = getNetwork(SOMNIA_CHAIN_ID)!;
+  const network = getNetwork(ACTIVE_CHAIN_ID)!;
   const oracleAddress = network.oracleAddress;
   const queueAddress = network.queueAddress;
   const registryAddress = network.registryAddress!;
@@ -849,7 +849,7 @@ export function WatchWizardPage() {
       patch({ saveWebhook: { kind: "saving" } });
       try {
         await saveWatchSubscription({
-          chainId: SOMNIA_CHAIN_ID,
+          chainId: ACTIVE_CHAIN_ID,
           agent: state.validatedAddress,
           policyId: effectivePolicyId,
           slackWebhookUrl: state.webhookInput,
@@ -890,7 +890,7 @@ export function WatchWizardPage() {
     patch({ saveWebhook: { kind: "saving" } });
     try {
       await saveWatchSubscription({
-        chainId: SOMNIA_CHAIN_ID,
+        chainId: ACTIVE_CHAIN_ID,
         agent: state.validatedAddress,
         policyId: effectivePolicyId,
         telegram: {
@@ -943,7 +943,7 @@ export function WatchWizardPage() {
     let loaded;
     try {
       loaded = await loadWatchSubscription(
-        SOMNIA_CHAIN_ID,
+        ACTIVE_CHAIN_ID,
         state.validatedAddress,
       );
     } catch (e) {
@@ -990,7 +990,7 @@ export function WatchWizardPage() {
           policyId: effectivePolicyId,
           tier: state.chosenTier,
           recommendationReason: reasonText,
-          chainId: SOMNIA_CHAIN_ID,
+          chainId: ACTIVE_CHAIN_ID,
         });
       } else if (loaded.telegram) {
         result = await sendTestAlertTelegram({
@@ -1000,7 +1000,7 @@ export function WatchWizardPage() {
           policyId: effectivePolicyId,
           tier: state.chosenTier,
           recommendationReason: reasonText,
-          chainId: SOMNIA_CHAIN_ID,
+          chainId: ACTIVE_CHAIN_ID,
         });
       } else {
         patch({
@@ -1092,7 +1092,7 @@ export function WatchWizardPage() {
       />
 
       {state.step === 1 && (
-        <Section number="" title="Paste a Somnia agent address">
+        <Section number="" title="Paste a Avalanche agent address">
           <Step1Body
             value={state.addressInput}
             error={state.addressError}
@@ -1219,7 +1219,7 @@ function DocumentFrontMatter({
   validatedAddress,
   onBackToStep1,
 }: FrontMatterProps) {
-  const net = getNetwork(SOMNIA_CHAIN_ID);
+  const net = getNetwork(ACTIVE_CHAIN_ID);
   const [, force] = useState(0);
   // Tick once a second so the elapsed counter ticks without a heavyweight
   // animation loop. setInterval is cheap and unmounts cleanly.
@@ -1251,7 +1251,7 @@ function DocumentFrontMatter({
         <MetaRow label="Network">
           {net?.name ?? "—"}
           <span className="ml-2 font-mono text-[12px] text-text-muted">
-            chain id {SOMNIA_CHAIN_ID}
+            chain id {ACTIVE_CHAIN_ID}
           </span>
         </MetaRow>
         <MetaRow label="Your wallet">
@@ -1337,8 +1337,8 @@ function Step1Body({
   return (
     <div className="max-w-2xl space-y-4">
       <p className="text-sm text-text-muted">
-        We&rsquo;ll look it up on {getNetwork(SOMNIA_CHAIN_ID)?.name ?? "Shannon"}{" "}
-        (chain {SOMNIA_CHAIN_ID}) and
+        We&rsquo;ll look it up on {getNetwork(ACTIVE_CHAIN_ID)?.name ?? "Fuji"}{" "}
+        (chain {ACTIVE_CHAIN_ID}) and
         recommend three deterministic policy tiers. No transactions yet
         &mdash; just read-only RPC calls.
       </p>
@@ -1563,7 +1563,7 @@ function Step2Sections({
             {report.nonce}
           </MetaRow>
           <MetaRow label="Balance" mono>
-            {formatEther(report.balanceWei)} STT
+            {formatEther(report.balanceWei)} AVAX
           </MetaRow>
           {report.tokenFingerprint && (
             <MetaRow label="Token">
@@ -1799,10 +1799,10 @@ function TierRow({
           {tierEnumName(params.tier)}
         </MetaRow>
         <MetaRow label="Per-call cap" mono>
-          {formatEther(params.valueCapPerCall)} STT
+          {formatEther(params.valueCapPerCall)} AVAX
         </MetaRow>
         <MetaRow label="Daily cap" mono>
-          {formatEther(params.dailySpendWeiCap)} STT
+          {formatEther(params.dailySpendWeiCap)} AVAX
         </MetaRow>
         <MetaRow label="Expires">
           <span title={expiresIso}>
@@ -1983,10 +1983,10 @@ function Step3Sections(props: Step3SectionsProps) {
             {TIER_LABEL[chosenTier]} ({tierEnumName(rec.parameters.tier)})
           </MetaRow>
           <MetaRow label="Per-call cap" mono>
-            {formatEther(rec.parameters.valueCapPerCall)} STT
+            {formatEther(rec.parameters.valueCapPerCall)} AVAX
           </MetaRow>
           <MetaRow label="Daily cap" mono>
-            {formatEther(rec.parameters.dailySpendWeiCap)} STT
+            {formatEther(rec.parameters.dailySpendWeiCap)} AVAX
           </MetaRow>
         </dl>
 
@@ -1996,8 +1996,8 @@ function Step3Sections(props: Step3SectionsProps) {
               Wrong network
             </p>
             <p className="mt-1 text-[13px] text-text-muted">
-              Connected to chain {currentChainId ?? "?"}. Switch to Somnia
-              Shannon ({expectedChainId}) before submitting.
+              Connected to chain {currentChainId ?? "?"}. Switch to Avalanche
+              Fuji ({expectedChainId}) before submitting.
             </p>
           </div>
         )}
@@ -2602,7 +2602,7 @@ function SubSectionC(props: SubSectionCProps) {
       return;
     }
     let cancelled = false;
-    void loadWatchSubscription(SOMNIA_CHAIN_ID, validatedAddress).then(
+    void loadWatchSubscription(ACTIVE_CHAIN_ID, validatedAddress).then(
       (record) => {
         if (cancelled) return;
         if (!record) {

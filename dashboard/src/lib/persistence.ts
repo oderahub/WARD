@@ -182,7 +182,7 @@ export async function openWardDB(): Promise<IDBPDatabase> {
         db.createObjectStore(PUBLISHED_CACHE_STORE, { keyPath: "key" });
       }
       // v7 adds contractName: per-(chainId, address) cache of resolved
-      // contract names from the Somnia explorer. Same idempotent contains-
+      // contract names from the Avalanche explorer. Same idempotent contains-
       // guarded create pattern as ownerIndex/publishedCache.
       if (!db.objectStoreNames.contains(CONTRACT_NAME_STORE)) {
         db.createObjectStore(CONTRACT_NAME_STORE, { keyPath: "key" });
@@ -557,7 +557,7 @@ export async function clearSnapshot(opts: NamespaceOpts): Promise<void> {
  * Per-(chain, oracle, owner) cache of discovered policyIds. Populated by the
  * Watched page's "Discover my policies" flow which fires a topic-filtered
  * eth_getLogs against PolicyPublished(owner=...) and chunks across the
- * Shannon 1000-block cap. `lastSeenBlock` is the highest reorg-safe block
+ * Fuji 1000-block cap. `lastSeenBlock` is the highest reorg-safe block
  * the scan covered, so subsequent runs only need to scan the tail.
  *
  * bigints (`lastSeenBlock`) are serialized as decimal strings to stay
@@ -742,7 +742,7 @@ export async function saveOwnerIndex(opts: SaveOwnerIndexOpts): Promise<void> {
 /* ---------------------------- contractName ---------------------------- */
 
 /**
- * Per-(chainId, address) cache of resolved contract names from the Somnia
+ * Per-(chainId, address) cache of resolved contract names from the Avalanche
  * explorer's Etherscan-style `getsourcecode` endpoint. The hot-path
  * resolveContractName() reads this before issuing a network call so the UI
  * stays snappy across page reloads. TTL enforcement lives in the caller

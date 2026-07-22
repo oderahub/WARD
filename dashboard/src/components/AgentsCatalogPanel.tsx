@@ -11,7 +11,7 @@ import {
 } from "@phosphor-icons/react";
 
 import { useUrlState } from "../hooks/useUrlState";
-import { SOMNIA_CHAIN_ID } from "../lib/networks";
+import { ACTIVE_CHAIN_ID } from "../lib/networks";
 import {
   resolveRegistryAddress,
   useAgentsCatalog,
@@ -35,7 +35,7 @@ import {
 } from "./ui/tooltip";
 
 /**
- * Ward-watched agents on Somnia — the discoverability surface that answers
+ * Ward-watched agents on Avalanche — the discoverability surface that answers
  * "who else is using Ward?" Stacks above MyPoliciesPanel on the Watched tab.
  *
  * Data flows from `useAgentsCatalog` which runs the 2-tier fallback (on-chain
@@ -48,9 +48,9 @@ import {
  * tags, and policy live under it. No surface fills, no rounded chips.
  */
 export default function AgentsCatalogPanel() {
-  const publicClient = usePublicClient({ chainId: SOMNIA_CHAIN_ID });
+  const publicClient = usePublicClient({ chainId: ACTIVE_CHAIN_ID });
   const { setDrawer, setTab } = useUrlState();
-  const registryAddress = resolveRegistryAddress(SOMNIA_CHAIN_ID);
+  const registryAddress = resolveRegistryAddress(ACTIVE_CHAIN_ID);
 
   const openInWizard = (agentAddress: CatalogAgent["agent"]) => {
     const params = new URLSearchParams(window.location.search);
@@ -66,7 +66,7 @@ export default function AgentsCatalogPanel() {
 
   const { data, isLoading, error, refetch } = useAgentsCatalog({
     publicClient: publicClient as PublicClient | undefined,
-    chainId: SOMNIA_CHAIN_ID,
+    chainId: ACTIVE_CHAIN_ID,
     registryAddress,
   });
 

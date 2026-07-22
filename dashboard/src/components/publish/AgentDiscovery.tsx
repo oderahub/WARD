@@ -172,7 +172,7 @@ export default function AgentDiscovery({ onApplyDraft }: Props) {
   return (
     <div className="space-y-2">
       <div className="text-[11px] uppercase tracking-wider text-text-subtle">
-        discover from an existing agent on shannon
+        discover from an existing agent on fuji
       </div>
       <div className="flex items-center gap-2">
         <Input

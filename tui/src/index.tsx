@@ -18,7 +18,7 @@ if (args.includes("-h") || args.includes("--help")) {
       "  ward-tui --help   Show this message",
       "  ward-tui --version",
       "",
-      "Env: PRIVATE_KEY (optional), SOMNIA_TESTNET_RPC, WARD_ORACLE, WARD_QUEUE",
+      "Env: PRIVATE_KEY (optional), FUJI_RPC, WARD_ORACLE, WARD_QUEUE",
       "     WARD_QUEUE_LOOKBACK_BLOCKS (default 50000)",
       "     WARD_TUI_ORACLE_DEPLOY_BLOCK or WARD_TUI_DEEP_BACKFILL=1 for deep policy backfill",
       "",

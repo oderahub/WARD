@@ -97,7 +97,7 @@ function sanitizePlain(input: string, maxLen = 500): string {
 function buildText(opts: SendTestAlertTelegramOpts, isoTimestamp: string): string {
   const tierUpper = opts.tier.toUpperCase();
   const reason = sanitizePlain(opts.recommendationReason);
-  const chainId = opts.chainId ?? 50312;
+  const chainId = opts.chainId ?? 43113;
   return [
     `[Ward watch wizard · test]`,
     ``,
@@ -109,7 +109,7 @@ function buildText(opts: SendTestAlertTelegramOpts, isoTimestamp: string): strin
     `Why this tier:`,
     reason,
     ``,
-    `Sent ${isoTimestamp} · Somnia Shannon (chain ${chainId}) · This is a wizard self-test, not a real alert.`,
+    `Sent ${isoTimestamp} · Avalanche Fuji (chain ${chainId}) · This is a wizard self-test, not a real alert.`,
   ].join('\n');
 }
 

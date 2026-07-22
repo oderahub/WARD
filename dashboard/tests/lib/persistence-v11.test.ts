@@ -16,7 +16,7 @@ const CONTRACT_NAME_STORE = "contractName";
 const CACHED_AGENTS_STORE = "cachedAgents";
 const PUBLISHED_CACHE_STORE = "publishedCache";
 
-const CHAIN_ID = 50312;
+const CHAIN_ID = 43113;
 const AGENT = "0x000000000000000000000000000000000000bEEf" as Address;
 const POLICY_ID = ("0x" + "ab".repeat(32)) as Hex;
 // Fixture URL — NEVER a real webhook secret.

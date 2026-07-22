@@ -33,7 +33,7 @@ export function GasEstimate({
   const [gas, setGas] = useState<bigint | null>(null);
   const [gasError, setGasError] = useState<string | null>(null);
 
-  // Live EIP-1559 fee estimate so we can show the cost in STT alongside gas
+  // Live EIP-1559 fee estimate so we can show the cost in AVAX alongside gas
   // units. wagmi caches this query; the modal's lifetime is short enough that
   // the extra request is negligible.
   const { data: feesPerGas } = useEstimateFeesPerGas();
@@ -92,7 +92,7 @@ export function GasEstimate({
           {gas !== null && (
             <span className="font-mono tabular-nums text-text">
               {gasCostStt
-                ? `~${gasCostStt} STT (~${gas.toString()} gas)`
+                ? `~${gasCostStt} AVAX (~${gas.toString()} gas)`
                 : `~${gas.toString()} gas`}
             </span>
           )}

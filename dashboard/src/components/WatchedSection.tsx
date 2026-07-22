@@ -36,7 +36,7 @@ function truncateHex(hex: string | undefined, head = 10, tail = 6): string {
 
 function formatWei(valueWei: bigint): string {
   if (valueWei === 0n) return "0";
-  // Compact STT/ETH display. 1 ETH = 1e18 wei.
+  // Compact AVAX/ETH display. 1 ETH = 1e18 wei.
   const ETH = 1_000_000_000_000_000_000n;
   if (valueWei >= ETH / 1000n) {
     // Render with 4 decimals.

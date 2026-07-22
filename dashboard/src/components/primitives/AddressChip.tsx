@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Check as CheckIcon } from '@phosphor-icons/react';
 import { ExplorerLink } from './ExplorerLink';
 import { useContractName } from '../../lib/contractName';
-import { SOMNIA_CHAIN_ID, getNetwork } from '../../lib/networks';
+import { ACTIVE_CHAIN_ID, getNetwork } from '../../lib/networks';
 import { useUrlState } from '../../hooks/useUrlState';
 
 export interface AddressChipProps {
@@ -10,7 +10,7 @@ export interface AddressChipProps {
   label?: string;
   className?: string;
   /**
-   * Chain to resolve the contract name against. Defaults to Shannon (50312).
+   * Chain to resolve the contract name against. Defaults to Fuji (43113).
    * Callers that already know the chain (e.g. owner-scoped views) should pass
    * it explicitly so cross-chain misses don't inherit the wrong name.
    */
@@ -22,10 +22,10 @@ function truncate(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
-export function AddressChip({ address, label, className, chainId = SOMNIA_CHAIN_ID }: AddressChipProps) {
+export function AddressChip({ address, label, className, chainId = ACTIVE_CHAIN_ID }: AddressChipProps) {
   const [copied, setCopied] = useState(false);
   // Privacy gate: every chip would otherwise fire a per-address fetch at the
-  // Somnia explorer, leaking the user's viewing pattern. Pass the explorer
+  // Avalanche explorer, leaking the user's viewing pattern. Pass the explorer
   // URL down to useContractName ONLY when the user has opted in via
   // ?explorerNames=1. Local-map and IDB-cache hits still resolve names.
   const { explorerNames } = useUrlState();
@@ -48,7 +48,7 @@ export function AddressChip({ address, label, className, chainId = SOMNIA_CHAIN_
 
   const nameTitle =
     source === 'explorer'
-      ? 'Verified on Somnia Explorer'
+      ? 'Verified on Avalanche Explorer'
       : source === 'local'
         ? 'Known local contract'
         : undefined;

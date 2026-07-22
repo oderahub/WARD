@@ -8,14 +8,14 @@ import { useEventStore } from "../hooks/useEventStore";
 import { useWallet } from "../hooks/useWallet";
 import { useUrlState } from "../hooks/useUrlState";
 import { WARD_ORACLE_ABI, type PolicyInput, type PolicyMeta, type StoreEvent } from "@ward/sdk";
-import { somniaTestnet } from "../main";
+import { avalancheFuji } from "../main";
 import { cacheRecoveredPolicy, readPublished } from "../lib/publishedCache";
 import { recoverPolicyInputFromChainDeduped } from "../lib/policyRecovery";
 import { isAsciiPrintable } from "../lib/policy-draft";
 import { formatExpiresAtFull } from "../lib/policy-render";
 import { formatSelector, humanizeTier, tierLabel } from "../lib/selector-display";
 import { useContractName } from "../lib/contractName";
-import { SOMNIA_CHAIN_ID, getNetwork } from "../lib/networks";
+import { ACTIVE_CHAIN_ID, getNetwork } from "../lib/networks";
 import PolicyActions from "./PolicyActions";
 import { DrawerHeader } from "./primitives/DrawerHeader";
 import { Row, AddressChip, SkeletonLines } from "./primitives";
@@ -27,7 +27,7 @@ interface Props {
 
 const ZERO_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 
-// Oracle deployment block on Shannon — mirrors the constant in useEventStore.
+// Oracle deployment block on Fuji — mirrors the constant in useEventStore.
 // The on-chain calldata recovery scan starts here and walks backward from
 // head; the policy can't exist before its oracle did so this is a safe floor.
 const ORACLE_DEPLOYMENT_BLOCK = 394474581n;
@@ -128,9 +128,9 @@ function ProbeTargetOption({
 }) {
   const { explorerNames } = useUrlState();
   const explorerApiUrl = explorerNames
-    ? getNetwork(SOMNIA_CHAIN_ID)?.explorer
+    ? getNetwork(ACTIVE_CHAIN_ID)?.explorer
     : undefined;
-  const { name } = useContractName(SOMNIA_CHAIN_ID, address, explorerApiUrl);
+  const { name } = useContractName(ACTIVE_CHAIN_ID, address, explorerApiUrl);
   const short = `${address.slice(0, 6)}…${address.slice(-4)}`;
   const head = name ? `${name} · ${short}` : short;
   const fnNoun = selectorCount === 1 ? "fn" : "fns";
@@ -149,7 +149,7 @@ export default function PolicyDrawer({ policyId, onClose }: Props) {
   // trips through RPC; this guarantees the drawer reflects the new chain state
   // the instant the receipt mines.
   const [refetchTick, setRefetchTick] = useState(0);
-  // Shannon's RPC occasionally returns stale state on the immediate read after
+  // Fuji's RPC occasionally returns stale state on the immediate read after
   // a tx receipt. A single delayed retry catches the propagated state without
   // turning this into a polling loop — by the time the timer fires the live
   // watcher has usually bumped snapshotKey anyway, but if it hasn't this is
@@ -317,7 +317,7 @@ export default function PolicyDrawer({ policyId, onClose }: Props) {
     setCachedInput(null);
     setCacheRead(false);
     (async () => {
-      const entry = await readPublished(somniaTestnet.id, oracleAddress, policyId);
+      const entry = await readPublished(avalancheFuji.id, oracleAddress, policyId);
       if (cancelled) return;
       if (!entry || !entry.policyInputJSON) {
         setCachedInput(null);
@@ -400,14 +400,14 @@ export default function PolicyDrawer({ policyId, onClose }: Props) {
     setRecovered(null);
     setRecoveryState("recovering");
     recoverPolicyInputFromChainDeduped({
-      chainId: somniaTestnet.id,
+      chainId: avalancheFuji.id,
       publicClient,
       oracleAddress,
       policyId,
       fromBlock: ORACLE_DEPLOYMENT_BLOCK,
       // EventStore meta already carries publishedBlock when the policy
       // was seen during backfill — anchoring the walk there collapses the
-      // worst-case 1M+ block crawl on Shannon. When meta is absent (out-
+      // worst-case 1M+ block crawl on Fuji. When meta is absent (out-
       // of-backfill policies) we fall back to the full deployment-block
       // floor and the scanner does its normal backward walk.
       publishedBlockHint: cachedMeta?.publishedBlock,
@@ -416,7 +416,7 @@ export default function PolicyDrawer({ policyId, onClose }: Props) {
       // has never been updated, so recovery short-circuits to a single
       // getLogs probe at the publish block — no chunked forward walk over
       // the ~head-publish gap (which is ~1M blocks for long-lived policies
-      // on Shannon). When greater, the latest update lives at exactly
+      // on Fuji). When greater, the latest update lives at exactly
       // that block, again resolvable in one getLogs call.
       lastUpdatedBlockHint: cachedMeta?.lastUpdatedBlock,
     })
@@ -452,7 +452,7 @@ export default function PolicyDrawer({ policyId, onClose }: Props) {
         if (cancelled) return;
         if (publisherForCache && publisherForCache !== ZERO_ADDRESS) {
           void cacheRecoveredPolicy({
-            chainId: somniaTestnet.id,
+            chainId: avalancheFuji.id,
             oracleAddress,
             policyId,
             policyInput: result.policyInput,
@@ -759,7 +759,7 @@ export default function PolicyDrawer({ policyId, onClose }: Props) {
                         {humanizeTier(s.tier)}
                       </span>
                       <span className="text-[11px] text-text-subtle tabular-nums">
-                        cap: {formatEther(s.valueCapPerCall)} STT
+                        cap: {formatEther(s.valueCapPerCall)} AVAX
                       </span>
                     </span>
                   </li>

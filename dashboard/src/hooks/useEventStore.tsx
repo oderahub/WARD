@@ -16,7 +16,7 @@ import {
   type StoreEvent,
 } from "@ward/sdk";
 
-import { somniaTestnet } from "../main";
+import { avalancheFuji } from "../main";
 import { useUrlState } from "./useUrlState";
 import {
   loadOwnerIndexRich,
@@ -40,7 +40,7 @@ import {
  *  refresh's job. */
 const OWNER_INDEX_REHYDRATE_CAP = 50;
 
-/** Concurrency budget for the rehydrate burst. Shannon comfortably handles
+/** Concurrency budget for the rehydrate burst. Fuji comfortably handles
  *  6 parallel reads; higher tends to trip rate-limits, lower needlessly
  *  serialises a cold reload. */
 const OWNER_INDEX_REHYDRATE_CONCURRENCY = 6;
@@ -80,18 +80,18 @@ export async function runWithConcurrency<T>(
 const SNAPSHOT_DEBOUNCE_MS = 500;
 
 /**
- * Oracle was deployed at this block on Shannon. Passed to the SDK so the
+ * Oracle was deployed at this block on Fuji. Passed to the SDK so the
  * deep policy backfill is bounded and complete.
  */
 const ORACLE_DEPLOYMENT_BLOCK = 394474581n;
 
-/** Approximate number of blocks in 30 days on Shannon (~0.5s block time). */
+/** Approximate number of blocks in 30 days on Fuji (~0.5s block time). */
 export const APPROX_30D_BLOCKS = 5_200_000n;
 
 /**
- * Approximate number of blocks in 24 hours on Shannon (0.5s block time):
+ * Approximate number of blocks in 24 hours on Fuji (0.5s block time):
  * 24 × 3600 ÷ 0.5 = 172_800. Drives the "Skip — last 24 hours" cold-start
- * opt-out: small enough to fit comfortably inside Shannon's live history
+ * opt-out: small enough to fit comfortably inside Fuji's live history
  * (~57h at the time of writing) so `head - APPROX_24H_BLOCKS` lands
  * strictly above `ORACLE_DEPLOYMENT_BLOCK` and Skip actually shortens the
  * scan instead of collapsing back to a full walk.
@@ -228,7 +228,7 @@ export interface EventStoreContextValue {
    * `fromBlock` is clamped to `[ORACLE_DEPLOYMENT_BLOCK, head]` so an
    * absurd `skipBlocks` (e.g. greater than head) can't push the scan
    * past head or below deployment; additionally, when the clamp would
-   * collapse `fromBlock` down to `ORACLE_DEPLOYMENT_BLOCK` (i.e. Shannon
+   * collapse `fromBlock` down to `ORACLE_DEPLOYMENT_BLOCK` (i.e. Fuji
    * is younger than `skipBlocks`), the shallow call no-ops so we don't
    * abort and restart an already-running full scan that would have
    * produced the same result.
@@ -357,7 +357,7 @@ export function EventStoreProvider({ children }: Props) {
     abortScanRef.current = null;
 
     const publicClient = createPublicClient({
-      chain: somniaTestnet,
+      chain: avalancheFuji,
       transport: http(rpc),
     }) as PublicClient;
     publicClientRef.current = publicClient;
@@ -372,7 +372,7 @@ export function EventStoreProvider({ children }: Props) {
       if (!createdStore) return;
       pendingWrite = false;
       const snapshotPayload = {
-        chainId: somniaTestnet.id,
+        chainId: avalancheFuji.id,
         oracleAddress: oracle,
         queueAddress: queue,
         cursor: createdStore.cursor(),
@@ -427,7 +427,7 @@ export function EventStoreProvider({ children }: Props) {
         typeof v === "string" && /^-?\d+n$/.test(v) ? BigInt(v.slice(0, -1)) : v;
       try {
         const snapshot = await loadSnapshot({
-          chainId: somniaTestnet.id,
+          chainId: avalancheFuji.id,
           oracleAddress: oracle,
           queueAddress: queue,
         });
@@ -563,7 +563,7 @@ export function EventStoreProvider({ children }: Props) {
 
       const nextStore = createEventStore({
         publicClient,
-        chainId: somniaTestnet.id,
+        chainId: avalancheFuji.id,
         oracleAddress: oracle,
         queueAddress: queue,
         oracleDeploymentBlock: ORACLE_DEPLOYMENT_BLOCK,
@@ -671,7 +671,7 @@ export function EventStoreProvider({ children }: Props) {
       lastChunkAtRef.current = null;
       try {
         const existing = await loadOwnerIndexRich({
-          chainId: somniaTestnet.id,
+          chainId: avalancheFuji.id,
           oracleAddress: oracle,
           owner,
         });
@@ -893,7 +893,7 @@ export function EventStoreProvider({ children }: Props) {
           }
         }
         await saveOwnerIndexRich({
-          chainId: somniaTestnet.id,
+          chainId: avalancheFuji.id,
           oracleAddress: oracle,
           owner,
           value: {
@@ -955,7 +955,7 @@ export function EventStoreProvider({ children }: Props) {
       if (!pc) return;
       const head = await pc.getBlockNumber();
       const fromBlockOverride = head > skipBlocks ? head - skipBlocks : 0n;
-      // When Shannon is younger than the skip window, `fromBlockOverride`
+      // When Fuji is younger than the skip window, `fromBlockOverride`
       // clamps back to `ORACLE_DEPLOYMENT_BLOCK` inside
       // `runRefreshOwnerIndex` and Skip would re-walk the entire chain —
       // exactly what the in-flight scan was already doing. Aborting +
@@ -1067,7 +1067,7 @@ export function EventStoreProvider({ children }: Props) {
   const loadOwnerIndexEntries = useCallback(
     async (owner: Address): Promise<OwnerIndexEntry[]> => {
       const rich = await loadOwnerIndexRich({
-        chainId: somniaTestnet.id,
+        chainId: avalancheFuji.id,
         oracleAddress: oracle,
         owner,
       });
@@ -1109,7 +1109,7 @@ export function EventStoreProvider({ children }: Props) {
         let lastUpdatedBlockHint: bigint | undefined;
         try {
           const rich = await loadOwnerIndexRich({
-            chainId: somniaTestnet.id,
+            chainId: avalancheFuji.id,
             oracleAddress: oracle,
             owner,
           });

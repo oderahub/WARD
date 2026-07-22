@@ -5,7 +5,7 @@ import { formatEther } from "viem";
 import { parseIdInput } from "../lib/encoding";
 import { useUrlState, type ModeKind } from "../hooks/useUrlState";
 import { useWallet } from "../hooks/useWallet";
-import { SOMNIA_CHAIN_ID } from "../lib/networks";
+import { ACTIVE_CHAIN_ID } from "../lib/networks";
 import { AddressChip, Button, Input } from "./primitives";
 import ThemeToggle from "./ThemeToggle";
 
@@ -46,7 +46,7 @@ export default function TopBar() {
     setSearchValue("");
   };
 
-  const wrongNetwork = isConnected && chainId !== SOMNIA_CHAIN_ID;
+  const wrongNetwork = isConnected && chainId !== ACTIVE_CHAIN_ID;
 
   const { data: balance } = useBalance({
     address: isConnected ? address : undefined,
@@ -130,21 +130,21 @@ export default function TopBar() {
           <Button
             variant="warn"
             size="xs"
-            onClick={() => switchChain({ chainId: SOMNIA_CHAIN_ID })}
+            onClick={() => switchChain({ chainId: ACTIVE_CHAIN_ID })}
           >
-            Wrong network. Switch to Somnia
+            Wrong network. Switch to Avalanche
           </Button>
         )}
         {isConnected && address ? (
           <div className="flex items-center gap-3">
             {showFaucet && (
               <a
-                href="https://testnet.somnia.network/"
+                href="https://faucet.avax.network/"
                 target="_blank"
                 rel="noreferrer"
                 className="text-[11px] text-warn hover:underline"
               >
-                Get STT →
+                Get AVAX →
               </a>
             )}
             <span
@@ -152,7 +152,7 @@ export default function TopBar() {
                 isLowBalance ? "text-warn" : "text-text"
               }`}
             >
-              {balanceFormatted !== null ? `${balanceFormatted} STT` : "—"}
+              {balanceFormatted !== null ? `${balanceFormatted} AVAX` : "—"}
             </span>
             <AddressChip address={address} />
             <button

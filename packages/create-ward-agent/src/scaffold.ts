@@ -75,7 +75,7 @@ export function nextStepsBlock(result: ScaffoldResult): string {
     "",
     "  # Publish your policy and bind it:",
     `  pnpm ward push ./POLICY.md --label ${name.dirName}`,
-    "  forge script script/Deploy.s.sol --rpc-url \"$SOMNIA_TESTNET_RPC\" \\",
+    "  forge script script/Deploy.s.sol --rpc-url \"$FUJI_RPC\" \\",
     "    --broadcast --legacy --gas-estimate-multiplier 2000",
     "  # Then export AGENT + POLICY_ID and run script/Bind.s.sol.",
     "",

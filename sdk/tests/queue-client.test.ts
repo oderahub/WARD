@@ -54,7 +54,7 @@ describe("queue-client state decoding", () => {
 /**
  * Pins the canonical→legacy ABI fallback chain for getRecordHeader().
  *
- * The live WardQueue on Shannon (0x98A3…90D5) predates the policyVersion
+ * The live WardQueue on Fuji (0x98A3…90D5) predates the policyVersion
  * field added to RecordHeader, so it returns 11 words instead of 12. viem's
  * decoder surfaces this as "is out of bounds" / "not in safe integer range".
  * The client must catch that specific class of shape errors, retry against

@@ -17,7 +17,7 @@ import { PublishedReveal } from "../components/publish/PublishedReveal";
 import { IntentSimulator } from "../components/publish/IntentSimulator";
 import { ResizableSplit } from "../components/primitives";
 import { Separator } from "../components/ui/separator";
-import { SOMNIA_CHAIN_ID } from "../lib/networks";
+import { ACTIVE_CHAIN_ID } from "../lib/networks";
 import type { PolicyDraft } from "../lib/policy-draft";
 import { cachePublished, readPublished } from "../lib/publishedCache";
 
@@ -61,7 +61,7 @@ export function PublishPage() {
   const { oracle, queue, mode, revealed, setRevealed } = useUrlState();
   const { address: walletAddress, isConnected } = useAccount();
   const walletChainId = useChainId();
-  const chainId = walletChainId || SOMNIA_CHAIN_ID;
+  const chainId = walletChainId || ACTIVE_CHAIN_ID;
   const { store, snapshotKey, ready: storeReady } = useEventStore();
   const publicClient = usePublicClient();
   // Status of the on-chain `policyOwner(policyId)` fallback for the current
@@ -641,7 +641,7 @@ function DocumentFrontMatter({
         </dd>
         <dt className="text-text-muted">Namespace</dt>
         <dd className="text-text">
-          Somnia Shannon
+          Avalanche Fuji
           <span className="ml-2 font-mono text-[12px] text-text-muted">
             chain id {chainId}
           </span>

@@ -8,7 +8,7 @@ describe("policy-field-paths.humanizeErrorPath", () => {
 
   it("maps top-level fields via FIELD_HUMAN_LABELS", () => {
     expect(humanizeErrorPath(["dailySpendWeiCap"])).toBe(
-      "Daily native (STT) spend cap",
+      "Daily native (AVAX) spend cap",
     );
     expect(humanizeErrorPath(["expiresAt"])).toBe("Valid until");
     expect(humanizeErrorPath(["paused"])).toBe("Paused");

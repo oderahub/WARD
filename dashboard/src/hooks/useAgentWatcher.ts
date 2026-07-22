@@ -74,7 +74,7 @@ const MAX_VIOLATIONS = 100;
 // expandable in the page header stays a glanceable list — older entries
 // FIFO-drop as new failures land.
 const MAX_ERRORS = 10;
-const SHANNON_EXPLORER = "https://shannon-explorer.somnia.network";
+const SNOWTRACE_EXPLORER = "https://testnet.snowtrace.io";
 const PAGE_SIZE = 50;
 const MAX_PAGES = 200;
 // ~7 days at 1s blocks. Bounds first-load history scan so a fresh watch
@@ -252,7 +252,7 @@ async function fetchTxListPage(
   signal: AbortSignal,
 ): Promise<ExplorerTx[]> {
   const url =
-    `${SHANNON_EXPLORER}/api?module=account&action=txlist` +
+    `${SNOWTRACE_EXPLORER}/api?module=account&action=txlist` +
     `&address=${agent}&page=${page}&offset=${PAGE_SIZE}&sort=desc`;
   const res = await fetch(url, { signal });
   if (!res.ok) throw new Error(`explorer HTTP ${res.status}`);
@@ -412,7 +412,7 @@ export function compareLogPosition(
  * gives us a safe advance).
  *
  * Exported for tests so the "advance vs hold" decision matrix is pinned
- * — getting it wrong silently corrupts the watch loop on Shannon, where
+ * — getting it wrong silently corrupts the watch loop on Fuji, where
  * Blockscout lags the RPC by ~5 days.
  */
 export function computeEmptyBatchCursor(args: {
@@ -440,14 +440,14 @@ export function computeEmptyBatchCursor(args: {
 
 /**
  * Pull every log emitted BY `agent` between `fromBlock` and `toBlock`
- * inclusive, chunked into Shannon-safe windows (≤1000 blocks per
+ * inclusive, chunked into Fuji-safe windows (≤1000 blocks per
  * `eth_getLogs` call). Returns the union of logs across all chunks; order
  * is "chunks oldest-first, logs within chunk in node-returned order" —
  * callers that need strict positional order should re-sort with
  * `compareLogPosition`.
  *
  * RPC-first replacement for the Blockscout txlist endpoint, which has been
- * lagging the RPC node by ~5 days on Shannon and returns "no transactions"
+ * lagging the RPC node by ~5 days on Fuji and returns "no transactions"
  * for verified contracts with recent activity. Logs come straight from the
  * RPC node's index so there's no upstream explorer dependency.
  *
@@ -604,7 +604,7 @@ export class PolicyNotFoundInWindowError extends Error {
  * older policies.
  *
  * Implementation: walks backward from head to `head - 7d` in 999-block
- * chunks (Shannon's `eth_getLogs` caps at 1000 blocks/call). Returns on
+ * chunks (Fuji's `eth_getLogs` caps at 1000 blocks/call). Returns on
  * the first chunk with any hit, taking the highest block in that chunk
  * across both event types — that's the most recent state-touch, which is
  * what the decoder needs to reconstruct the *current* PolicyInput.
@@ -777,7 +777,7 @@ async function pollOne(entry: WatchedPolicy, ctx: PollContext): Promise<void> {
     return;
   }
 
-  // RPC-first fetch. Shannon Blockscout has been lagging the RPC node by
+  // RPC-first fetch. Fuji Blockscout has been lagging the RPC node by
   // ~5 days, so txlist returns "no transactions" for verified contracts
   // with recent activity. The RPC node's log index is realtime, so reading
   // events emitted BY the agent gives us a fresh and accurate "what did
@@ -876,7 +876,7 @@ async function pollOne(entry: WatchedPolicy, ctx: PollContext): Promise<void> {
   if (newTxs.length === 0) {
     // No work for this poll. Advance the cursor to `head` ONLY if every
     // attempted fetch path completed without error — see
-    // `computeEmptyBatchCursor` for the decision matrix. On Shannon this
+    // `computeEmptyBatchCursor` for the decision matrix. On Fuji this
     // matters because Blockscout lags ~5d behind RPC, so an idle agent
     // would otherwise see every poll re-scan the same growing window.
     const maxSeenBlock = txs.reduce((m, t) => {
@@ -1252,7 +1252,7 @@ export function useAgentWatcher(): UseAgentWatcherResult {
   // active Promise.all, and starve slower entries.
   const cursorsRef = useRef<Map<string, bigint>>(new Map());
 
-  const effectiveChainId = chainIdFromWallet || 50312;
+  const effectiveChainId = chainIdFromWallet || 43113;
 
   // Load watched entries whenever (chainId, oracle) changes. We use the
   // wallet's chainId when available; otherwise the URL-state default.

@@ -31,7 +31,7 @@ function makeClient(
   responses: Record<string, Address | Error>,
 ): DiscoverOpts["publicClient"] {
   return {
-    chain: { id: 50312 },
+    chain: { id: 43113 },
     readContract: vi.fn().mockImplementation(
       async ({ functionName }: { functionName: string }) => {
         const r = responses[functionName];
@@ -63,7 +63,7 @@ describe("discoverAgentTargets", () => {
   it("returns ok+empty when the agent ABI has no address-returning views", async () => {
     fetchAddressViewsMock.mockResolvedValueOnce(viewsOk([]));
     const client = makeClient({});
-    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 50312 });
+    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 43113 });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.targets).toEqual([]);
@@ -73,7 +73,7 @@ describe("discoverAgentTargets", () => {
   it("propagates abi-fetch failure as { ok: false }", async () => {
     fetchAddressViewsMock.mockResolvedValueOnce({ ok: false, error: "boom" });
     const client = makeClient({});
-    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 50312 });
+    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 43113 });
     expect(r.ok).toBe(false);
     if (r.ok) return;
     expect(r.error).toBe("boom");
@@ -82,7 +82,7 @@ describe("discoverAgentTargets", () => {
   it("surfaces a single target from counter()", async () => {
     fetchAddressViewsMock.mockResolvedValueOnce(viewsOk([{ name: "counter" }]));
     const client = makeClient({ counter: COUNTER });
-    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 50312 });
+    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 43113 });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.targets).toHaveLength(1);
@@ -96,7 +96,7 @@ describe("discoverAgentTargets", () => {
       viewsOk([{ name: "counter" }, { name: "router" }]),
     );
     const client = makeClient({ counter: ZERO, router: ROUTER });
-    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 50312 });
+    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 43113 });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.targets).toHaveLength(1);
@@ -108,7 +108,7 @@ describe("discoverAgentTargets", () => {
       viewsOk([{ name: "self" }, { name: "router" }]),
     );
     const client = makeClient({ self: AGENT, router: ROUTER });
-    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 50312 });
+    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 43113 });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.targets).toHaveLength(1);
@@ -126,7 +126,7 @@ describe("discoverAgentTargets", () => {
       viewsOk([{ name: "oracle" }, { name: "router" }]),
     );
     const client = makeClient({ oracle: reserved, router: ROUTER });
-    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 50312 });
+    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 43113 });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.targets.map((t) => t.address)).toEqual([ROUTER.toLowerCase()]);
@@ -137,7 +137,7 @@ describe("discoverAgentTargets", () => {
       viewsOk([{ name: "router" }, { name: "weth" }]),
     );
     const client = makeClient({ router: ROUTER, weth: ROUTER });
-    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 50312 });
+    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 43113 });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.targets).toHaveLength(1);
@@ -152,7 +152,7 @@ describe("discoverAgentTargets", () => {
       router: ROUTER,
       factory: new Error("factory() reverted"),
     });
-    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 50312 });
+    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 43113 });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.targets).toHaveLength(1);
@@ -165,7 +165,7 @@ describe("discoverAgentTargets", () => {
       viewsOk([{ name: "owner" }, { name: "router" }]),
     );
     const client = makeClient({ owner: COUNTER, router: ROUTER });
-    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 50312 });
+    const r = await discoverAgentTargets(AGENT, { publicClient: client, chainId: 43113 });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     const ownerTarget = r.targets.find((t) => t.sourceViewNames.includes("owner"));
@@ -180,7 +180,7 @@ describe("discoverAgentTargets", () => {
     const client = makeClient({});
     const r = await discoverAgentTargets(AGENT, {
       publicClient: client,
-      chainId: 50312,
+      chainId: 43113,
       signal: controller.signal,
     });
     expect(r.ok).toBe(false);
@@ -198,7 +198,7 @@ describe("discoverAgentTargets", () => {
     const client = makeClient({ router: ROUTER });
     const r = await discoverAgentTargets(AGENT, {
       publicClient: client,
-      chainId: 50312,
+      chainId: 43113,
       signal: controller.signal,
     });
     expect(r.ok).toBe(false);

@@ -2,30 +2,32 @@ import { createConfig, http } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { defineChain } from "viem";
 
-export const SOMNIA_CHAIN_ID = 50312;
+export const ACTIVE_CHAIN_ID = 43113;
 
-export const somniaTestnet = defineChain({
-  id: SOMNIA_CHAIN_ID,
-  name: "Somnia Testnet",
-  nativeCurrency: { name: "Somnia Test Token", symbol: "STT", decimals: 18 },
+export const avalancheFuji = defineChain({
+  id: ACTIVE_CHAIN_ID,
+  name: "Avalanche Fuji",
+  nativeCurrency: { name: "Avalanche Test Token", symbol: "AVAX", decimals: 18 },
   rpcUrls: {
-    default: { http: ["https://dream-rpc.somnia.network"] },
+    default: { http: ["https://api.avax-test.network/ext/bc/C/rpc"] },
   },
   blockExplorers: {
     default: {
-      name: "Shannon Explorer",
-      url: "https://shannon-explorer.somnia.network",
+      name: "Fuji Explorer",
+      url: "https://testnet.snowtrace.io",
     },
   },
 });
 
-export const WARD_ORACLE_ADDRESS =
-  "0x3C7bF90f243d670a01f512221d9546e09fEaCC9c" as const;
+// No canonical Avalanche deployment exists yet; supply the address from
+// contracts/deployments/43113.json via VITE_WARD_ORACLE.
+export const WARD_ORACLE_ADDRESS = (import.meta.env.VITE_WARD_ORACLE?.trim() ||
+  "0x0000000000000000000000000000000000000000") as `0x${string}`;
 
 export const wagmiConfig = createConfig({
-  chains: [somniaTestnet],
+  chains: [avalancheFuji],
   connectors: [injected()],
   transports: {
-    [somniaTestnet.id]: http(undefined, { timeout: 8_000 }),
+    [avalancheFuji.id]: http(undefined, { timeout: 8_000 }),
   },
 });

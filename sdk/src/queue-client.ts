@@ -4,7 +4,7 @@ import type { Intent } from "./types.js";
 
 export type QueueState = "None" | "Pending" | "Committed" | "Vetoed" | "Expired";
 
-// The first Shannon WardQueue returns an 11-word `RecordHeader`; synthesize `policyVersion: 0n`.
+// The first Fuji WardQueue returns an 11-word `RecordHeader`; synthesize `policyVersion: 0n`.
 function isQueueHeaderShapeError(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
   return (

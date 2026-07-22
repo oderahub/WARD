@@ -5,7 +5,7 @@ import type { QueueRecordHeader } from "@ward/sdk";
 import { useEventStore } from "../hooks/useEventStore";
 import { useUrlState } from "../hooks/useUrlState";
 import { useWallet } from "../hooks/useWallet";
-import { SOMNIA_CHAIN_ID, getNetwork } from "../lib/networks";
+import { ACTIVE_CHAIN_ID, getNetwork } from "../lib/networks";
 import { AddressChip, SkeletonLines } from "./primitives";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -474,7 +474,7 @@ interface FrontMatterProps {
 }
 
 function DocumentFrontMatter({ head, pendingCount }: FrontMatterProps) {
-  const net = getNetwork(SOMNIA_CHAIN_ID);
+  const net = getNetwork(ACTIVE_CHAIN_ID);
   return (
     <section className="mx-auto w-full max-w-[1100px] px-10 pt-10 pb-8 md:px-16">
       <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-text-muted">
@@ -493,7 +493,7 @@ function DocumentFrontMatter({ head, pendingCount }: FrontMatterProps) {
         <dd className="text-text">
           {net?.name ?? "—"}
           <span className="ml-2 font-mono text-[12px] text-text-muted">
-            chain id {SOMNIA_CHAIN_ID}
+            chain id {ACTIVE_CHAIN_ID}
           </span>
         </dd>
         <dt className="text-text-muted">Indexed through</dt>

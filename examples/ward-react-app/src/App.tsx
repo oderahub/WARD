@@ -10,7 +10,7 @@ import {
 import type { Address, Hex } from "viem";
 
 import { GuardedBumpPanel } from "./GuardedBumpPanel.js";
-import { SOMNIA_CHAIN_ID, somniaTestnet } from "./wagmi.js";
+import { ACTIVE_CHAIN_ID, avalancheFuji } from "./wagmi.js";
 
 const DEFAULT_AGENT_ADDRESS: Address =
   "0x809F01268B718Ea6d17438b94190749159Eee311";
@@ -48,7 +48,7 @@ export default function App() {
   const { connect, connectors, status: connectStatus } = useConnect();
   const { disconnect } = useDisconnect();
   const { switchChain } = useSwitchChain();
-  const publicClient = usePublicClient({ chainId: SOMNIA_CHAIN_ID });
+  const publicClient = usePublicClient({ chainId: ACTIVE_CHAIN_ID });
 
   const [agentAddress, setAgentAddress] = useState<string>(DEFAULT_AGENT_ADDRESS);
   const [policy, setPolicy] = useState<PolicyState>({ kind: "idle" });
@@ -61,7 +61,7 @@ export default function App() {
     return () => window.removeEventListener("focus", onFocus);
   }, []);
 
-  const onWrongChain = isConnected && chainId !== SOMNIA_CHAIN_ID;
+  const onWrongChain = isConnected && chainId !== ACTIVE_CHAIN_ID;
   const agentOk = isAddress(agentAddress);
 
   // Read the agent's bound policyId on-chain whenever the address changes, so
@@ -137,10 +137,10 @@ export default function App() {
         )}
         {onWrongChain && (
           <div className="warn">
-            Wrong network. The demo expects Somnia Testnet (chain {SOMNIA_CHAIN_ID}).
+            Wrong network. The demo expects Avalanche Fuji (chain {ACTIVE_CHAIN_ID}).
             <button
               type="button"
-              onClick={() => switchChain({ chainId: somniaTestnet.id })}
+              onClick={() => switchChain({ chainId: avalancheFuji.id })}
             >
               Switch network
             </button>
@@ -174,7 +174,7 @@ export default function App() {
         {policy.kind === "error" && (
           <div className="warn">
             Could not read POLICY_ID from this address. Is it a WardAgentBase
-            agent on Somnia? ({policy.message})
+            agent on Avalanche? ({policy.message})
           </div>
         )}
       </section>
@@ -182,7 +182,7 @@ export default function App() {
       <section className="card">
         <h2>Guarded write</h2>
         {!isConnected && <p>Connect a wallet to preflight and send.</p>}
-        {isConnected && !publicClient && <p>Waiting for Somnia RPC client.</p>}
+        {isConnected && !publicClient && <p>Waiting for Avalanche RPC client.</p>}
         {isConnected && publicClient && agentOk && policy.kind === "bound" && (
           <GuardedBumpPanel
             agentAddress={agentAddress as Address}

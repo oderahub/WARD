@@ -61,8 +61,8 @@ describe("humanizeWeb3Error — user-action paths (regression)", () => {
 
   it("explains insufficient-funds with the faucet hint", () => {
     const result = humanizeWeb3Error(new Error("insufficient funds for gas"));
-    expect(result.headline).toMatch(/Not enough STT/);
-    expect(result.headline).toMatch(/Somnia faucet/);
+    expect(result.headline).toMatch(/Not enough AVAX/);
+    expect(result.headline).toMatch(/Avalanche faucet/);
   });
 });
 
@@ -112,7 +112,7 @@ describe("humanizeWeb3Error — setPolicyId-missing detection", () => {
   });
 
   it("handles RPC-flattened reverts (plain Error) when functionName === setPolicyId", () => {
-    // Some RPCs (Shannon included, intermittently) strip the structured
+    // Some RPCs (Fuji included, intermittently) strip the structured
     // revert into a flat `Error("execution reverted")` with no viem
     // ContractFunctionRevertedError wrapper. The string-match fallback must
     // still surface the late-binding hint.

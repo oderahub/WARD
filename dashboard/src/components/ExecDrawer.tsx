@@ -10,7 +10,7 @@ import {
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useEventStore } from "../hooks/useEventStore";
 import { useUrlState } from "../hooks/useUrlState";
-import { somniaTestnet } from "../main";
+import { avalancheFuji } from "../main";
 import { DrawerHeader } from "./primitives/DrawerHeader";
 import { Row, AddressChip, SkeletonLines } from "./primitives";
 import WriteActions from "./WriteActions";
@@ -359,7 +359,7 @@ function QueueHandoffPanel({
     setPolicyOwner(undefined);
     setOwnerError(null);
     const client = createPublicClient({
-      chain: somniaTestnet,
+      chain: avalancheFuji,
       transport: http(rpc),
     });
     client

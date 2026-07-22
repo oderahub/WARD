@@ -402,8 +402,8 @@ export function RegisterStep({
 
         {wrongNetwork && (
           <Alert variant="warn" title="Wrong network">
-            Connected to chain {currentChainId ?? "?"}. Switch to Somnia
-            Shannon ({expectedChainId}) before submitting.
+            Connected to chain {currentChainId ?? "?"}. Switch to Avalanche
+            Fuji ({expectedChainId}) before submitting.
           </Alert>
         )}
 

@@ -19,14 +19,11 @@ export interface PreflightResult {
 const DEFAULT_MIN_BALANCE_WEI = 500_000_000_000_000_000n;
 
 const FAUCET_LINKS = [
-  "https://testnet.somnia.network/",
-  "https://faucet.somnia.network/",
+  "https://faucet.avax.network/",
+  "https://core.app/tools/testnet-faucet/",
 ];
 
-const REAL_PLATFORM = "0x037Bb9C718F3f7fe5eCBDB0b600D607b52706776".toLowerCase();
-const REAL_AGENT_ID = "12847293847561029384";
-
-/** Check env, RPC, and wallet balance for Somnia testnet write readiness. */
+/** Check env, RPC, and wallet balance for Avalanche write readiness. */
 export async function preflightCmd(
   opts: PreflightOptions = {},
   print = true,
@@ -56,23 +53,6 @@ export async function preflightCmd(
     );
   }
 
-  const platform = (process.env.SOMNIA_AGENT_PLATFORM ?? "").toLowerCase();
-  if (!platform) {
-    warnings.push("SOMNIA_AGENT_PLATFORM is empty; falling back to scripts' defaults.");
-  } else if (platform !== REAL_PLATFORM) {
-    warnings.push(
-      `SOMNIA_AGENT_PLATFORM=${platform} differs from the canonical testnet platform ${REAL_PLATFORM}.`,
-    );
-  }
-  const agentId = process.env.LLM_INFERENCE_AGENT_ID ?? "";
-  if (!agentId) {
-    warnings.push("LLM_INFERENCE_AGENT_ID is empty; required by any deploy script that wires in the real LLM Inference agent.");
-  } else if (agentId !== REAL_AGENT_ID) {
-    warnings.push(
-      `LLM_INFERENCE_AGENT_ID=${agentId} differs from the canonical id ${REAL_AGENT_ID}.`,
-    );
-  }
-
   if (process.env.WARD_ORACLE && !isAddress(process.env.WARD_ORACLE)) {
     errors.push(`WARD_ORACLE=${process.env.WARD_ORACLE} is not a valid 0x-address.`);
   }
@@ -99,7 +79,7 @@ export async function preflightCmd(
       balanceWei = await pc.getBalance({ address });
       if (balanceWei < minBalance) {
         warnings.push(
-          `Wallet balance ${formatEther(balanceWei)} STT is below the recommended ${formatEther(minBalance)} STT for a full live demo.`,
+          `Wallet balance ${formatEther(balanceWei)} AVAX is below the recommended ${formatEther(minBalance)} AVAX for a full live demo.`,
         );
       }
     } catch (e) {
@@ -115,10 +95,8 @@ export async function preflightCmd(
     console.log(`  chainId        ${chainId ?? kleur.gray("(unknown)")}`);
     console.log(`  wallet         ${address ?? kleur.gray("(no PRIVATE_KEY set)")}`);
     console.log(
-      `  balance        ${balanceWei !== undefined ? formatEther(balanceWei) + " STT" : kleur.gray("(not queried)")}`,
+      `  balance        ${balanceWei !== undefined ? formatEther(balanceWei) + " AVAX" : kleur.gray("(not queried)")}`,
     );
-    console.log(`  platform       ${process.env.SOMNIA_AGENT_PLATFORM ?? kleur.gray("(unset)")}`);
-    console.log(`  agentId        ${process.env.LLM_INFERENCE_AGENT_ID ?? kleur.gray("(unset)")}`);
     console.log(`  ward oracle  ${process.env.WARD_ORACLE ?? kleur.gray("(unset — deploy via script/Deploy.s.sol)")}`);
     console.log(`  ward queue   ${process.env.WARD_QUEUE ?? kleur.gray("(unset — optional; only needed for DELAYED/VETO_REQUIRED flows)")}`);
 
@@ -132,7 +110,7 @@ export async function preflightCmd(
     }
     if (balanceWei !== undefined && balanceWei < minBalance) {
       console.log("");
-      console.log(kleur.yellow("  Fund this wallet via a Somnia testnet faucet:"));
+      console.log(kleur.yellow("  Fund this wallet via an Avalanche Fuji faucet:"));
       for (const f of FAUCET_LINKS) console.log(`    ${kleur.cyan(f)}`);
     }
     console.log("");
