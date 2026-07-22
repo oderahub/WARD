@@ -25,6 +25,12 @@ call_override = false
 
 [rpc_endpoints]
 somnia_testnet = "https://dream-rpc.somnia.network"
+# Avalanche Fuji C-Chain testnet (chainId 43113). Deploy with:
+#   forge script script/Deploy.s.sol --rpc-url avalanche_fuji --broadcast
+avalanche_fuji = "https://api.avax-test.network/ext/bc/C/rpc"
 
 [etherscan]
 somnia_testnet = { key = "${SOMNIA_EXPLORER_KEY}", url = "https://shannon-explorer.somnia.network/api" }
+# Snowtrace migrated to Routescan; this etherscan-compatible endpoint verifies
+# on Fuji. SNOWTRACE_API_KEY may be any non-empty string for Routescan.
+avalanche_fuji = { key = "${SNOWTRACE_API_KEY}", chain = 43113, url = "https://api.routescan.io/v2/network/testnet/evm/43113/etherscan" }

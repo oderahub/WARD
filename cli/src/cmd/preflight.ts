@@ -1,7 +1,7 @@
 import kleur from "kleur";
 import { formatEther, isAddress, type Address } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { loadEnv, publicClient, somniaTestnet } from "../lib/env.js";
+import { loadEnv, publicClient, activeChain } from "../lib/env.js";
 
 export interface PreflightOptions {
   minBalance?: bigint;
@@ -90,9 +90,10 @@ export async function preflightCmd(
     const pc = publicClient(env.rpc);
     try {
       chainId = await pc.getChainId();
-      if (chainId !== somniaTestnet.id) {
+      const chain = activeChain();
+      if (chainId !== chain.id) {
         warnings.push(
-          `RPC returned chainId ${chainId}, expected ${somniaTestnet.id} (Somnia testnet). Wrong network?`,
+          `RPC returned chainId ${chainId}, expected ${chain.id} (${chain.name}). Wrong network?`,
         );
       }
       balanceWei = await pc.getBalance({ address });
