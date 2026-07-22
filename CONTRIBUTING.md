@@ -69,7 +69,7 @@ pnpm build   # → pnpm -r --if-present run build
 - `PRIVATE_KEY` — funded Avalanche Fuji testnet key, used by the CLI write paths.
 - `DEPLOYER_PK` — same key, named for `forge script ... --private-key $DEPLOYER_PK`. May equal `PRIVATE_KEY`; if you set only one, copy it to the other before running deploy scripts.
 - `FUJI_RPC` — defaults to `https://api.avax-test.network/ext/bc/C/rpc`.
-- `WARD_ORACLE` / `WARD_QUEUE` — the canonical live deployments (`0x3C7bF90f243d670a01f512221d9546e09fEaCC9c` / `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4`); leave as-is unless you re-deploy a fork.
+- `WARD_ORACLE` / `WARD_QUEUE` — your deployed contracts, taken from `contracts/deployments/43113.json` after running `script/Deploy.s.sol`. There is no canonical Avalanche deployment yet.
 - `SNOWTRACE_API_KEY` — optional, only for contract verification against the Fuji explorer.
 
 Forge scripts pick up `DEPLOYER_PK` from the shell, so `set -a; source .env; set +a` before bare `forge` invocations.

@@ -9,7 +9,7 @@
 
 <p>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href="https://testnet.snowtrace.io/address/0x3C7bF90f243d670a01f512221d9546e09fEaCC9c"><img alt="Network: Avalanche Fuji" src="https://img.shields.io/badge/Avalanche-Fuji%20testnet-blueviolet"></a>
+  <a href="#deploying-to-avalanche"><img alt="Network: Avalanche Fuji" src="https://img.shields.io/badge/Avalanche-Fuji%20testnet-blueviolet"></a>
   <a href="#test-surface"><img alt="Tests: 950+ passing" src="https://img.shields.io/badge/tests-950%2B%20passing-brightgreen"></a>
   <a href="verification/lean/"><img alt="Lean 4: 10 theorems, no sorry" src="https://img.shields.io/badge/Lean%204-10%20theorems%2C%20no%20sorry-informational"></a>
 </p>
@@ -19,18 +19,18 @@
   <a href="SKILL.md"><b>Docs</b></a> ·
   <a href="#integrate-into-your-agent"><b>Integrate</b></a> ·
   <a href="sdk/README.md"><b>SDK</b></a> ·
-  <a href="#live-on-fuji-testnet"><b>Contracts</b></a>
+  <a href="#deploying-to-avalanche"><b>Contracts</b></a>
 </p>
 
 </div>
 
 ---
 
-**Ward is the policy gate for autonomous Solidity agents on Avalanche — live on Fuji testnet.** Declare what your agent is allowed to do — in one short `POLICY.md` you compile and publish — and an on-chain modifier enforces it on every entrypoint, in the same transaction as the call. Replaces ad-hoc `onlyOwner` checks + per-call `require` lines with a single declarative policy you can version, pause, expire, or revoke without redeploying the agent. Ward does not hold funds, does not execute, and does not own anything it gates.
+**Ward is the policy gate for autonomous Solidity agents on Avalanche.** Declare what your agent is allowed to do — in one short `POLICY.md` you compile and publish — and an on-chain modifier enforces it on every entrypoint, in the same transaction as the call. Replaces ad-hoc `onlyOwner` checks + per-call `require` lines with a single declarative policy you can version, pause, expire, or revoke without redeploying the agent. Ward does not hold funds, does not execute, and does not own anything it gates.
 
 All three Ward contracts are deployed on **Avalanche Fuji testnet (chainId 43113)** and listed in Ward's own on-chain `WardAgentRegistry` — any agent or tool that walks `findWardAgents()` discovers them by name (`WardOracle (v2)`, `WardQueue (v2)`, `WardAgentRegistry`) plus the canonical sample (`CounterAgent (canonical dual-layer sample)`).
 
-It is a Avalanche-native set of three no-custody contracts:
+It is an Avalanche-native set of three no-custody contracts:
 
 - **`WardOracle`** — policy registry + synchronous validator. Publish a `POLICY.md` once, get a stable `policyId`. An agent calls `checkIntent` / `checkSelector` inline before dispatching and aborts on `(false, reason)`. The v2 contract additionally exposes `checkSelector`, used by the `wardGuarded` modifier.
 - **`WardQueue`** *(opt-in)* — coordination for `TIER_DELAYED` and `TIER_VETO_REQUIRED` intents. The asker enqueues; after the delay the dispatcher pulls the intent back and executes it. No custody, no execution by the queue.
@@ -51,7 +51,7 @@ It is a Avalanche-native set of three no-custody contracts:
   - [Dashboard](#quickstart--dashboard)
   - [CLI + TUI](#quickstart--cli--tui)
 - [Integrate into your agent](#integrate-into-your-agent)
-- [Live on Fuji testnet](#live-on-fuji-testnet)
+- [Deploying to Avalanche](#deploying-to-avalanche)
 - [Using the dashboard](#using-the-dashboard)
 - [Worked examples](#worked-examples)
 - [Prior art](#prior-art)
@@ -63,7 +63,7 @@ It is a Avalanche-native set of three no-custody contracts:
 
 ## The problem this exists to solve
 
-An autonomous agent's job is to turn a goal into on-chain action. On Avalanche, `inferToolsChat` lets an LLM return executable calldata at validator consensus — the model's output *is* a transaction the agent can dispatch. The agent reads `(target, selector, value, data)` and calls it.
+An autonomous agent's job is to turn a goal into on-chain action. Whatever drives it — an LLM emitting calldata, a keeper bot, a treasury automation — the output *is* a transaction the agent can dispatch. The agent reads `(target, selector, value, data)` and calls it.
 
 Nothing in that path asks "should this call be allowed?" The bytes came from a probabilistic model; the dispatch is a state mutation that does not roll back. A prompt injection, a hallucinated target, or a value an order of magnitude too large all execute exactly like a legitimate action. Once the transaction lands there is no undo — only post-hoc cleanup.
 
@@ -145,7 +145,7 @@ A consumer can still opt in to the queue: read the `reason`, recognize `REQUIRES
 
 The reason Ward can be a *gate* and not just a *monitor* is that the policy decision and the dispatch share one execution context. Three properties follow from being Avalanche-native:
 
-- **Same place the calldata was produced.** On Avalanche, the calldata comes from deterministic LLM consensus (`inferToolsChat`). The policy check runs at that same validator consensus. An off-chain enforcer structurally cannot sit inside that step; an on-chain enforcer on a different L1 cannot use deterministic LLM consensus. The author validates the bytes where the bytes were minted.
+- **Cheap enough to check every call.** Avalanche's sub-cent fees make a synchronous policy view call affordable on *every* agent action. On expensive chains a per-action guard is a luxury you ration; here it is the default, which is what lets Ward be a gate rather than a sampled monitor.
 - **Same transaction as the dispatch.** The agent calls `oracle.checkIntent(...)` and then dispatches in one transaction. Either the call passes the policy and executes, or the policy says no and the whole transaction reverts. There is no window between "checked" and "executed" for state to drift, and no separate signer that can be skipped — anyone who bypasses your dApp or your tooling still hits the same on-chain revert.
 - **No custody, no extra trust surface.** `WardOracle` is a pure policy registry plus synchronous validator. No Ward contract holds funds, owns agents, or executes external calls. The gate adds a `view` call to the agent's own dispatch, not a custodial intermediary that funds must pass through.
 
@@ -198,10 +198,8 @@ contracts/src/
 ├── WardOracle.sol            # policy registry + checkIntent + tierAndDelay + policyHealth
 ├── WardQueue.sol             # opt-in coordination for TIER_DELAYED / TIER_VETO_REQUIRED — enqueue / dispatch / veto / expireIfStale
 ├── WardAgentRegistry.sol     # ownerless permissionless directory of Ward-watched agents — register / update / agentsPaginated (v0.10.0)
-├── constants/
-│   └── AvalancheTestnet.sol       # verified mainnet/testnet platform + LLM agentId constants (for integrators)
-└── interfaces/
-    └── IAvalancheAgentPlatform.sol # mirrors createRequest + AgentResponse/Request/Status shape (for integrators)
+└── constants/
+    └── AvalancheFuji.sol       # chain id / RPC / explorer constants for scripts and examples
 ```
 
 `script/Deploy.s.sol` deploys WardOracle + WardQueue in one broadcast; `script/DeployRegistry.s.sol` deploys WardAgentRegistry separately (added in v0.10.0). Both write per-chain artifacts to `contracts/deployments/$CHAINID.json` and `$CHAINID-registry.json` respectively.
@@ -303,24 +301,19 @@ Hybrid intentional: enumeration during `publishPolicy` / `updatePolicy` (which i
 ### End-to-end agent loop (oracle model)
 
 ```
-            ┌───────────────────────┐
-   user   → │  YourAgent            │
-            │   (your entry point)  │
-            └────────────┬──────────┘
-                         │ posts inferToolsChat payload + deposit
-                         ▼
-          ┌─────────────────────────┐
-          │  IAvalancheAgentPlatform   │
-          │  .createRequest         │
-          └────────────┬────────────┘
-                       │ subcommittee runs LLM, returns response bytes
-                       ▼
-          ┌─────────────────────────┐
-          │  YourAgent              │
-          │  .handleResponse        │   (you write this)
-          └────────────┬────────────┘
-                       │ build Intent from response
-                       ▼
+       off-chain │ ┌───────────────────────┐
+   model / bot   │ │  Your agent runtime   │
+   / keeper      │ │  (LLM, bot, cron)     │
+                 │ └────────────┬──────────┘
+                 │              │ produces calldata
+─────────────────┼──────────────┼──────────────────────
+        on-chain │              ▼
+                 │ ┌─────────────────────────┐
+                 │ │  YourAgent              │
+                 │ │  .execute(intent)       │   (you write this)
+                 │ └────────────┬────────────┘
+                                │ build Intent from calldata
+                                ▼
           ┌─────────────────────────┐
           │  WardOracle           │
           │  .checkIntent           │   (one synchronous view call)
@@ -337,7 +330,11 @@ The oracle is a single view call in the middle of *your* dispatch. It returns; y
 
 ### Avalanche Fuji gas note
 
-Avalanche Fuji testnet under-reports actual on-chain gas consumption by ~15x vs forge's `eth_estimateGas` simulation. Without compensation every CREATE OOGs. Deploy with `--legacy --gas-estimate-multiplier 2000`; for writes from viem use `type: "legacy"` and an explicit `gas` limit. `script/Deploy.s.sol` does two CREATEs (WardOracle + WardQueue), so a full deploy costs ~0.2-0.3 AVAX.
+Deploying on Fuji is unremarkable: standard `eth_estimateGas` is accurate and no
+multiplier workaround is needed. `script/Deploy.s.sol` does two CREATEs (WardOracle +
+WardQueue). Benchmark the real cost against current C-Chain fees before quoting a
+number — Avalanche base fees move, and no figure here has been measured on a live
+Avalanche deploy yet.
 
 ### Trust model
 
@@ -348,7 +345,7 @@ Avalanche Fuji testnet under-reports actual on-chain gas consumption by ~15x vs 
 | `WardQueue` | The on-chain code itself + the 3 Lean WardQueue theorems pinning the state-transition timing. |
 | `WardAgentRegistry` | The on-chain code itself — ownerless and permissionless. First-writer-wins; no admin override. Trust the first registrar to have entered the right (agent, oracle, policyId) tuple. |
 | Your agent's `handleResponse` | Your own code — Ward can only protect you if you actually call `checkIntent` before dispatching. |
-| The Avalanche agent platform's validator consensus | Whatever you'd already trust for `inferToolsChat`. Ward is orthogonal — it runs in your asking-agent transaction, not in the validator subcommittee. |
+| Whatever produced the calldata | Your own model, bot, or keeper. Ward does not vouch for the intent's *quality* — only that it falls inside the policy you published. |
 
 The biggest "trust gap" in the oracle model is **integrator discipline**: nothing in `WardOracle` forces you to call `checkIntent` before dispatching. The same is true of any guardrails library. The mitigation is straightforward: keep the integration to a single, conspicuous line in your `handleResponse` (or its equivalent), and review the code path that follows a positive verdict.
 
@@ -370,7 +367,7 @@ The hosted build is at **<https://ward.vercel.app>**. To run it locally instead 
 
 Publish your first on-chain policy and watch it live, entirely from the terminal — no browser required.
 
-This tutorial takes you end to end against the canonical Ward v2 oracle on the Avalanche Fuji testnet (`0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`, chain id `43113`). You will install the tools, run a preflight check, compile and publish the policy that ships with the `ward-counter` example, and open the live TUI monitor. By the end you will have a real `policyId` on-chain and know how to bind it to an agent.
+This tutorial takes you end to end on the Avalanche Fuji testnet (chain id `43113`) against a `WardOracle` you deploy yourself — see [Deploying to Avalanche](#deploying-to-avalanche). You will install the tools, run a preflight check, compile and publish the policy that ships with the `ward-counter` example, and open the live TUI monitor. By the end you will have a real `policyId` on-chain and know how to bind it to an agent.
 
 #### Before you start
 
@@ -412,7 +409,8 @@ Set these in `.env` (the rest already point at the canonical live deployments):
 | `PRIVATE_KEY` | Your funded testnet key, used by the CLI to sign. |
 | `DEPLOYER_PK` | Same key, the name `forge` scripts read. Copy `PRIVATE_KEY` here. |
 | `FUJI_RPC` | Leave as `https://api.avax-test.network/ext/bc/C/rpc` unless you run a private node. |
-| `WARD_ORACLE` | Leave as `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c` (v2). |
+| `WARD_ORACLE` | Your deployed oracle, from `contracts/deployments/43113.json`. |
+| `WARD_QUEUE` | Your deployed queue, same file. Only needed for DELAYED / VETO_REQUIRED flows. |
 
 The CLI auto-loads `.env` from the directory you run it in, so anything you set here is picked up automatically.
 
@@ -424,7 +422,7 @@ Confirm your environment, network, and balance are good *before* spending gas:
 pnpm ward preflight
 ```
 
-It reports the RPC, the chain id, your wallet address and balance, the Avalanche agent platform and LLM-inference agent id, and the configured oracle/queue, then prints a verdict:
+It reports the RPC, the chain id, your wallet address and balance, and the configured oracle/queue, then prints a verdict:
 
 ```
 # ward preflight
@@ -432,10 +430,8 @@ It reports the RPC, the chain id, your wallet address and balance, the Avalanche
   chainId        43113
   wallet         0x....
   balance        ... AVAX
-  platform       0x037Bb9C718F3f7fe5eCBDB0b600D607b52706776
-  agentId        12847293847561029384
-  ward oracle  0x3C7bF90f243d670a01f512221d9546e09fEaCC9c
-  ward queue   0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4
+  ward oracle  0x… (from deployments/43113.json)
+  ward queue   0x… (from deployments/43113.json)
 
   preflight: OK
 ```
@@ -599,37 +595,62 @@ contract CounterAgent is WardAgentBase {
 
 Modifier order is deliberate: Solidity runs modifiers left-to-right, so `onlyOperator` rejects unauthorized callers *before* the agent makes the external oracle call — gas saved on doomed calls. `POLICY_ID` is inherited and late-bound via `setPolicyId(0xNEW)`; while unbound the Ward layer short-circuits, so the agent can ship to testnet before a policy exists (`setPolicyId(0)` is the Ward kill switch). For **multi-outbound** functions (e.g. `approve` + `swap`), use the inline `oracle.checkIntent` / `_wardCheck` + `_call` path instead — see the integration models + integration guide in **[SKILL.md](SKILL.md)**. Canonical sample: **[`examples/ward-counter/`](examples/ward-counter/)**.
 
-## Live on Fuji testnet
+## Deploying to Avalanche
 
-Canonical (v2) deployment — chain id `43113`:
-
-| Contract | Address |
-|---|---|
-| `WardOracle` | [`0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`](https://testnet.snowtrace.io/address/0x3C7bF90f243d670a01f512221d9546e09fEaCC9c) |
-| `WardQueue` | [`0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4`](https://testnet.snowtrace.io/address/0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4) |
-| `WardAgentRegistry` | [`0x97F743A9AAa5AcAA73075C1B8F1921274755CF70`](https://testnet.snowtrace.io/address/0x97F743A9AAa5AcAA73075C1B8F1921274755CF70) |
-
-The v1 oracle (`0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf`) and v1 queue (`0x98A3f7C38D19edF1ddA7E3bc38fa4B935aD590D5`) stay live for policies published before the v2 deploy; new `wardGuarded` agents bind to **v2** (it adds the `checkSelector` view the modifier uses). v1 lacks `checkSelector`, so it backs inline `checkIntent` callers only, not the `wardGuarded` modifier. Full history: **[CHANGELOG](CHANGELOG.md)**.
-
-### Discoverable on chain — Ward registered in its own registry
-
-All three Ward contracts are themselves registered as entries in `WardAgentRegistry`, so other agents and tooling can find Ward by name without hard-coded addresses:
+Ward has **no canonical Avalanche deployment yet** — the contracts are ownerless and
+hold no funds, so you deploy your own and point the tooling at it. Chain ids: Fuji
+`43113`, C-Chain mainnet `43114`.
 
 ```bash
-# Walk the registry for everything named "ward-core"
-cast call 0x97F743A9AAa5AcAA73075C1B8F1921274755CF70 "agentCount()(uint256)" \
-  --rpc-url https://api.avax-test.network/ext/bc/C/rpc
-# → 8 (4 historical demo agents + 3 ward-core meta-entries + the canonical CounterAgent sample)
-
-# Read one of the entries
-cast call 0x97F743A9AAa5AcAA73075C1B8F1921274755CF70 \
-  "getAgent(address)((address,address,address,bytes32,uint64,uint64,bool,string,string,string[]))" \
-  0x3C7bF90f243d670a01f512221d9546e09fEaCC9c \
-  --rpc-url https://api.avax-test.network/ext/bc/C/rpc
-# → name: "WardOracle (v2)", tags: ["ward-core","oracle"], metadataURI: github link
+cd contracts
+export DEPLOYER_PK=0xYOUR_FUNDED_KEY          # fund from https://faucet.avax.network/
+forge script script/Deploy.s.sol --rpc-url avalanche_fuji --broadcast
 ```
 
-The canonical sample agent (`CounterAgent (canonical dual-layer sample)` at [`0x809F01268B718Ea6d17438b94190749159Eee311`](https://testnet.snowtrace.io/address/0x809F01268B718Ea6d17438b94190749159Eee311)) is also in the registry — `findWardAgents()` SDK helpers surface it alongside Ward's own contracts.
+That writes `contracts/deployments/43113.json`:
+
+| Contract | Where its address comes from |
+|---|---|
+| `WardOracle` | `deployments/43113.json` → `wardOracle`; export as `WARD_ORACLE` |
+| `WardQueue` | `deployments/43113.json` → `wardQueue`; export as `WARD_QUEUE` |
+| `WardAgentRegistry` | `script/DeployRegistry.s.sol`; export as `WARD_AGENT_REGISTRY` |
+
+Then wire the rest of the stack:
+
+```bash
+# CLI + forge scripts
+export WARD_CHAIN=fuji
+export WARD_ORACLE=0x…   WARD_QUEUE=0x…
+
+# dashboard (dashboard/.env.local)
+VITE_WARD_CHAIN=fuji
+VITE_WARD_ORACLE=0x…
+VITE_WARD_QUEUE=0x…
+```
+
+`ward preflight` verifies the wallet, RPC, chain id, and balance before any write.
+
+### Discoverable on chain — register Ward in its own registry
+
+`WardAgentRegistry` is ownerless and permissionless, so once deployed you can register
+Ward's own contracts as entries and let other agents and tooling resolve them by name
+instead of hard-coding addresses:
+
+```bash
+# Walk the registry
+cast call $WARD_AGENT_REGISTRY "agentCount()(uint256)" \
+  --rpc-url https://api.avax-test.network/ext/bc/C/rpc
+
+# Read one entry
+cast call $WARD_AGENT_REGISTRY \
+  "getAgent(address)((address,address,address,bytes32,uint64,uint64,bool,string,string,string[]))" \
+  $WARD_ORACLE \
+  --rpc-url https://api.avax-test.network/ext/bc/C/rpc
+```
+
+> **Prior deployment.** Ward ran previously on Somnia Shannon (chain `50312`) under its
+> former name; those contracts remain live there but are **not** part of this
+> Avalanche-only codebase. See [CHANGELOG](CHANGELOG.md) for that history.
 
 Source verification on Fuji Blockscout is the one remaining discoverability gap — pending a working `forge verify-contract` config for the Avalanche explorer's API.
 
@@ -657,7 +678,7 @@ The left **Sidebar** has the four tabs:
 | Publish | Compile and publish a policy on-chain |
 | Queue | Pending intents and recent oracle events |
 | Watched | Watch-mode violations from immutable agents |
-| Watch wizard | Discover a Avalanche agent and set up Slack alerts in 60 seconds |
+| Watch wizard | Discover an Avalanche agent and set up Slack alerts in 60 seconds |
 
 ### Publish tab: author and publish a policy
 
@@ -792,7 +813,7 @@ indexed-through block, and how many agents are watched. It contains:
 
 ### Watch wizard: bind alerts to an agent
 
-The Watch wizard is a three-step flow to discover a Avalanche agent and bind alerts. Its
+The Watch wizard is a three-step flow to discover an Avalanche agent and bind alerts. Its
 front matter tracks the registry contract, your wallet, the target agent, and an
 elapsed-seconds counter.
 
@@ -1017,15 +1038,15 @@ Ward did not invent policy-bounded agent execution. The intent-policy enforcemen
 
 ### What Ward adds
 
-- **Validator-consensus authorization.** The policy decision runs at the same place that produced the calldata (Avalanche's deterministic LLM consensus). Off-chain enforcers structurally cannot match this; on-chain enforcers on other L1s cannot use deterministic LLM consensus.
-- **AgentRegistry-native identity.** Ward uses Avalanche's built-in `AgentRegistry` (`0xaD3101C37F091593fEe7cb471e92b5E9A1205194` mainnet) for canonical `agentId`s. No external identity standard is required.
+- **In-transaction authorization.** The policy decision executes inside the same transaction as the guarded call, so there is no window between "checker approved" and "action executed". Off-chain enforcers and middleware proxies structurally cannot close that gap.
+- **Self-contained agent directory.** Ward ships its own ownerless `WardAgentRegistry`, so agents are discoverable by name without depending on a chain-specific identity contract or an external identity standard.
 - **Selector-granular policy.** Per-target / per-selector tier, value cap, and delay. Lets an author authorize `approve(spender, X)` IMMEDIATE while keeping `transfer(to, *)` on `VETO_REQUIRED`.
 - **`POLICY.md` format.** Plain markdown wrapper around a fenced YAML block; SDK ships a deterministic compiler to `PolicyInput`. The format is the human-authoring surface; the compiler is the bridge.
 - **Namespaced shared registry.** `WardOracle.publishPolicy(label, …)` keys policies by `keccak256(publisher, label)`, so multiple agents share one deployed oracle without colliding. Publishers can iterate on their policy (`updatePolicy`) without changing the `policyId` integrators reference — same `policyId` is stable across updates.
 
 ### Where Ward deliberately does NOT compete
 
-- **Prompt-injection scanning.** Out of scope; an off-chain enforcer (e.g. Mandate's Venice.ai integration) can sit upstream of Ward. Ward trusts what `inferToolsChat` consensus delivers.
+- **Prompt-injection scanning.** Out of scope; an off-chain enforcer can sit upstream of Ward. Ward makes no claim about *why* the calldata was produced — only whether it falls inside the published policy.
 - **Off-chain reputation/identity standards (ERC-8004, x402).** Avalanche provides agent identity natively; Ward does not depend on these. Apps that want to interop with external chains can layer those above Ward's receipts.
 
 ### License compatibility

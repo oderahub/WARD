@@ -91,8 +91,8 @@ import { createOracleClient } from "@ward/sdk";
 const oracle = createOracleClient({
   publicClient: createPublicClient({ transport: http("https://api.avax-test.network/ext/bc/C/rpc") }),
   // v2 oracle (canonical for new integrations; v0.11.0+).
-  // Pass "0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf" if you're reading a pre-v0.11.0 policy on the v1 oracle.
-  oracleAddress: "0x3C7bF90f243d670a01f512221d9546e09fEaCC9c",
+  // Your deployed WardOracle, from contracts/deployments/43113.json.
+  oracleAddress: process.env.WARD_ORACLE as `0x${string}`,
 });
 
 const { ok, reason } = await oracle.checkIntent(policyId, intent, spentToday);
@@ -119,7 +119,7 @@ const publicClient = createPublicClient({ chain: avalanche, transport: http(aval
 
 const result = await findWardAgents({
   publicClient,
-  registryAddress: '0x97F743A9AAa5AcAA73075C1B8F1921274755CF70',
+  registryAddress: process.env.WARD_AGENT_REGISTRY as `0x${string}`,
   onlyActive: true,
 });
 

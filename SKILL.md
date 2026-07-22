@@ -64,20 +64,27 @@ This file is self-contained: every address, command, schema rule, selector, stru
 
 ---
 
-## 1. Canonical Fuji addresses (don't deploy your own unless you need to)
+## 1. Deploy your own Ward contracts
 
-| Thing | Value |
+There is **no canonical Avalanche deployment yet**. Ward's contracts are ownerless and
+hold no funds, so every integrator deploys their own and points the tooling at it.
+
+```bash
+cd contracts
+export DEPLOYER_PK=0xYOUR_FUNDED_KEY      # fund at https://faucet.avax.network/
+forge script script/Deploy.s.sol --rpc-url avalanche_fuji --broadcast
+forge script script/DeployRegistry.s.sol --rpc-url avalanche_fuji --broadcast
+```
+
+| Thing | Where it comes from |
 |---|---|
-| `WardOracle` *(v2, canonical for new integrations)* | `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c` |
-| `WardQueue` *(v2)* | `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4` |
-| `WardAgentRegistry` *(v0.10.0, oracle-agnostic)* | `0x97F743A9AAa5AcAA73075C1B8F1921274755CF70` |
-| `WardOracle` *(v1, still live for pre-v0.11.0 policies)* | `0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf` |
-| `WardQueue` *(v1, still live)* | `0x98A3f7C38D19edF1ddA7E3bc38fa4B935aD590D5` |
-| Avalanche agent platform | `0x037Bb9C718F3f7fe5eCBDB0b600D607b52706776` |
-| LLM inference agent id | `12847293847561029384` (uint256) |
-| JSON API agent id | `13174292974160097713` (uint256) |
-| Default request deposit | `0.12 ether` (validator reward only; see §11 gotcha 14) |
-| Chain | Avalanche Fuji testnet, chainId `43113` |
+| `WardOracle` | `contracts/deployments/43113.json` → `wardOracle`; export as `WARD_ORACLE` |
+| `WardQueue` | `contracts/deployments/43113.json` → `wardQueue`; export as `WARD_QUEUE` |
+| `WardAgentRegistry` | `contracts/deployments/43113-registry.json`; export as `WARD_AGENT_REGISTRY` |
+| Chain | Avalanche Fuji testnet, chainId `43113` (mainnet C-Chain is `43114`) |
+
+Throughout this document, `$WARD_ORACLE` / `$WARD_QUEUE` / `$WARD_AGENT_REGISTRY` refer to
+**your** deployment's addresses.
 | RPC | `https://api.avax-test.network/ext/bc/C/rpc` |
 | Explorer | `https://testnet.snowtrace.io` |
 
@@ -148,7 +155,7 @@ Schema rules (compiler is strict — extra/unknown fields are rejected):
 - `dailySpendWeiCap` is the per-UTC-day rolling cap across ALL selectors (native wei only — ERC20 amounts are not summed).
 - `expiresAt` is ISO-8601; after that timestamp `checkIntent` returns `(false, "EXPIRED")`.
 - Caps: `MAX_TARGETS = 20`, `MAX_SELECTORS_PER_TARGET = 10`. Larger policies revert at publish; they do not silently truncate.
-- Reserved target: `WardOracle` itself (v2 `0x3C7bF90f…CC9c` or v1 `0x68d4B045…11DDf` — whichever your agent binds to) — including it fails compilation.
+- Reserved target: `WardOracle` itself (whichever oracle your agent binds to) — including it fails compilation.
 - Labels (separate from the YAML) are encoded as `padHex({size:32, dir:"right"}, stringToBytes(label))` — UTF-8 right-padded with zeros. **Never `keccak256(label)`.** The CLI handles this for you.
 
 For the complete authoritative grammar (every field, every validation rule, EIP-55 enforcement, error messages, `maxSlippageBps` semantics), see [§19 POLICY.md spec](#19-policymd-spec--authoritative-grammar).
@@ -976,10 +983,10 @@ A contract that inherits `WardAgentBase`, guards its entrypoints with `wardGuard
 For new integrations use the canonical v2 oracle already live on Avalanche Fuji (chain id `43113`):
 
 ```
-WardOracle (v2) = 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c
+WardOracle (v2) = $WARD_ORACLE
 ```
 
-The `wardGuarded` modifier calls `oracle.checkSelector(...)`, which only exists on the v2 oracle — so the modifier path **requires v2**. The legacy v1 oracle (`0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf`) is still live but reference it only as explicit legacy; bind there only if you are continuing a pre-v0.11.0 policy through the inline `checkIntent` path.
+The `wardGuarded` modifier calls `oracle.checkSelector(...)`, which only exists on the v2 oracle — so the modifier path **requires v2**. The legacy v1 oracle (`$WARD_ORACLE`) is still live but reference it only as explicit legacy; bind there only if you are continuing a pre-v0.11.0 policy through the inline `checkIntent` path.
 
 To deploy your own oracle instead, run the repo's deploy script and capture the printed address. The `--gas-estimate-multiplier 2000` is required because Fuji's RPC under-reports gas by roughly 15×.
 
@@ -1101,7 +1108,7 @@ pnpm ward compile ./policy.md   # prints the canonical JSON; sends nothing
 Publish the policy. The `policyId` is `keccak256(abi.encode(publisher, label))` — stable across `updatePolicy` calls and namespaced by your wallet:
 
 ```bash
-export WARD_ORACLE=0x3C7bF90f243d670a01f512221d9546e09fEaCC9c
+export WARD_ORACLE=$WARD_ORACLE
 export PRIVATE_KEY=0x…                       # publisher wallet
 pnpm ward push ./policy.md --label counter-demo
 # → publishPolicy tx: 0x…
@@ -1168,7 +1175,7 @@ Generate a `WardAgentBase`-derived Foundry project with one command, then build 
 - **Node.js >= 20** — the monorepo's root `package.json` declares `"engines": { "node": ">=20" }` (and `.nvmrc` pins `20`).
 - **pnpm** — the scaffolder is published as a `pnpm create` initializer.
 - **Foundry** (`forge`, `cast`) — to build and test the generated project. Install via [getfoundry.sh](https://getfoundry.sh).
-- **A funded Fuji key** — only needed later, when you deploy. Avalanche Fuji testnet is chain id `43113`, RPC `https://api.avax-test.network/ext/bc/C/rpc` (from `contracts/src/constants/AvalancheTestnet.sol`).
+- **A funded Fuji key** — only needed later, when you deploy. Avalanche Fuji testnet is chain id `43113`, RPC `https://api.avax-test.network/ext/bc/C/rpc` (from `contracts/src/constants/AvalancheFuji.sol`).
 
 You do not need a funded key to complete this tutorial. The scaffold + build + test steps are fully local.
 
@@ -1717,11 +1724,9 @@ On startup the CLI auto-loads a `.env` file from the current working directory (
 |---|---|---|---|
 | `PRIVATE_KEY` | every write command (`push`, `queue:*`) and `preflight` | — | `0x`-prefixed 32-byte hex. The signing wallet. |
 | `DEPLOYER_PK` | `preflight` only (fallback for `PRIVATE_KEY`) | — | Read only by `preflight`; if it differs from `PRIVATE_KEY` while both are set, `preflight` warns. |
-| `WARD_ORACLE` | `push`, `queue:handoff` (for a `VETO_REQUIRED` record) | — | Deployed `WardOracle` address. Canonical (v2): `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`. `lint` reads the oracle from its own `--oracle` flag, not this variable. |
-| `WARD_QUEUE` | `queue:status`, `queue:enqueue`, `queue:dispatch`, `queue:veto`, `queue:expire`, `queue:handoff` | — | Deployed `WardQueue` address. Canonical (v2): `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4`. |
+| `WARD_ORACLE` | `push`, `queue:handoff` (for a `VETO_REQUIRED` record) | — | Deployed `WardOracle` address. Canonical (v2): `$WARD_ORACLE`. `lint` reads the oracle from its own `--oracle` flag, not this variable. |
+| `WARD_QUEUE` | `queue:status`, `queue:enqueue`, `queue:dispatch`, `queue:veto`, `queue:expire`, `queue:handoff` | — | Deployed `WardQueue` address. Canonical (v2): `$WARD_QUEUE`. |
 | `FUJI_RPC` | every on-chain command | `https://api.avax-test.network/ext/bc/C/rpc` | RPC URL for chain id `43113`. |
-| `AVALANCHE_AGENT_PLATFORM` | `preflight` (sanity warning) | — | Compared against canonical platform `0x037Bb9C718F3f7fe5eCBDB0b600D607b52706776`. |
-| `LLM_INFERENCE_AGENT_ID` | `preflight` (sanity warning) | — | Compared against canonical id `12847293847561029384`. |
 
 Commands that need a missing variable fail fast with an explicit error, e.g. `WARD_ORACLE env var required (the deployed oracle address)`, `WARD_QUEUE env var required (the deployed queue address)`, or `PRIVATE_KEY env var required`.
 
@@ -1861,7 +1866,7 @@ pnpm ward ai:init --all
 Check env + wallet balance against Avalanche Fuji. **On-chain read** (RPC only, no transaction).
 
 - **Flag:** `--min-balance <eth>` — minimum recommended balance in AVAX (default `0.5`).
-- **Env:** reads `PRIVATE_KEY` (or `DEPLOYER_PK`), `FUJI_RPC`, and the optional `WARD_ORACLE` / `WARD_QUEUE` / `AVALANCHE_AGENT_PLATFORM` / `LLM_INFERENCE_AGENT_ID` variables.
+- **Env:** reads `PRIVATE_KEY` (or `DEPLOYER_PK`), `WARD_CHAIN`, `FUJI_RPC`, and the optional `WARD_ORACLE` / `WARD_QUEUE` variables.
 - **Output:** a `# ward preflight` report of rpc, chainId, wallet, balance, platform, agentId, and the two Ward addresses, followed by any `ERROR` / `WARN` lines, faucet links when the balance is low, and a final `preflight: OK` / `preflight: NOT READY`. It errors on a missing or malformed key, an invalid `WARD_ORACLE` / `WARD_QUEUE` address shape, or an unreachable RPC; it warns on a chainId other than `43113`, a low balance, or a non-canonical platform / agent id.
 - **Exit code:** `1` when not ready (any error present).
 
@@ -1980,7 +1985,7 @@ Exhaustive reference for Ward's on-chain surface: the three core contracts, thei
 
 ### Canonical addresses (Avalanche Fuji, chain id 43113)
 
-Use the canonical table in §1. Contract-specific ABI details start below; RPC and chain constants are defined in [`AvalancheTestnet`](#avalanchetestnet-constants).
+Use the deployment table in §1. Contract-specific ABI details start below; RPC and chain constants are defined in [`AvalancheFuji`](#avalanchefuji-constants).
 
 ### Import paths & remapping
 
@@ -1999,7 +2004,7 @@ import "ward/PolicyTypes.sol";          // Intent, Policy structs, tier constant
 import "ward/integration/WardAgentBase.sol";
 import "ward/integration/QueueAgentBase.sol";
 import "ward/integration/WardCall.sol";
-import "ward/constants/AvalancheTestnet.sol";
+import "ward/constants/AvalancheFuji.sol";
 ```
 
 All sources compile with `pragma solidity 0.8.26;`.
@@ -2464,25 +2469,22 @@ error NotRegistrar();
 error InvalidAgent();
 ```
 
-### AvalancheTestnet constants
+### AvalancheFuji constants
 
-Network and agent-platform constants used by deploy scripts and integration code (`contracts/src/constants/AvalancheTestnet.sol`).
+Network constants used by deploy scripts and integration code
+(`contracts/src/constants/AvalancheFuji.sol`).
 
 ```solidity
-library AvalancheTestnet {
+library AvalancheFuji {
     uint256 internal constant CHAIN_ID = 43113;
     string  internal constant RPC_URL = "https://api.avax-test.network/ext/bc/C/rpc";
-
-    address internal constant AGENT_PLATFORM = 0x037Bb9C718F3f7fe5eCBDB0b600D607b52706776;
-
-    uint256 internal constant LLM_INFERENCE_AGENT_ID = 12847293847561029384;
-    uint256 internal constant JSON_API_AGENT_ID      = 13174292974160097713;
-
-    uint256 internal constant DEFAULT_REQUEST_DEPOSIT = 0.12 ether;
+    string  internal constant EXPLORER_URL = "https://testnet.snowtrace.io";
 }
 ```
 
-`AGENT_PLATFORM` is the real Avalanche Agents platform; its ABI is in `contracts/src/interfaces/IAvalancheAgentPlatform.sol`. Ward's core contracts do not depend on the agent platform — the interface and these agent-id constants exist only for agents that additionally call the Avalanche platform (the oracle gate is independent of it).
+Ward's core contracts are chain-agnostic and do not read these constants — they exist for
+deploy scripts, tests, and example actors. The native gas token is AVAX (18 decimals), so
+`msg.value` caps in policies are denominated in wei-of-AVAX.
 
 ---
 
@@ -2633,7 +2635,7 @@ function cancelPolicyOwnershipTransfer(bytes32 policyId) external {
 None of these three has a CLI command or an SDK client method — drive them with raw ABI. From the old owner's wallet:
 
 ```bash
-cast send 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c \
+cast send $WARD_ORACLE \
   "transferPolicyOwnership(bytes32,address)" \
   0x<policyId> 0x<newOwner> \
   --rpc-url https://api.avax-test.network/ext/bc/C/rpc --private-key $PRIVATE_KEY
@@ -2642,7 +2644,7 @@ cast send 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c \
 Then from the new owner's wallet:
 
 ```bash
-cast send 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c \
+cast send $WARD_ORACLE \
   "acceptPolicyOwnership(bytes32)" \
   0x<policyId> \
   --rpc-url https://api.avax-test.network/ext/bc/C/rpc --private-key $NEW_OWNER_PK
@@ -2772,8 +2774,8 @@ The TUI runs against the canonical v2 deployment by default — no flags or conf
 
 | Setting | Default | Override env var |
 | --- | --- | --- |
-| Oracle | `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c` | `WARD_ORACLE` |
-| Queue | `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4` | `WARD_QUEUE` |
+| Oracle | `$WARD_ORACLE` | `WARD_ORACLE` |
+| Queue | `$WARD_QUEUE` | `WARD_QUEUE` |
 | RPC | `https://api.avax-test.network/ext/bc/C/rpc` (chain `43113`) | `FUJI_RPC` |
 | Queue lookback | `50000` blocks | `WARD_QUEUE_LOOKBACK_BLOCKS` |
 
@@ -2881,8 +2883,8 @@ Loaded from `.env` in the current working directory (KEY=VALUE lines, `#` commen
 | Variable                          | Default                                        | Purpose                                                              |
 | --------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------- |
 | `PRIVATE_KEY`                     | unset (read-only)                              | Enables `expireIfStale` writes.                                      |
-| `WARD_ORACLE`                   | `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`   | Oracle address.                                                     |
-| `WARD_QUEUE`                    | `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4`   | Queue address.                                                      |
+| `WARD_ORACLE`                   | `$WARD_ORACLE`   | Oracle address.                                                     |
+| `WARD_QUEUE`                    | `$WARD_QUEUE`   | Queue address.                                                      |
 | `FUJI_RPC`              | `https://api.avax-test.network/ext/bc/C/rpc`             | RPC endpoint (chain id `43113`, Avalanche Fuji).                   |
 | `WARD_QUEUE_LOOKBACK_BLOCKS`    | `50000`                                        | Queue event backfill window.                                        |
 | `WARD_TUI_ORACLE_DEPLOY_BLOCK`  | unset                                          | Start block for a deep policy backfill.                             |
@@ -2930,7 +2932,7 @@ The flow expects you to have:
 
 1. The Ward repo cloned somewhere on disk (for the CLI).
 2. `pnpm install` + `pnpm -C cli run build` run in the Ward repo.
-3. A `.env` in the Ward repo with `PRIVATE_KEY` set to a Avalanche Fuji wallet with AVAX ([faucet](https://faucet.avax.network/)).
+3. A `.env` in the Ward repo with `PRIVATE_KEY` set to an Avalanche Fuji wallet with AVAX ([faucet](https://faucet.avax.network/)).
 4. Your agent contract source open in the workspace.
 
 The skill handles everything else — including verifying the precomputed `policyId` matches the published one, surfacing label-encoding mistakes, and only running real on-chain transactions after explicit confirmation.
@@ -2978,7 +2980,7 @@ Do NOT auto-invoke if the user is asking conceptual questions about Ward ("how d
 
 #### Ward contracts (live on Fuji testnet, chainId 43113)
 
-Use the canonical table in §1. The v2 oracle is the default for new integrations because it adds `checkSelector`; v1 remains live for inline `checkIntent` callers. Neither contract holds funds, owns agents, or executes calls. The dev's agent remains the executor of `target.call(...)`.
+Use the deployment table in §1. The v2 oracle is the default for new integrations because it adds `checkSelector`; v1 remains live for inline `checkIntent` callers. Neither contract holds funds, owns agents, or executes calls. The dev's agent remains the executor of `target.call(...)`.
 
 #### The Ward CLI (`pnpm ward` from the Ward repo) — onboarding subset
 
@@ -2991,7 +2993,7 @@ Use the canonical table in §1. The v2 oracle is the default for new integration
 | `inspect <intent.json>` | Pretty-print an Intent JSON with calldata decoded |
 | `queue:status <execId>` | Read a WardQueue record header (operator-side, not needed for onboarding) |
 
-The dev needs the Ward repo cloned + `pnpm install`'d + `pnpm -C cli run build`. Their `.env` needs `PRIVATE_KEY` (a Avalanche Fuji key with AVAX) and optionally `WARD_ORACLE` / `WARD_QUEUE` overrides (defaults match the addresses above). Use `pnpm ward` for the guided menu or `pnpm ward <command>` for direct commands.
+The dev needs the Ward repo cloned + `pnpm install`'d + `pnpm -C cli run build`. Their `.env` needs `PRIVATE_KEY` (an Avalanche Fuji key with AVAX) and optionally `WARD_ORACLE` / `WARD_QUEUE` overrides (defaults match the addresses above). Use `pnpm ward` for the guided menu or `pnpm ward <command>` for direct commands.
 
 #### POLICY.md format (v0.1) — short form
 
@@ -3050,7 +3052,7 @@ contract MyAgent {
         bytes4(keccak256("doThing(uint256,string)"));
 
     constructor(WardOracle _oracle, bytes32 _policyId) {
-        oracle    = _oracle;          // 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c on Fuji (v2 — canonical for new integrations); 0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf for pre-v0.11.0 v1-bound agents
+        oracle    = _oracle;          // $WARD_ORACLE on Fuji (v2 — canonical for new integrations); $WARD_ORACLE for pre-v0.11.0 v1-bound agents
         POLICY_ID = _policyId;
     }
 
@@ -3209,7 +3211,7 @@ Notes when generating the diff:
 - If the policy's `dailySpendWeiCap` is non-zero, also add `mapping(uint64 => uint256) internal _wardDailySpent;`, pass `_wardDailySpent[uint64(block.timestamp / 1 days)]` instead of `0` as the third arg, and bump it by `intent.value` after `require(success)`. **Don't add this if the policy has no daily cap** — dead gas.
 - If the agent already wraps dispatch in something like an `Intent` of its own, reuse fields where the names line up — don't introduce parallel state.
 - The constructor change is a deployment break; flag it.
-- The oracle address constant could be hardcoded instead of constructor-injected if the dev prefers (`address(0x3C7bF90f243d670a01f512221d9546e09fEaCC9c)` for v2 — canonical for new integrations; `address(0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf)` for pre-v0.11.0 v1-bound agents). Either works.
+- The oracle address constant could be hardcoded instead of constructor-injected if the dev prefers (`address($WARD_ORACLE)` for v2 — canonical for new integrations; `address($WARD_ORACLE)` for pre-v0.11.0 v1-bound agents). Either works.
 
 If the dev says "apply it", use Edit to land the diff in their actual file. Then:
 1. Run their existing test suite. Fix any breakage (typically: tests that hit a now-blocked selector — those are now tests of the policy itself, which the dev should keep as expected-revert tests).
@@ -3219,7 +3221,6 @@ If the dev says "apply it", use Edit to land the diff in their actual file. Then
 ### Common pitfalls — call these out as you hit them
 
 - **Label encoding.** Labels are encoded as `padHex({size:32, dir:"right"}, stringToBytes(label))` — i.e. the UTF-8 bytes right-padded with zeros to 32 bytes. **Never `keccak256(label)`.** The CLI handles this; if the dev rolls their own publish path and uses keccak, their `policyId` will not match what `policyid <label>` precomputed.
-- **Deposit sizing for LLM agents.** If the agent uses Avalanche's `inferString` / `inferToolsChat`, `getRequestDeposit()` returns ONLY the validator-reward budget — it does NOT include the LLM execution cost. Empirically 1 AVAX works for short prompts; 0.12 AVAX returns the validator response `"insufficient budget for execution cost"`. Document this in the agent.
 - **DELAYED vs VETO_REQUIRED dispatcher mismatch.** `DELAYED` is dispatched by the **asker**; `VETO_REQUIRED` is dispatched by `oracle.policyOwner(policyId)`. If the policy owner is a multisig that doesn't have a path to call into the agent's execution surface, `VETO_REQUIRED` calls revert at dispatch even after the delay window. Use DELAYED unless the dev confirms the policy-owner address can actually execute.
 - **`policyId` is stable for `(publisher, label)`, not content-addressed.** Editing POLICY.md and running `pnpm ward push` with the same wallet + label updates the existing policy under the same id. Changing the label or publisher wallet creates a new id. This is convenient for iteration, but a compromised policy owner can also update rules in place; use a multisig/timelock owner for production.
 - **Caps in wei, not AVAX.** The markdown says `"1 ether"` — the compiler normalizes to `10^18` wei. Don't hand-write hex caps.
@@ -3325,7 +3326,7 @@ Use the v2 oracle in §1 for `wardGuarded`; use v1 only for legacy inline `check
 
 **Rules.**
 
-- If you use the `wardGuarded` modifier, bind the **v2 oracle** (`0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`). This is the default for new integrations.
+- If you use the `wardGuarded` modifier, bind the **v2 oracle** (`$WARD_ORACLE`). This is the default for new integrations.
 - If you must run against the v1 oracle (a pre-v0.11.0 v1-bound agent), do **not** use `wardGuarded` — call `oracle.checkIntent(...)` inline instead. The inline path works on both v1 and v2.
 - The registry is oracle-agnostic, so registering an agent says nothing about which oracle gates it. Don't infer the oracle version from the registry.
 
