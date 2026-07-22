@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Sentry design tokens — Lane B "Document Grade" (warm paper, editorial).
+ *
+ * Two layers: raw palette and semantic tokens. Only semantic tokens belong in
+ * component className strings; raw tokens are private to this file.
+ *
+ * Themes are class-toggled via next-themes (`attribute="class"`): `.light` and
+ * `.dark` on <html>. `:root` carries the LIGHT defaults so SSR / pre-hydration
+ * paints don't flash. Variable NAMES are identical between themes so shadcn
+ * aliases and Tailwind utilities continue to cascade with zero JS changes.
+ */
+:root,
+.light {
+  /* raw palette — Lane B warm-paper (LIGHT) */
+  --paper: #F7F4EC;          /* page background — warmer paper, away from white-canvas territory */
+  --paper-elev: #FFFFFF;     /* pure white for the rare surface that needs to lift */
+  --rule-warm: #7A6F52;      /* BOLD rule — top-level section dividers, very visible against paper */
+  --rule-soft: #C9C2AC;      /* subtle rule — second-tier subdivisions (rows inside a table) */
+  --ink: #111111;            /* primary text */
+  --ink-muted: #6E6B5F;      /* muted text — warm-leaning */
+  --ink-subtle: #8E8B7E;     /* subtle text — labels, captions */
+  --accent-ink: #1F3A8A;     /* deep ink-blue — links / refs / active / live ONLY */
+  --accent-ink-hover: #15296A;
+  --accent-ink-pressed: #0F1F52;
+  --status-green: #2E7D32;   /* muted */
+  --status-ochre: #B5832B;   /* ochre */
+  --status-brick: #B0413E;   /* brick */
+  --white: #FFFFFF;
+
+  /* semantic tokens (use these everywhere) */
+  --bg: var(--paper);
+  --surface: var(--paper);            /* surface ~= bg; depth comes from rules, not fill */
+  --surface-elev: var(--paper-elev);  /* reserved for popovers/dropdowns that MUST lift */
+  --border: var(--rule-warm);
+  --rule: var(--rule-warm);           /* alias — preferred name in new Lane B code */
+  --text: var(--ink);
+  --text-display: var(--ink);
+  --text-muted: var(--ink-muted);
+  --text-subtle: var(--ink-subtle);
+  --accent: var(--accent-ink);
+  --accent-hover: var(--accent-ink-hover);
+  --accent-pressed: var(--accent-ink-pressed);
+  --success: var(--status-green);
+  --warn: var(--status-ochre);
+  --danger: var(--status-brick);
+
+  /*
+   * shadcn/ui token aliases — map shadcn's expected variable names onto our
+   * semantic tokens above. Two of shadcn's tokens intentionally overlap with
+   * ours:
+   *   - `--accent` (shadcn = hover bg; ours = accent ink): we let the brand
+   *     win; hover tinting toward the ink-blue stays coherent on warm paper.
+   *   - `--ring` = brand accent: matches our existing :focus-visible rule.
+   */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface-elev);
+  --popover-foreground: var(--text);
+  --primary: var(--accent);
+  --primary-foreground: var(--white);
+  --secondary: var(--surface-elev);
+  --secondary-foreground: var(--text);
+  --muted: var(--surface);
+  --muted-foreground: var(--text-muted);
+  --accent-foreground: var(--white);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--white);
+  --input: var(--border);
+  --ring: var(--accent);
+
+  /* chart palette — semantic, ordered by frequency-of-meaning in our domain */
+  --chart-1: var(--accent);
+  --chart-2: var(--success);
+  --chart-3: var(--warn);
+  --chart-4: var(--danger);
+  --chart-5: var(--text-muted);
+
+  /* Lane B has near-zero corner radius; 4px on inputs/buttons max. */
+  --radius: 4px;
+
+  /* Motion tokens — see design/DESIGN.md "Motion" section. State-change only;
+   * never decorative. Every transition above 50ms must respect the existing
+   * prefers-reduced-motion rule below.
+   */
+  --motion-feedback: 150ms;
+  --motion-state: 200ms;
+  --motion-layout: 300ms;
+  --motion-ease: cubic-bezier(0.25, 1, 0.5, 1);
+  --motion-ease-exit: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.dark {
+  /* raw palette — Lane B warm-espresso (DARK).
+   * Espresso, not navy and not pure black — keeps the "warm document" feel.
+   * Rules step down one notch each (bold → subtle) like the light theme.
+   */
+  --paper: #1A1614;          /* page background — warm espresso */
+  --paper-elev: #221E1B;     /* slightly lifted surface for popovers/dropdowns */
+  --rule-warm: #5C5343;      /* BOLD rule — top-level section dividers, visible against espresso */
+  --rule-soft: #3D3528;      /* subtle rule — second-tier subdivisions */
+  --ink: #E8E4D5;            /* primary text — warm cream */
+  --ink-muted: #A89D85;      /* muted text */
+  --ink-subtle: #807660;     /* subtle text — labels, captions */
+  --accent-ink: #9BBAFF;     /* lighter ink-blue — readable on dark bg */
+  --accent-ink-hover: #C2D4FF;
+  --accent-ink-pressed: #7BA0E8;
+  --status-green: #66BB6A;   /* brighter green for dark */
+  --status-ochre: #D9A847;   /* brighter ochre for dark */
+  --status-brick: #E07370;   /* brighter brick for dark */
+  --white: #FFFFFF;
+
+  /* semantic tokens — same names as light, values cascade automatically */
+  --bg: var(--paper);
+  --surface: var(--paper);
+  --surface-elev: var(--paper-elev);
+  --border: var(--rule-warm);
+  --rule: var(--rule-warm);
+  --text: var(--ink);
+  --text-display: var(--ink);
+  --text-muted: var(--ink-muted);
+  --text-subtle: var(--ink-subtle);
+  --accent: var(--accent-ink);
+  --accent-hover: var(--accent-ink-hover);
+  --accent-pressed: var(--accent-ink-pressed);
+  --success: var(--status-green);
+  --warn: var(--status-ochre);
+  --danger: var(--status-brick);
+
+  /* shadcn/ui aliases */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface);
+  --card-foreground: var(--text);
+  --popover: var(--surface-elev);
+  --popover-foreground: var(--text);
+  --primary: var(--accent);
+  --primary-foreground: var(--paper);
+  --secondary: var(--surface-elev);
+  --secondary-foreground: var(--text);
+  --muted: var(--surface);
+  --muted-foreground: var(--text-muted);
+  --accent-foreground: var(--paper);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--white);
+  --input: var(--border);
+  --ring: var(--accent);
+}
+
+html, body, #root {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Geist, system-ui, -apple-system, "Segoe UI", Roboto, ui-sans-serif, sans-serif;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--text);
+}
+
+/* focus ring uses the brand accent so it's coherent across inputs/buttons */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}
+
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+.shimmer { background: linear-gradient(90deg, var(--surface-elev) 0%, color-mix(in srgb, var(--surface-elev) 60%, var(--border)) 50%, var(--surface-elev) 100%); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
+
+/* Row-insert pulse — DESIGN.md "Motion".
+ *
+ * Used on Queue rows the first time they appear (new exec enqueued, new event
+ * landed). The seen-keys ref in the consumer gates application so re-renders
+ * of existing rows do NOT re-trigger. 200ms accent tint, then ~1300ms fade
+ * to default. Reduced-motion compresses the pulse to instant.
+ */
+@keyframes row-pulse {
+  0%   { background-color: color-mix(in srgb, var(--accent) 14%, transparent); }
+  15%  { background-color: color-mix(in srgb, var(--accent) 14%, transparent); }
+  100% { background-color: transparent; }
+}
+.row-pulse { animation: row-pulse 1500ms var(--motion-ease) 1 both; }
+@media (prefers-reduced-motion: reduce) {
+  .row-pulse { animation: none; }
+}

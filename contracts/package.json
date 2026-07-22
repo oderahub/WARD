@@ -1,0 +1,15 @@
+{
+  "name": "@sentry-somnia/contracts",
+  "version": "0.9.0",
+  "private": true,
+  "description": "Sentry on-chain policy enforcement contracts (Foundry)",
+  "scripts": {
+    "build": "forge build --sizes",
+    "test": "forge test -vvv",
+    "forge:build": "forge build --sizes",
+    "forge:test": "forge test -vvv",
+    "forge:fmt": "forge fmt",
+    "forge:coverage": "forge coverage",
+    "gen:parity-fixtures": "forge test --match-path test/PolicyEvalFixtures.t.sol -vv"
+  }
+}

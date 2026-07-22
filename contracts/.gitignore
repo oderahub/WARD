@@ -1,0 +1,15 @@
+# Compiler files
+cache/
+out/
+
+# Commonly ignored directories
+.logs/
+.ignore/
+
+# Docs
+docs/
+
+# Dotenv file
+.env
+.env.*
+!.env.example

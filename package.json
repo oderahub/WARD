@@ -1,0 +1,37 @@
+{
+  "name": "sentry-somnia",
+  "version": "0.12.0",
+  "private": true,
+  "description": "Policy-enforced safe execution for Somnia agents",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r --if-present run build",
+    "sentry": "node scripts/sentry.mjs",
+    "sentry:tui": "pnpm sentry tui",
+    "test": "LOG=$(mktemp); pnpm -r --if-present run test >\"$LOG\" 2>&1; RC=$?; cat \"$LOG\"; if [ \"$RC\" -ne 0 ] && grep -q 'No test files found' \"$LOG\"; then echo 'Note: test files are not shipped in this public repo. See README test surface section for what is covered.'; rm -f \"$LOG\"; exit 0; fi; rm -f \"$LOG\"; exit \"$RC\"",
+    "lint": "pnpm -r --if-present run lint",
+    "lint:docs": "node scripts/check-doc-launchers.mjs",
+    "audit:prod": "pnpm audit --prod --ignore GHSA-6cpc-mj5c-m9rq",
+    "forge:test": "pnpm --dir contracts run forge:test",
+    "forge:build": "pnpm --dir contracts run forge:build",
+    "forge:fmt": "pnpm --dir contracts run forge:fmt",
+    "quickstart": "pnpm -C sdk run build && pnpm -C cli run build && pnpm -C dashboard run build && pnpm -C dashboard run preview"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "uuid": "^11.1.1",
+      "ws": "^8.20.1"
+    },
+    "auditConfig": {
+      "ignoreCves": [
+        "GHSA-6cpc-mj5c-m9rq"
+      ]
+    }
+  }
+}

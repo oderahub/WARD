@@ -1,0 +1,26 @@
+# Skip everything Vercel does not need to deploy the dashboard.
+# The buildCommand pulls in the workspace dependencies it actually needs
+# (@sentry-somnia/sdk, react, vite-plugin, dashboard); the rest is overhead.
+
+contracts/
+verification/
+examples/
+tui/
+cli/tests/
+sdk/tests/
+dashboard/tests/
+packages/*/tests/
+
+# Repo docs + design — not needed for the build, slow to clone
+docs/
+design/
+skills/
+.impeccable/
+.claude/
+
+# Local-only state
+.env
+.env.local
+.env.*.local
+.proof-runbook.md
+.codex/

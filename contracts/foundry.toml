@@ -1,0 +1,30 @@
+[profile.default]
+src = "src"
+test = "test"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.26"
+evm_version = "shanghai"
+optimizer = true
+optimizer_runs = 200
+via_ir = true
+remappings = ["forge-std/=lib/forge-std/src/"]
+fs_permissions = [{ access = "read", path = "./"}, { access = "write", path = "deployments/"}, { access = "write", path = "../sdk/tests/fixtures/"}]
+
+[fmt]
+line_length = 120
+tab_width = 4
+bracket_spacing = false
+int_types = "long"
+
+[invariant]
+runs = 256
+depth = 25
+fail_on_revert = false
+call_override = false
+
+[rpc_endpoints]
+somnia_testnet = "https://dream-rpc.somnia.network"
+
+[etherscan]
+somnia_testnet = { key = "${SOMNIA_EXPLORER_KEY}", url = "https://shannon-explorer.somnia.network/api" }

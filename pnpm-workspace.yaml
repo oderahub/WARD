@@ -1,0 +1,11 @@
+packages:
+  - contracts
+  - sdk
+  - cli
+  - policy-spec
+  - dashboard
+  - tui
+  - packages/create-sentry-agent
+  - packages/sentry-react
+  - packages/sentry-vite
+  - examples/sentry-react-app

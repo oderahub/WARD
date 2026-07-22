@@ -1,0 +1,6 @@
+{
+  "name": "@sentry-somnia/policy-spec",
+  "version": "0.9.0",
+  "private": true,
+  "description": "POLICY.md v0.1 spec + example policies. Docs only."
+}

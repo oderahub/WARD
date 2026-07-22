@@ -1,0 +1,29 @@
+{
+  "name": "@sentry-somnia/tui",
+  "version": "0.9.0",
+  "private": true,
+  "description": "Sentry operator TUI — raster-style Ink queue monitor with health scope, expirable actions, aging bars, live filters, and NDJSON mode.",
+  "type": "module",
+  "bin": {
+    "sentry-tui": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && chmod +x dist/index.js",
+    "start": "tsx src/index.tsx",
+    "typecheck": "tsc --noEmit",
+    "test": "echo no tests yet"
+  },
+  "dependencies": {
+    "@sentry-somnia/sdk": "workspace:*",
+    "ink": "^5.0.1",
+    "kleur": "^4.1.5",
+    "react": "^18.3.1",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "@types/react": "^18.3.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

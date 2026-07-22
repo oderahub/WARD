@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm -F @sentry-somnia/sdk build && pnpm -F @sentry-somnia/react build && pnpm -F @sentry-somnia/vite-plugin build && pnpm -F @sentry-somnia/dashboard build",
+  "outputDirectory": "dashboard/dist",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
