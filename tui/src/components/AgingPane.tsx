@@ -1,5 +1,5 @@
 import { Box, Text } from "ink";
-import type { QueueRecordHeader } from "@sentry-somnia/sdk";
+import type { QueueRecordHeader } from "@ward/sdk";
 
 interface Props {
   pending: QueueRecordHeader[];

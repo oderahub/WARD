@@ -1,7 +1,7 @@
 // Input-domain guards for `evalCheckIntent`. ABI-impossible inputs (negative
 // bigints, values past uint256, malformed hex, non-4-byte selectors, etc.)
 // must throw synchronously — they can't ever round-trip through
-// `SentryOracle.checkIntent`, so accepting them would silently diverge the
+// `WardOracle.checkIntent`, so accepting them would silently diverge the
 // off-chain preflight from the on-chain decision.
 
 import { describe, it, expect } from "vitest";

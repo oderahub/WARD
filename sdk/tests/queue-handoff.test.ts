@@ -15,8 +15,8 @@ const OWNER = "0x4444444444444444444444444444444444444444";
 describe("queue handoff helpers", () => {
   it.each([
     { tier: 0, hasAgent: false, hasDispatchQueued: false, expected: "IMMEDIATE requests should not be sitting" },
-    { tier: 1, hasAgent: false, hasDispatchQueued: false, expected: "Dispatch directly through SentryQueue" },
-    { tier: 1, hasAgent: true, hasDispatchQueued: false, expected: "Dispatch directly through SentryQueue" },
+    { tier: 1, hasAgent: false, hasDispatchQueued: false, expected: "Dispatch directly through WardQueue" },
+    { tier: 1, hasAgent: true, hasDispatchQueued: false, expected: "Dispatch directly through WardQueue" },
     { tier: 1, hasAgent: true, hasDispatchQueued: true, expected: "Use the integrator agent dispatch flow" },
     { tier: 2, hasAgent: true, hasDispatchQueued: true, expected: "Policy owner only" },
   ])("maps tier=$tier agent=$hasAgent dispatchQueued=$hasDispatchQueued", (c) => {

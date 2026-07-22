@@ -51,7 +51,7 @@ export function Sidebar() {
       aria-label="Primary"
       className="sticky top-0 z-20 flex h-screen w-56 shrink-0 flex-col border-r border-rule bg-bg"
     >
-      {/* Header — Sentry brand mark in the top-left corner, before the
+      {/* Header — Ward brand mark in the top-left corner, before the
           sidebar's right rule. Height aligns with the TopBar's bottom rule
           so the chrome reads as one continuous grid. */}
       <div className="flex h-14 shrink-0 items-center border-b border-rule pl-0 pr-6">

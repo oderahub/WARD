@@ -2,18 +2,18 @@ import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { Box, Text, useApp, useInput, useStdout } from "ink";
 import {
   createEventStore,
-  SENTRY_QUEUE_ABI,
+  WARD_QUEUE_ABI,
   type EventStore,
   type StoreEvent,
   type QueueRecordHeader,
-} from "@sentry-somnia/sdk";
+} from "@ward/sdk";
 import { type Hex } from "viem";
 import {
   resolveEnv,
   makePublicClient,
   makeWalletClient,
-  SENTRY_ORACLE_DEPLOY_BLOCK,
-  SENTRY_QUEUE_LOOKBACK_BLOCKS,
+  WARD_ORACLE_DEPLOY_BLOCK,
+  WARD_QUEUE_LOOKBACK_BLOCKS,
 } from "../lib/env.js";
 import { ExpirablePane } from "./ExpirablePane.js";
 import { AgingPane } from "./AgingPane.js";
@@ -75,10 +75,10 @@ export function App() {
       publicClient,
       oracleAddress: env.oracleAddress,
       queueAddress: env.queueAddress,
-      ...(SENTRY_ORACLE_DEPLOY_BLOCK !== undefined
-        ? { oracleDeploymentBlock: SENTRY_ORACLE_DEPLOY_BLOCK }
+      ...(WARD_ORACLE_DEPLOY_BLOCK !== undefined
+        ? { oracleDeploymentBlock: WARD_ORACLE_DEPLOY_BLOCK }
         : {}),
-      queueLookbackBlocks: SENTRY_QUEUE_LOOKBACK_BLOCKS,
+      queueLookbackBlocks: WARD_QUEUE_LOOKBACK_BLOCKS,
       onProgress: ({ phase, current, total }) => {
         if (cancelled) return;
         const pct = total > 0n ? ((Number(current) / Number(total)) * 100).toFixed(0) : "—";
@@ -158,7 +158,7 @@ export function App() {
     try {
       const hash = await wallet.writeContract({
         address: env.queueAddress,
-        abi: SENTRY_QUEUE_ABI as never,
+        abi: WARD_QUEUE_ABI as never,
         functionName: "expireIfStale",
         args: [execId],
         account: wallet.account,

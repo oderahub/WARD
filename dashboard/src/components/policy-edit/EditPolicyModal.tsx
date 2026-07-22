@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { X as XIcon } from "@phosphor-icons/react";
 import { useAccount, useChainId, usePublicClient, useWriteContract } from "wagmi";
 import { formatEther, type Address, type Hex } from "viem";
-import { compilePolicy, SENTRY_ORACLE_ABI, type PolicyInput } from "@sentry-somnia/sdk";
+import { compilePolicy, WARD_ORACLE_ABI, type PolicyInput } from "@ward/sdk";
 
 import { useEventStore } from "../../hooks/useEventStore";
 import { useFocusTrapAndEsc } from "../../hooks/useFocusTrapAndEsc";
@@ -199,7 +199,7 @@ export function EditPolicyModal({
       try {
         const [paused, expiresAt] = (await publicClient.readContract({
           address: oracleAddress,
-          abi: SENTRY_ORACLE_ABI,
+          abi: WARD_ORACLE_ABI,
           functionName: "policyHealth",
           args: [policyId],
         })) as readonly [boolean, bigint];
@@ -578,7 +578,7 @@ export function EditPolicyModal({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.97, opacity: 0 }}
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-        className="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-lg border border-sentry-border bg-surface-elev p-5 text-sm text-text shadow-2xl"
+        className="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-lg border border-ward-border bg-surface-elev p-5 text-sm text-text shadow-2xl"
       >
         <header className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-text">Edit policy body</h3>
@@ -597,7 +597,7 @@ export function EditPolicyModal({
          * must-know facts (full-replacement, comment regeneration,
          * concurrent-edit race) so a user who never expands the <details>
          * still sees them. Longer prose stays inside for context. */}
-        <details className="mb-3 rounded-md border border-sentry-border bg-surface px-3 py-2 text-xs">
+        <details className="mb-3 rounded-md border border-ward-border bg-surface px-3 py-2 text-xs">
           <summary className="cursor-pointer list-none text-text-muted hover:text-text">
             <span className="text-warn">⚠</span>{" "}
             Replacing the on-chain policy in full — comments outside the policy block are regenerated, and concurrent edits can race.{" "}
@@ -716,7 +716,7 @@ export function EditPolicyModal({
             touch={touch}
           />
 
-          <section className="space-y-2 border-t border-sentry-border pt-3">
+          <section className="space-y-2 border-t border-ward-border pt-3">
             <div className="text-[11px] uppercase tracking-wider text-text-subtle">
               diff vs current on-chain body
             </div>
@@ -748,7 +748,7 @@ export function EditPolicyModal({
         </div>
 
         {state.kind === "mining" && (
-          <div className="mt-3 rounded-md border border-sentry-border bg-surface p-2 text-xs">
+          <div className="mt-3 rounded-md border border-ward-border bg-surface p-2 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-text-muted">Mining updatePolicy…</span>
               <ExplorerLink txHash={state.txHash} />
@@ -772,7 +772,7 @@ export function EditPolicyModal({
           </Alert>
         )}
 
-        <div className="mt-4 flex justify-end gap-2 border-t border-sentry-border pt-3">
+        <div className="mt-4 flex justify-end gap-2 border-t border-ward-border pt-3">
           <Button variant="ghost" size="md" onClick={onClose} disabled={inFlight}>
             Cancel
           </Button>

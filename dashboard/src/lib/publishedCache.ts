@@ -1,7 +1,7 @@
 import type { Address, Hex } from "viem";
 import type { PublishMode } from "../components/publish/ModeToggle";
-import type { PolicyInput } from "@sentry-somnia/sdk";
-import { openSentryDB, PUBLISHED_CACHE_STORE } from "./persistence";
+import type { PolicyInput } from "@ward/sdk";
+import { openWardDB, PUBLISHED_CACHE_STORE } from "./persistence";
 
 /**
  * Per-browser cache of full publish results, keyed by `(chainId, oracle, policyId)`.
@@ -18,7 +18,7 @@ import { openSentryDB, PUBLISHED_CACHE_STORE } from "./persistence";
  * publisher; no download, no watch binding). The cache is the path for
  * the SAME browser to revisit the SAME publish moment in full.
  *
- * Storage: IndexedDB (object store `publishedCache` in the shared sentry
+ * Storage: IndexedDB (object store `publishedCache` in the shared ward
  * DB, see persistence.ts). Previous versions used `localStorage`, which
  * was lost whenever the user cleared site data — even though the
  * EventStore (in IDB) survived. Unifying both onto IDB makes persistence
@@ -26,7 +26,7 @@ import { openSentryDB, PUBLISHED_CACHE_STORE } from "./persistence";
  * no longer create skewed reveal/event state.
  *
  * Migration: on first read with the new code, any pre-existing
- * `sentry-published:*` localStorage entries are copied into IDB and the
+ * `ward-published:*` localStorage entries are copied into IDB and the
  * originals deleted. The migration runs at most once per browser via a
  * module-scoped guard.
  *
@@ -35,7 +35,7 @@ import { openSentryDB, PUBLISHED_CACHE_STORE } from "./persistence";
  * `publishedAtMs`.
  */
 
-const LEGACY_PREFIX = "sentry-published";
+const LEGACY_PREFIX = "ward-published";
 
 export interface PublishedCacheEntry {
   policyId: Hex;
@@ -67,7 +67,7 @@ function cacheKey(chainId: number, oracle: Address, policyId: Hex): string {
 /**
  * Parse a legacy localStorage key back into its (chainId, oracle, policyId)
  * parts. Returns null if the key isn't shaped like one of ours — defensive
- * against unrelated `sentry-published`-prefixed keys (none currently exist,
+ * against unrelated `ward-published`-prefixed keys (none currently exist,
  * but the prefix is generic enough to want to be safe). Exposed for tests.
  */
 export function parseLegacyKey(
@@ -99,7 +99,7 @@ function isValidEntry(parsed: Partial<PublishedCacheEntry> | null): parsed is Pu
 let migrationPromise: Promise<number> | null = null;
 
 /**
- * Read every legacy `sentry-published:*` localStorage entry, write each into
+ * Read every legacy `ward-published:*` localStorage entry, write each into
  * IDB, then delete the originals. Idempotent: subsequent invocations short-
  * circuit through the cached promise. Returns the count migrated this call
  * (0 on every call after the first per browser).
@@ -138,7 +138,7 @@ export async function migrateLocalStorageIfNeeded(): Promise<number> {
     }
     if (toMigrate.length === 0) return 0;
 
-    const db = await openSentryDB();
+    const db = await openWardDB();
     let migratedCount = 0;
     const migratedLegacyKeys: string[] = [];
     try {
@@ -194,7 +194,7 @@ export async function cachePublished(
   entry: PublishedCacheEntry,
 ): Promise<void> {
   try {
-    const db = await openSentryDB();
+    const db = await openWardDB();
     try {
       const tx = db.transaction(PUBLISHED_CACHE_STORE, "readwrite");
       const record: CacheRecord = { ...entry, key: cacheKey(chainId, oracle, entry.policyId) };
@@ -263,7 +263,7 @@ export async function readPublished(
     // Lazy migration on first read. After the initial run this is a
     // single in-flight promise resolution so it doesn't add latency.
     await migrateLocalStorageIfNeeded();
-    const db = await openSentryDB();
+    const db = await openWardDB();
     try {
       const rec = (await db.get(PUBLISHED_CACHE_STORE, cacheKey(chainId, oracle, policyId))) as
         | CacheRecord

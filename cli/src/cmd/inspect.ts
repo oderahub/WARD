@@ -39,7 +39,7 @@ export async function inspectCmd(path: string): Promise<void> {
     console.log(
       kleur.red(
         `\nWARNING: intent.selector ${raw.selector} does not match first 4 bytes of intent.data ${dataSelector}.` +
-          ` Sentry will reject with SELECTOR_MISMATCH.`,
+          ` Ward will reject with SELECTOR_MISMATCH.`,
       ),
     );
   } else {

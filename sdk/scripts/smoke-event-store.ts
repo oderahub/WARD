@@ -23,8 +23,8 @@ import { createEventStore } from "../src/event-store.js";
 })();
 
 const RPC = process.env.SOMNIA_TESTNET_RPC ?? "https://dream-rpc.somnia.network";
-const ORACLE = (process.env.SENTRY_ORACLE ?? "0x3C7bF90f243d670a01f512221d9546e09fEaCC9c") as `0x${string}`;
-const QUEUE = (process.env.SENTRY_QUEUE ?? "0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4") as `0x${string}`;
+const ORACLE = (process.env.WARD_ORACLE ?? "0x3C7bF90f243d670a01f512221d9546e09fEaCC9c") as `0x${string}`;
+const QUEUE = (process.env.WARD_QUEUE ?? "0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4") as `0x${string}`;
 const ORACLE_DEPLOY = 403805414n;
 
 const somniaTestnet = defineChain({

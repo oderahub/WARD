@@ -1,5 +1,5 @@
 import { encodeFunctionData, type Hex } from "viem";
-import { SENTRY_QUEUE_ABI } from "@sentry-somnia/sdk";
+import { WARD_QUEUE_ABI } from "@ward/sdk";
 
 import { encodeBytes32Label } from "../../lib/encoding";
 import { type ButtonVariant } from "../primitives";
@@ -64,7 +64,7 @@ export function buildCallData(kind: ModalKind, execId: bigint, reason?: string):
   // map intentionally types them as readonly unknown[], so we lean on the
   // ABI generic to do the runtime check.
   return encodeFunctionData({
-    abi: SENTRY_QUEUE_ABI,
+    abi: WARD_QUEUE_ABI,
     functionName: cfg.functionName,
     args: cfg.encodeArgs(execId, reason) as never,
   });

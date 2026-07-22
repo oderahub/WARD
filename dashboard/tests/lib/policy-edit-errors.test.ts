@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { PolicyInput } from "@sentry-somnia/sdk";
+import type { PolicyInput } from "@ward/sdk";
 import {
   errorPathSet,
   humanizeErrorPath,

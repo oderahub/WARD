@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { Address, Hex } from "viem";
-import { TIER_DELAYED, TIER_IMMEDIATE, TIER_VETO_REQUIRED } from "@sentry-somnia/sdk";
+import { TIER_DELAYED, TIER_IMMEDIATE, TIER_VETO_REQUIRED } from "@ward/sdk";
 
 import { recommendPolicies } from "../../src/lib/policy-recommender";
 import type { DiscoveryReport } from "../../src/lib/discovery";
@@ -21,7 +21,7 @@ function baseReport(overrides: Partial<DiscoveryReport> = {}): DiscoveryReport {
     nonce: 0,
     balanceWei: 0n,
     tokenFingerprint: null,
-    sentryAware: { sentryAware: false, reason: "no-registry-no-queue" },
+    wardAware: { wardAware: false, reason: "no-registry-no-queue" },
     alreadyRegistered: { registered: false },
     scannedAtMs: 1,
     rpcCallsUsed: 1,
@@ -40,8 +40,8 @@ function eoaActive(): DiscoveryReport {
     kind: "eoa",
     hasCode: false,
     nonce: 42,
-    sentryAware: {
-      sentryAware: true,
+    wardAware: {
+      wardAware: true,
       evidence: {
         kind: "queue",
         execId: 7n,
@@ -60,8 +60,8 @@ function erc20(): DiscoveryReport {
     codeSize: 200,
     nonce: 1,
     tokenFingerprint: { symbol: "TEST", decimals: 18, supports721: false },
-    sentryAware: {
-      sentryAware: true,
+    wardAware: {
+      wardAware: true,
       evidence: {
         kind: "queue",
         execId: 1n,
@@ -80,8 +80,8 @@ function erc721(): DiscoveryReport {
     codeSize: 200,
     nonce: 1,
     tokenFingerprint: { symbol: "NFT", supports721: true },
-    sentryAware: {
-      sentryAware: true,
+    wardAware: {
+      wardAware: true,
       evidence: {
         kind: "queue",
         execId: 1n,
@@ -93,14 +93,14 @@ function erc721(): DiscoveryReport {
   });
 }
 
-function unknownContractSentryAware(): DiscoveryReport {
+function unknownContractWardAware(): DiscoveryReport {
   return baseReport({
     kind: "unknown-contract",
     hasCode: true,
     codeSize: 500,
     nonce: 1,
-    sentryAware: {
-      sentryAware: true,
+    wardAware: {
+      wardAware: true,
       evidence: {
         kind: "registry",
         policyId: POLICY_ID,
@@ -131,13 +131,13 @@ function unknownContractSentryAware(): DiscoveryReport {
   });
 }
 
-function unknownContractNotSentryAware(): DiscoveryReport {
+function unknownContractNotWardAware(): DiscoveryReport {
   return baseReport({
     kind: "unknown-contract",
     hasCode: true,
     codeSize: 500,
     nonce: 1,
-    sentryAware: { sentryAware: false, reason: "no-registry-no-queue" },
+    wardAware: { wardAware: false, reason: "no-registry-no-queue" },
   });
 }
 
@@ -147,8 +147,8 @@ function registryWithResolvedTargets(): DiscoveryReport {
     hasCode: true,
     codeSize: 500,
     nonce: 1,
-    sentryAware: {
-      sentryAware: true,
+    wardAware: {
+      wardAware: true,
       evidence: {
         kind: "registry",
         policyId: POLICY_ID,
@@ -192,7 +192,7 @@ function registryWithResolvedTargets(): DiscoveryReport {
 }
 
 describe("recommendPolicies", () => {
-  it("returns conservative as default with observationOnly=true for non-sentry-aware EOA", () => {
+  it("returns conservative as default with observationOnly=true for non-ward-aware EOA", () => {
     const result = recommendPolicies(eoaFresh(), { nowSec: NOW });
 
     expect(result.defaultTier).toBe("conservative");
@@ -222,13 +222,13 @@ describe("recommendPolicies", () => {
   });
 
   it("returns balanced as default for an unknown-contract with registry evidence", () => {
-    const result = recommendPolicies(unknownContractSentryAware(), { nowSec: NOW });
+    const result = recommendPolicies(unknownContractWardAware(), { nowSec: NOW });
     expect(result.defaultTier).toBe("balanced");
     expect(result.observationOnly).toBe(false);
   });
 
-  it("returns conservative as default for an unknown-contract that is not Sentry-aware", () => {
-    const result = recommendPolicies(unknownContractNotSentryAware(), { nowSec: NOW });
+  it("returns conservative as default for an unknown-contract that is not Ward-aware", () => {
+    const result = recommendPolicies(unknownContractNotWardAware(), { nowSec: NOW });
     expect(result.defaultTier).toBe("conservative");
     expect(result.observationOnly).toBe(true);
   });
@@ -245,7 +245,7 @@ describe("recommendPolicies", () => {
   });
 
   it("does NOT attach a PolicyInput when there are no resolved targets — wizard must collect them", () => {
-    const result = recommendPolicies(unknownContractSentryAware(), { nowSec: NOW });
+    const result = recommendPolicies(unknownContractWardAware(), { nowSec: NOW });
     expect(result.conservative.policy).toBeUndefined();
     expect(result.balanced.policy).toBeUndefined();
     expect(result.aggressive.policy).toBeUndefined();
@@ -257,8 +257,8 @@ describe("recommendPolicies", () => {
       eoaActive(),
       erc20(),
       erc721(),
-      unknownContractSentryAware(),
-      unknownContractNotSentryAware(),
+      unknownContractWardAware(),
+      unknownContractNotWardAware(),
       registryWithResolvedTargets(),
     ];
     for (const report of reports) {
@@ -286,8 +286,8 @@ describe("recommendPolicies", () => {
       ["eoa-active", eoaActive()],
       ["erc20", erc20()],
       ["erc721", erc721()],
-      ["unknown-sentry-aware", unknownContractSentryAware()],
-      ["unknown-not-sentry-aware", unknownContractNotSentryAware()],
+      ["unknown-ward-aware", unknownContractWardAware()],
+      ["unknown-not-ward-aware", unknownContractNotWardAware()],
       ["registry-resolved", registryWithResolvedTargets()],
     ];
     for (const [_name, report] of reports) {

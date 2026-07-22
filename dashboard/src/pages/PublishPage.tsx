@@ -596,7 +596,7 @@ export function PublishPage() {
 
   return (
     <ResizableSplit
-      storageKey="sentry-publish-split"
+      storageKey="ward-publish-split"
       defaultLeftPct={55}
       minPaneWidth={360}
       className="h-full"
@@ -646,7 +646,7 @@ function DocumentFrontMatter({
             chain id {chainId}
           </span>
         </dd>
-        <dt className="text-text-muted">SentryOracle</dt>
+        <dt className="text-text-muted">WardOracle</dt>
         <dd className="font-mono text-[12px] text-text">{oracle}</dd>
         <dt className="text-text-muted">Indexed through</dt>
         <dd className="font-mono text-[12px] text-text">block {head}</dd>

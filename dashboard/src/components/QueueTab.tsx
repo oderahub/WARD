@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Address, Hex } from "viem";
-import type { QueueRecordHeader } from "@sentry-somnia/sdk";
+import type { QueueRecordHeader } from "@ward/sdk";
 
 import { useEventStore } from "../hooks/useEventStore";
 import { useUrlState } from "../hooks/useUrlState";

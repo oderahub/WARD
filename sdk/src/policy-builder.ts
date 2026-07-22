@@ -18,7 +18,7 @@ interface TargetSpec {
 const UINT32_MAX_BUILDER = (1n << 32n) - 1n;
 const UINT256_MAX_BUILDER = (1n << 256n) - 1n;
 
-/** Fluent builder for Sentry `PolicyInput`. */
+/** Fluent builder for Ward `PolicyInput`. */
 export class PolicyBuilder {
   private targets: TargetSpec[] = [];
   private current?: TargetSpec;

@@ -220,7 +220,7 @@ function normalize(raw: RawPolicy, opts: CompileOptions): PolicyInput {
   // `expiresAt: 0` is already expired on-chain.
   if (expiresAt === 0n) {
     throw new Error(
-      "compilePolicy: Policy expiresAt cannot be 0 (Sentry treats 0 as already-expired).",
+      "compilePolicy: Policy expiresAt cannot be 0 (Ward treats 0 as already-expired).",
     );
   }
   // The slack absorbs client/RPC clock skew at the publish boundary.

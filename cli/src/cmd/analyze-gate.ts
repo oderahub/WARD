@@ -22,7 +22,7 @@ function writeJson(value: unknown): void {
   writeSync(1, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-/** Conservative static analyzer for ungated dispatches in Sentry agent contracts. */
+/** Conservative static analyzer for ungated dispatches in Ward agent contracts. */
 export function analyzeGate(filePath: string, source: string): GateFinding[] {
   const stripped = stripCommentsAndStrings(source);
   const functions = extractFunctions(stripped);
@@ -39,9 +39,9 @@ export function analyzeGate(filePath: string, source: string): GateFinding[] {
     const preceding = body.slice(0, dispatchOffset);
     if (containsGate(preceding)) continue;
 
-    // A dispatch through SentryCall is already guarded.
+    // A dispatch through WardCall is already guarded.
     const dispatchSnippet = body.slice(dispatchOffset, Math.min(body.length, dispatchOffset + 200));
-    if (/SentryCall\s*\.\s*(check|guardedCall)\s*\(/.test(dispatchSnippet)) continue;
+    if (/WardCall\s*\.\s*(check|guardedCall)\s*\(/.test(dispatchSnippet)) continue;
 
     const absOffset = fn.bodyStart + dispatchOffset;
     const line = lineOf(stripped, absOffset);
@@ -50,7 +50,7 @@ export function analyzeGate(filePath: string, source: string): GateFinding[] {
       file: filePath,
       line,
       function: fn.name,
-      message: `dispatch in ${fn.name}(...) is not preceded by _gate(...) or SentryCall.check(...)`,
+      message: `dispatch in ${fn.name}(...) is not preceded by _gate(...) or WardCall.check(...)`,
     });
   }
 
@@ -96,7 +96,7 @@ export async function analyzeGateCmd(path: string, opts: AnalyzeGateOptions = {}
   if (opts.json) {
     writeJson(result);
   } else {
-    console.log(kleur.bold().cyan("# sentry analyze:gate"));
+    console.log(kleur.bold().cyan("# ward analyze:gate"));
     if (findings.length === 0) {
       console.log(kleur.green("  OK · every dispatch is gated"));
     } else {
@@ -259,8 +259,8 @@ function findDispatch(body: string): number {
 
 function containsGate(snippet: string): boolean {
   if (/\b_gate\s*\(/.test(snippet)) return true;
-  if (/\bSentryCall\s*\.\s*(check|guardedCall)\s*\(/.test(snippet)) return true;
-  // Matches the SentryAgentBase oracle check pattern.
+  if (/\bWardCall\s*\.\s*(check|guardedCall)\s*\(/.test(snippet)) return true;
+  // Matches the WardAgentBase oracle check pattern.
   if (/\.\s*checkIntent\s*\(/.test(snippet)) return true;
   if (/\.\s*check\s*\(/.test(snippet) && /oracle/i.test(snippet)) return true;
   return false;

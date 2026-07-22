@@ -1,8 +1,8 @@
 {
-  "name": "@sentry-somnia/contracts",
+  "name": "@ward/contracts",
   "version": "0.9.0",
   "private": true,
-  "description": "Sentry on-chain policy enforcement contracts (Foundry)",
+  "description": "Ward on-chain policy enforcement contracts (Foundry)",
   "scripts": {
     "build": "forge build --sizes",
     "test": "forge test -vvv",

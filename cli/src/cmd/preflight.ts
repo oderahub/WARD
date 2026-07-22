@@ -73,11 +73,11 @@ export async function preflightCmd(
     );
   }
 
-  if (process.env.SENTRY_ORACLE && !isAddress(process.env.SENTRY_ORACLE)) {
-    errors.push(`SENTRY_ORACLE=${process.env.SENTRY_ORACLE} is not a valid 0x-address.`);
+  if (process.env.WARD_ORACLE && !isAddress(process.env.WARD_ORACLE)) {
+    errors.push(`WARD_ORACLE=${process.env.WARD_ORACLE} is not a valid 0x-address.`);
   }
-  if (process.env.SENTRY_QUEUE && !isAddress(process.env.SENTRY_QUEUE)) {
-    errors.push(`SENTRY_QUEUE=${process.env.SENTRY_QUEUE} is not a valid 0x-address.`);
+  if (process.env.WARD_QUEUE && !isAddress(process.env.WARD_QUEUE)) {
+    errors.push(`WARD_QUEUE=${process.env.WARD_QUEUE} is not a valid 0x-address.`);
   }
 
   let address: Address | undefined;
@@ -110,7 +110,7 @@ export async function preflightCmd(
   const ok = errors.length === 0;
 
   if (print) {
-    console.log(kleur.bold().cyan("# sentry preflight"));
+    console.log(kleur.bold().cyan("# ward preflight"));
     console.log(`  rpc            ${env.rpc}`);
     console.log(`  chainId        ${chainId ?? kleur.gray("(unknown)")}`);
     console.log(`  wallet         ${address ?? kleur.gray("(no PRIVATE_KEY set)")}`);
@@ -119,8 +119,8 @@ export async function preflightCmd(
     );
     console.log(`  platform       ${process.env.SOMNIA_AGENT_PLATFORM ?? kleur.gray("(unset)")}`);
     console.log(`  agentId        ${process.env.LLM_INFERENCE_AGENT_ID ?? kleur.gray("(unset)")}`);
-    console.log(`  sentry oracle  ${process.env.SENTRY_ORACLE ?? kleur.gray("(unset — deploy via script/Deploy.s.sol)")}`);
-    console.log(`  sentry queue   ${process.env.SENTRY_QUEUE ?? kleur.gray("(unset — optional; only needed for DELAYED/VETO_REQUIRED flows)")}`);
+    console.log(`  ward oracle  ${process.env.WARD_ORACLE ?? kleur.gray("(unset — deploy via script/Deploy.s.sol)")}`);
+    console.log(`  ward queue   ${process.env.WARD_QUEUE ?? kleur.gray("(unset — optional; only needed for DELAYED/VETO_REQUIRED flows)")}`);
 
     if (errors.length > 0) {
       console.log("");

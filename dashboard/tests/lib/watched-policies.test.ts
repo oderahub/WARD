@@ -33,7 +33,7 @@ function sample(overrides: Partial<WatchedPolicy> = {}): WatchedPolicy {
 // fresh factory via /auto registration; we just delete the db.
 beforeEach(async () => {
   await new Promise<void>((resolve, reject) => {
-    const req = indexedDB.deleteDatabase("sentry-store");
+    const req = indexedDB.deleteDatabase("ward-store");
     req.onsuccess = () => resolve();
     req.onerror = () => reject(req.error);
     req.onblocked = () => resolve();

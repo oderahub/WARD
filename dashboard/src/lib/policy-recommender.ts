@@ -27,9 +27,9 @@
  *      wizard's Step 3 picker collects real `(target, selector[])` pairs and
  *      builds the input via `buildPolicyInputFromRecommendation`.
  *
- *   3. Observation-only honesty. `observationOnly = !sentryAware`. The
+ *   3. Observation-only honesty. `observationOnly = !wardAware`. The
  *      recommender does NOT emit a tier=VETO_REQUIRED policy for an agent
- *      that will never call SentryOracle.checkIntent.
+ *      that will never call WardOracle.checkIntent.
  *
  * Default-tier rules live in `pickDefaultTier` and tier parameters in
  * `tierParametersFor`; reading those two functions reproduces every
@@ -45,7 +45,7 @@ import {
   type SelectorRule,
   type TargetRule,
   type Tier,
-} from "@sentry-somnia/sdk";
+} from "@ward/sdk";
 
 import type { DiscoveryReport } from "./discovery";
 
@@ -91,9 +91,9 @@ export interface TierRecommendation {
   reasoning: string;
   /**
    * Fully-formed PolicyInput. Set ONLY when:
-   *   - report.sentryAware.sentryAware === true
-   *   - report.sentryAware.evidence.kind === 'registry'
-   *   - report.sentryAware.evidence.resolvedTargets !== undefined and
+   *   - report.wardAware.wardAware === true
+   *   - report.wardAware.evidence.kind === 'registry'
+   *   - report.wardAware.evidence.resolvedTargets !== undefined and
    *     non-empty (every TargetRule has at least one SelectorRule with a
    *     non-zero selector).
    *
@@ -112,7 +112,7 @@ export interface RecommendationResult {
   aggressive: TierRecommendation;
   defaultTier: TierName;
   /**
-   * True iff the agent is NOT Sentry-aware. The wizard surfaces this so
+   * True iff the agent is NOT Ward-aware. The wizard surfaces this so
    * the operator sees the "alerts are observation-only, calls are not
    * gated in real time" banner before they pick a tier.
    */
@@ -188,11 +188,11 @@ function tierParametersFor(tier: TierName, nowSec: bigint): TierParameters {
 function tierSemanticsBullet(tier: TierName): string {
   switch (tier) {
     case "conservative":
-      return "VETO_REQUIRED: SentryOracle.checkIntent rejects every matching call with REQUIRES_VETO. Only the policy owner can dispatch it via SentryQueue.";
+      return "VETO_REQUIRED: WardOracle.checkIntent rejects every matching call with REQUIRES_VETO. Only the policy owner can dispatch it via WardQueue.";
     case "balanced":
-      return `DELAYED: SentryOracle.checkIntent rejects with REQUIRES_DELAY; the call must be enqueued and waits ${BALANCED_DELAY_SECONDS}s before SentryQueue lets it through.`;
+      return `DELAYED: WardOracle.checkIntent rejects with REQUIRES_DELAY; the call must be enqueued and waits ${BALANCED_DELAY_SECONDS}s before WardQueue lets it through.`;
     case "aggressive":
-      return "IMMEDIATE: SentryOracle.checkIntent returns (true, 0) for matching calls. No delay, no human gate.";
+      return "IMMEDIATE: WardOracle.checkIntent returns (true, 0) for matching calls. No delay, no human gate.";
   }
 }
 
@@ -207,7 +207,7 @@ function tierSemanticsBullet(tier: TierName): string {
  * lays them out as `<li>` elements.
  */
 type BranchRule =
-  | "no-sentry-path"
+  | "no-ward-path"
   | "token-contract"
   | "eoa-zero-nonce"
   | "eoa-active"
@@ -217,9 +217,9 @@ type BranchRule =
 
 function branchBullets(rule: BranchRule, report: DiscoveryReport): string[] {
   switch (rule) {
-    case "no-sentry-path":
+    case "no-ward-path":
       return [
-        "No SentryOracle / SentryQueue interaction found in the last 5000 blocks. Alerts will be observation-only, so the safest default is VETO_REQUIRED.",
+        "No WardOracle / WardQueue interaction found in the last 5000 blocks. Alerts will be observation-only, so the safest default is VETO_REQUIRED.",
       ];
     case "token-contract": {
       const which = report.kind === "erc20" ? "ERC-20" : "ERC-721";
@@ -238,11 +238,11 @@ function branchBullets(rule: BranchRule, report: DiscoveryReport): string[] {
       ];
     case "registered-in-registry":
       return [
-        "Already registered in SentryAgentRegistry; balanced delay matches typical Sentry-aware agent UX.",
+        "Already registered in WardAgentRegistry; balanced delay matches typical Ward-aware agent UX.",
       ];
     case "queue-evidence":
       return [
-        "Has routed intents through SentryQueue. Sentry-aware, balanced default applies.",
+        "Has routed intents through WardQueue. Ward-aware, balanced default applies.",
       ];
     case "fallback-unknown":
       return [
@@ -261,9 +261,9 @@ interface DefaultPick {
  * wins. Pure function of the report; no time, no I/O.
  */
 function pickDefaultTier(report: DiscoveryReport): DefaultPick {
-  // Rule 1 — no Sentry path → observation-only conservative.
-  if (!report.sentryAware.sentryAware) {
-    return { tier: "conservative", rule: "no-sentry-path" };
+  // Rule 1 — no Ward path → observation-only conservative.
+  if (!report.wardAware.wardAware) {
+    return { tier: "conservative", rule: "no-ward-path" };
   }
 
   // Rule 2 — token fingerprint trumps everything else; wrapping a token as
@@ -282,15 +282,15 @@ function pickDefaultTier(report: DiscoveryReport): DefaultPick {
     return { tier: "balanced", rule: "eoa-active" };
   }
 
-  // Rules 5 & 6 — unknown contract that's already Sentry-aware. Tighten the
+  // Rules 5 & 6 — unknown contract that's already Ward-aware. Tighten the
   // check on `kind` here (matches the spec's "unknown-contract && ...")
   // so a future `kind: 'contract'` bucket doesn't silently fall through to
   // balanced without re-running the rule table.
   if (
     report.kind === "unknown-contract" &&
-    report.sentryAware.sentryAware === true
+    report.wardAware.wardAware === true
   ) {
-    const ev = report.sentryAware.evidence;
+    const ev = report.wardAware.evidence;
     if (ev.kind === "registry") {
       return { tier: "balanced", rule: "registered-in-registry" };
     }
@@ -403,9 +403,9 @@ function maybeBuildPolicyFromResolvedTargets(
   report: DiscoveryReport,
   params: TierParameters,
 ): PolicyInput | undefined {
-  if (!report.sentryAware.sentryAware) return undefined;
-  if (report.sentryAware.evidence.kind !== "registry") return undefined;
-  const resolved = report.sentryAware.evidence.resolvedTargets;
+  if (!report.wardAware.wardAware) return undefined;
+  if (report.wardAware.evidence.kind !== "registry") return undefined;
+  const resolved = report.wardAware.evidence.resolvedTargets;
   if (!resolved || resolved.length === 0) return undefined;
   // stampTierOntoTargets throws on zero-selector / zero-target / empty;
   // wrap in a try/catch so a bad resolved set degrades to "operator must
@@ -473,10 +473,10 @@ export function recommendPolicies(
   }
 
   const defaultTierReason = branchBulletList.join(" ");
-  // observationOnly intentionally derives from sentryAware ONLY, not from
+  // observationOnly intentionally derives from wardAware ONLY, not from
   // whether `policy` was populatable. A registered-but-stale agent without
-  // resolvedTargets is still Sentry-aware (the registry row proves it).
-  const observationOnly = !report.sentryAware.sentryAware;
+  // resolvedTargets is still Ward-aware (the registry row proves it).
+  const observationOnly = !report.wardAware.wardAware;
 
   return {
     conservative: built.conservative,

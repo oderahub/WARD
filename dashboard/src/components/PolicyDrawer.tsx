@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useEventStore } from "../hooks/useEventStore";
 import { useWallet } from "../hooks/useWallet";
 import { useUrlState } from "../hooks/useUrlState";
-import { SENTRY_ORACLE_ABI, type PolicyInput, type PolicyMeta, type StoreEvent } from "@sentry-somnia/sdk";
+import { WARD_ORACLE_ABI, type PolicyInput, type PolicyMeta, type StoreEvent } from "@ward/sdk";
 import { somniaTestnet } from "../main";
 import { cacheRecoveredPolicy, readPublished } from "../lib/publishedCache";
 import { recoverPolicyInputFromChainDeduped } from "../lib/policyRecovery";
@@ -194,7 +194,7 @@ export default function PolicyDrawer({ policyId, onClose }: Props) {
     publicClient
       .readContract({
         address: store.oracleClient.address,
-        abi: SENTRY_ORACLE_ABI as never,
+        abi: WARD_ORACLE_ABI as never,
         functionName: "policyOwner",
         args: [policyId],
       })
@@ -231,7 +231,7 @@ export default function PolicyDrawer({ policyId, onClose }: Props) {
     publicClient
       .readContract({
         address: store.oracleClient.address,
-        abi: SENTRY_ORACLE_ABI as never,
+        abi: WARD_ORACLE_ABI as never,
         functionName: "pendingPolicyOwner",
         args: [policyId],
       })
@@ -275,7 +275,7 @@ export default function PolicyDrawer({ policyId, onClose }: Props) {
     publicClient
       .readContract({
         address: store.oracleClient.address,
-        abi: SENTRY_ORACLE_ABI as never,
+        abi: WARD_ORACLE_ABI as never,
         functionName: "policyHealth",
         args: [policyId],
       })

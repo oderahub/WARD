@@ -6,9 +6,9 @@
  */
 export default function VisibilityBanner() {
   return (
-    <div className="border-b border-sentry-border bg-bg px-4 py-1 text-[11px] text-text-muted">
+    <div className="border-b border-ward-border bg-bg px-4 py-1 text-[11px] text-text-muted">
       <span className="text-text-subtle uppercase tracking-wider mr-2">scope</span>
-      Sentry only sees delayed + veto-required calls. immediate-mode
+      Ward only sees delayed + veto-required calls. immediate-mode
       checkIntent emits no events — invisible here.
     </div>
   );

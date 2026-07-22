@@ -14,7 +14,7 @@ import { Alert, ExplorerLink } from "./primitives";
 /**
  * WatchedSection — third section of QueueTab.
  *
- * Sentry's "watch mode": same policy spec / same on-chain publish as enforce
+ * Ward's "watch mode": same policy spec / same on-chain publish as enforce
  * mode, but the dashboard polls the agent's tx history off-chain and
  * surfaces violations as alerts. Never blocks the call.
  *
@@ -133,8 +133,8 @@ export default function WatchedSection() {
 
   if (watched.length === 0) {
     return (
-      <section className="border-t border-sentry-border">
-        <header className="flex items-baseline justify-between border-b border-sentry-border px-4 py-1.5">
+      <section className="border-t border-ward-border">
+        <header className="flex items-baseline justify-between border-b border-ward-border px-4 py-1.5">
           <h2 className="text-[11px] uppercase tracking-wider font-semibold text-text">
             Watched agents
             <span className="ml-2 rounded-full border border-warn bg-warn/20 px-1.5 py-0.5 text-[9px] text-warn">
@@ -158,8 +158,8 @@ export default function WatchedSection() {
   }
 
   return (
-    <section className="border-t border-sentry-border">
-      <header className="flex items-baseline justify-between border-b border-sentry-border px-4 py-1.5">
+    <section className="border-t border-ward-border">
+      <header className="flex items-baseline justify-between border-b border-ward-border px-4 py-1.5">
         <h2 className="text-[11px] uppercase tracking-wider font-semibold text-text">
           Watched agents
         </h2>
@@ -168,7 +168,7 @@ export default function WatchedSection() {
         </span>
       </header>
       {banners}
-      <div className="divide-y divide-sentry-border">
+      <div className="divide-y divide-ward-border">
         {watched.map((entry) => (
           <WatchedEntry
             key={`${entry.agent}-${entry.policyId}`}
@@ -220,7 +220,7 @@ function WatchedEntry({ agent, policyId, violations }: WatchedEntryProps) {
           No violations seen yet — polled every {POLL_INTERVAL_SEC}s.
         </div>
       ) : (
-        <ul className="divide-y divide-sentry-border">
+        <ul className="divide-y divide-ward-border">
           {recent.map((v, i) => (
             <li
               key={`${v.txHash}-${i}`}

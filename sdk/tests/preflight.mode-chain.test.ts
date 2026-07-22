@@ -79,7 +79,7 @@ describe("preflight — mode 'chain'", () => {
     expect(result.reasonText).toMatch(/selector is not allowed/i);
   });
 
-  it("decodes REQUIRES_DELAY (the tier branch SentryOracle adds)", async () => {
+  it("decodes REQUIRES_DELAY (the tier branch WardOracle adds)", async () => {
     const readContract = vi.fn(
       async () => [false, REASON_CODES.REQUIRES_DELAY] as const,
     );

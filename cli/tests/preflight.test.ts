@@ -26,12 +26,12 @@ function clearEnv() {
   delete process.env.SOMNIA_AGENT_PLATFORM;
   delete process.env.LLM_INFERENCE_AGENT_ID;
   delete process.env.SOMNIA_TESTNET_RPC;
-  delete process.env.SENTRY_ORACLE;
+  delete process.env.WARD_ORACLE;
   delete (globalThis as any).__MOCK_BALANCE__;
   delete (globalThis as any).__MOCK_CHAIN_ID__;
 }
 
-describe("sentry preflight", () => {
+describe("ward preflight", () => {
   beforeEach(() => {
     clearEnv();
   });
@@ -91,12 +91,12 @@ describe("sentry preflight", () => {
     expect(r.warnings.join(" ")).toMatch(/expected 50312/);
   });
 
-  it("errors on a malformed SENTRY_ORACLE address", async () => {
+  it("errors on a malformed WARD_ORACLE address", async () => {
     process.env.PRIVATE_KEY = VALID_PK;
-    process.env.SENTRY_ORACLE = "not-an-address";
+    process.env.WARD_ORACLE = "not-an-address";
     const r = await preflightCmd({}, false);
     expect(r.ok).toBe(false);
-    expect(r.errors.join(" ")).toMatch(/SENTRY_ORACLE=not-an-address/);
+    expect(r.errors.join(" ")).toMatch(/WARD_ORACLE=not-an-address/);
   });
 
   it("returns ok with derived address when env is well-formed and balance is healthy", async () => {

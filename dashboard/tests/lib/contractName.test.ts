@@ -11,14 +11,14 @@ import {
   saveContractName,
 } from "../../src/lib/persistence";
 
-const DB_NAME = "sentry-store";
+const DB_NAME = "ward-store";
 const CHAIN_ID = 50312;
 const EXPLORER = "https://shannon-explorer.somnia.network";
 
-// SentryOracle (v2) from the local map — one of the small set of Sentry-
+// WardOracle (v2) from the local map — one of the small set of Ward-
 // canonical addresses that resolve synchronously without an explorer hit.
 const LOCAL_ADDR = "0x3C7bF90f243d670a01f512221d9546e09fEaCC9c" as Address;
-const LOCAL_NAME = "SentryOracle";
+const LOCAL_NAME = "WardOracle";
 // Random unverified-shaped address not in LOCAL.
 const UNKNOWN_ADDR = "0x1234567890abcdef1234567890abcdef12345678" as Address;
 const UNKNOWN_ADDR_UPPER = "0x1234567890ABCDEF1234567890ABCDEF12345678" as Address;

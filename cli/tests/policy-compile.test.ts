@@ -6,13 +6,13 @@ import { compileCmd } from "../src/cmd/policy.js";
 
 const ADDR = "0x1111111111111111111111111111111111111111";
 
-describe("sentry policy compile", () => {
+describe("ward policy compile", () => {
   let dir: string;
   let logs: string[];
   let restore: () => void;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "sentry-cli-"));
+    dir = mkdtempSync(join(tmpdir(), "ward-cli-"));
     logs = [];
     const orig = console.log;
     console.log = (...args: unknown[]) => {
@@ -112,12 +112,12 @@ describe("decode lib", () => {
 describe("env loader", () => {
   it("returns undefined for missing PRIVATE_KEY", async () => {
     delete process.env.PRIVATE_KEY;
-    delete process.env.SENTRY_ORACLE;
-    const { loadEnv, requirePrivateKey, requireSentryOracle } = await import("../src/lib/env.js");
+    delete process.env.WARD_ORACLE;
+    const { loadEnv, requirePrivateKey, requireWardOracle } = await import("../src/lib/env.js");
     const e = loadEnv();
     expect(e.privateKey).toBeUndefined();
     expect(() => requirePrivateKey(e)).toThrow(/PRIVATE_KEY/);
-    expect(() => requireSentryOracle(e)).toThrow(/SENTRY_ORACLE/);
+    expect(() => requireWardOracle(e)).toThrow(/WARD_ORACLE/);
   });
 });
 

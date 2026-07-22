@@ -1,10 +1,10 @@
 import { type Address, type Hex, type PublicClient, type WalletClient } from "viem";
-import { LEGACY_SENTRY_QUEUE_ABI_V0, SENTRY_QUEUE_ABI } from "./abi.js";
+import { LEGACY_WARD_QUEUE_ABI_V0, WARD_QUEUE_ABI } from "./abi.js";
 import type { Intent } from "./types.js";
 
 export type QueueState = "None" | "Pending" | "Committed" | "Vetoed" | "Expired";
 
-// The first Shannon SentryQueue returns an 11-word `RecordHeader`; synthesize `policyVersion: 0n`.
+// The first Shannon WardQueue returns an 11-word `RecordHeader`; synthesize `policyVersion: 0n`.
 function isQueueHeaderShapeError(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
   return (
@@ -59,7 +59,7 @@ export interface CreateQueueClientArgs {
   queueAddress: Address;
 }
 
-/** Thin viem wrapper around `SentryQueue`; reads are walletless, writes require `walletClient`. */
+/** Thin viem wrapper around `WardQueue`; reads are walletless, writes require `walletClient`. */
 export function createQueueClient(args: CreateQueueClientArgs): QueueClient {
   const { publicClient, walletClient, queueAddress } = args;
 
@@ -76,7 +76,7 @@ export function createQueueClient(args: CreateQueueClientArgs): QueueClient {
       const wallet = requireWallet();
       const txHash = await wallet.writeContract({
         address: queueAddress,
-        abi: SENTRY_QUEUE_ABI as never,
+        abi: WARD_QUEUE_ABI as never,
         functionName: "enqueue",
         args: [policyId, intent as never, spentToday],
         account: wallet.account!,
@@ -89,7 +89,7 @@ export function createQueueClient(args: CreateQueueClientArgs): QueueClient {
       const wallet = requireWallet();
       const txHash = await wallet.writeContract({
         address: queueAddress,
-        abi: SENTRY_QUEUE_ABI as never,
+        abi: WARD_QUEUE_ABI as never,
         functionName: "dispatch",
         args: [execId],
         account: wallet.account!,
@@ -102,7 +102,7 @@ export function createQueueClient(args: CreateQueueClientArgs): QueueClient {
       const wallet = requireWallet();
       const txHash = await wallet.writeContract({
         address: queueAddress,
-        abi: SENTRY_QUEUE_ABI as never,
+        abi: WARD_QUEUE_ABI as never,
         functionName: "veto",
         args: [execId, reason],
         account: wallet.account!,
@@ -115,7 +115,7 @@ export function createQueueClient(args: CreateQueueClientArgs): QueueClient {
       const wallet = requireWallet();
       const txHash = await wallet.writeContract({
         address: queueAddress,
-        abi: SENTRY_QUEUE_ABI as never,
+        abi: WARD_QUEUE_ABI as never,
         functionName: "expireIfStale",
         args: [execId],
         account: wallet.account!,
@@ -127,7 +127,7 @@ export function createQueueClient(args: CreateQueueClientArgs): QueueClient {
     async getRecord(execId) {
       const raw = (await publicClient.readContract({
         address: queueAddress,
-        abi: SENTRY_QUEUE_ABI as never,
+        abi: WARD_QUEUE_ABI as never,
         functionName: "getRecord",
         args: [execId],
       })) as {
@@ -165,7 +165,7 @@ export function createQueueClient(args: CreateQueueClientArgs): QueueClient {
       try {
         const raw = (await publicClient.readContract({
           address: queueAddress,
-          abi: SENTRY_QUEUE_ABI as never,
+          abi: WARD_QUEUE_ABI as never,
           functionName: "getRecordHeader",
           args: [execId],
         })) as CanonicalRaw;
@@ -178,7 +178,7 @@ export function createQueueClient(args: CreateQueueClientArgs): QueueClient {
       try {
         const legacy = (await publicClient.readContract({
           address: queueAddress,
-          abi: LEGACY_SENTRY_QUEUE_ABI_V0 as never,
+          abi: LEGACY_WARD_QUEUE_ABI_V0 as never,
           functionName: "getRecordHeader",
           args: [execId],
         })) as LegacyRaw;
@@ -187,7 +187,7 @@ export function createQueueClient(args: CreateQueueClientArgs): QueueClient {
         const legacyMsg = legacyErr instanceof Error ? legacyErr.message : String(legacyErr);
         const canonicalMsg = canonicalErr instanceof Error ? canonicalErr.message : String(canonicalErr);
         throw new Error(
-          `SentryQueue at ${queueAddress} returned an unexpected payload shape ` +
+          `WardQueue at ${queueAddress} returned an unexpected payload shape ` +
             `for getRecordHeader(${execId}); expected 384 (canonical) or 352 (legacy) bytes. ` +
             `canonical decode: ${canonicalMsg} | legacy decode: ${legacyMsg}`,
         );
@@ -197,7 +197,7 @@ export function createQueueClient(args: CreateQueueClientArgs): QueueClient {
     async nextExecId() {
       return (await publicClient.readContract({
         address: queueAddress,
-        abi: SENTRY_QUEUE_ABI as never,
+        abi: WARD_QUEUE_ABI as never,
         functionName: "nextExecId",
         args: [],
       })) as bigint;

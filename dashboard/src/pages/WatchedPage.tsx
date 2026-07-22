@@ -13,7 +13,7 @@ import {
   Trash,
   WarningCircle,
 } from "@phosphor-icons/react";
-import type { PolicyMeta } from "@sentry-somnia/sdk";
+import type { PolicyMeta } from "@ward/sdk";
 
 import {
   useAgentWatcher,
@@ -402,7 +402,7 @@ function DocumentFrontMatter({
         Registry · Document {DASHBOARD_VERSION}
       </div>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-text md:text-4xl">
-        Sentry-watched agents on Somnia Shannon
+        Ward-watched agents on Somnia Shannon
       </h1>
 
       <dl className="mt-6 grid max-w-[640px] grid-cols-[140px_1fr] gap-y-1.5 gap-x-6 text-[13px]">
@@ -504,7 +504,7 @@ function Footnote() {
         <code className="font-mono">register(agent, policyId, …)</code> for a
         given address becomes the entry's <em>registrar</em> and the only one who
         can subsequently update or deactivate it. See{" "}
-        <code className="font-mono">SentryAgentRegistry.sol </code>.
+        <code className="font-mono">WardAgentRegistry.sol </code>.
       </div>
     </footer>
   );

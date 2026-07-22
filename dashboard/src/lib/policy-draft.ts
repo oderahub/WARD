@@ -6,7 +6,7 @@ import {
   TIER_NAMES,
   type PolicyInput,
   type Tier as SdkTier,
-} from "@sentry-somnia/sdk";
+} from "@ward/sdk";
 import { NETWORKS } from "./networks";
 
 /**
@@ -18,7 +18,7 @@ import { NETWORKS } from "./networks";
  * The SDK's `compilePolicy` is the only path from POLICY.md text to a valid
  * on-chain PolicyInput. We deliberately do NOT skip the markdown round-trip:
  * staying on that path means the dashboard publish behavior is bit-identical
- * to `sentry push` from the CLI.
+ * to `ward push` from the CLI.
  */
 export const TIER_VALUES = ["IMMEDIATE", "DELAYED", "VETO_REQUIRED"] as const;
 export type Tier = (typeof TIER_VALUES)[number];
@@ -90,7 +90,7 @@ const weiOrEtherRegex = /^(0|[1-9][0-9]*)(\.[0-9]+)?( ether)?$|^[0-9]+$/;
  * for well-formed inputs is unchanged, but upgrades the message from the
  * generic "wei integer or `N ether` shorthand" when a typo is detectable.
  *
- * Native-only by design: STT (chain native value) is the only metering Sentry
+ * Native-only by design: STT (chain native value) is the only metering Ward
  * does on-chain; ERC20 token amounts encoded in calldata are not parsed. So we
  * deliberately do NOT accept `gwei` / `wei` / `eth` here, and the caller
  * messaging makes that explicit on the form.
@@ -442,12 +442,12 @@ export const TargetDraftSchemaSemantic = z
         message: "Invalid address checksum. Paste from your wallet, or use all-lowercase.",
       });
     }
-    // Refuse precompiles and the Sentry oracle/queue addresses.
+    // Refuse precompiles and the Ward oracle/queue addresses.
     if (RESERVED_TARGETS.has(t.target.toLowerCase())) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["target"],
-        message: "Target cannot be the SentryOracle, SentryQueue, or a precompile address.",
+        message: "Target cannot be the WardOracle, WardQueue, or a precompile address.",
       });
     }
   });
@@ -482,7 +482,7 @@ export const TargetDraftSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["target"],
-        message: "Target cannot be the SentryOracle, SentryQueue, or a precompile address.",
+        message: "Target cannot be the WardOracle, WardQueue, or a precompile address.",
       });
     }
   });
@@ -537,13 +537,13 @@ export const PolicyDraftSchemaSemantic = z
       ),
     expiresAtISO: z
       .string()
-      .min(1, "Expiry required. Sentry treats 0 as already-expired.")
+      .min(1, "Expiry required. Ward treats 0 as already-expired.")
       .refine((s) => !Number.isNaN(Date.parse(s)), {
         message: "must be a parseable ISO-8601 timestamp",
       }),
     paused: z.boolean().default(false),
     targets: z.array(TargetDraftSchemaSemantic).min(1, "at least one target required"),
-    // UI-draft-only: the deployed SentryAgentBase address the operator pasted
+    // UI-draft-only: the deployed WardAgentBase address the operator pasted
     // into the Source-agent entry on the Publish form, when the probe
     // confirmed it's bind-capable. Threaded into PostPublishChecklist as the
     // pre-filled Bind agent so the operator doesn't paste it twice. The chain
@@ -570,7 +570,7 @@ export const PolicyDraftSchemaSemantic = z
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ["expiresAtISO"],
-          message: "Expiry required. Sentry treats 0 as already-expired.",
+          message: "Expiry required. Ward treats 0 as already-expired.",
         });
       } else if (parsed <= Date.now() + SAFETY_WINDOW_MS) {
         ctx.addIssue({
@@ -849,7 +849,7 @@ function tierName(t: SdkTier): "IMMEDIATE" | "DELAYED" | "VETO_REQUIRED" {
  * Client-side preview only. On-chain `checkIntent` is authoritative.
  *
  * Given a compiled PolicyInput (DRAFT — not yet on-chain) and an intent the
- * user types into the simulator, mirror SentryOracle.checkIntent's decision
+ * user types into the simulator, mirror WardOracle.checkIntent's decision
  * tree so the publisher can see what their policy would allow before
  * spending gas to publish it.
  */

@@ -8,7 +8,7 @@
  * carry the signature strings — they're hashed away into bytes4 — so we can't
  * recover them from chain.
  *
- * This module ships a small hardcoded map of the selectors the Sentry tutorial
+ * This module ships a small hardcoded map of the selectors the Ward tutorial
  * + common ERC-20 / agent-trading flows actually use. Unknown selectors render
  * as their hex form (which is still useful: an operator can paste it into
  * 4byte.directory if they need the human name). Async 4byte lookup is
@@ -135,7 +135,7 @@ export const FIELD_HUMAN_LABELS: Record<string, string> = {
 
 /**
  * Known-target lookup — same shape as KNOWN_SELECTORS but for contract
- * addresses. Lets the policy drawer and edit modal render canonical Sentry
+ * addresses. Lets the policy drawer and edit modal render canonical Ward
  * deployments under a friendly label instead of an opaque hex address.
  * Lowercased addresses are the lookup key; the lookup is case-insensitive.
  *

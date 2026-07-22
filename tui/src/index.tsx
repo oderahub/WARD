@@ -10,17 +10,17 @@ const VERSION = "0.9.0";
 if (args.includes("-h") || args.includes("--help")) {
   process.stdout.write(
     [
-      `sentry-tui ${VERSION}`,
+      `ward-tui ${VERSION}`,
       "",
       "Usage:",
-      "  sentry-tui          Open the full-screen queue monitor TUI",
-      "  sentry-tui --json   Skip the TUI; stream NDJSON of events to stdout",
-      "  sentry-tui --help   Show this message",
-      "  sentry-tui --version",
+      "  ward-tui          Open the full-screen queue monitor TUI",
+      "  ward-tui --json   Skip the TUI; stream NDJSON of events to stdout",
+      "  ward-tui --help   Show this message",
+      "  ward-tui --version",
       "",
-      "Env: PRIVATE_KEY (optional), SOMNIA_TESTNET_RPC, SENTRY_ORACLE, SENTRY_QUEUE",
-      "     SENTRY_QUEUE_LOOKBACK_BLOCKS (default 50000)",
-      "     SENTRY_TUI_ORACLE_DEPLOY_BLOCK or SENTRY_TUI_DEEP_BACKFILL=1 for deep policy backfill",
+      "Env: PRIVATE_KEY (optional), SOMNIA_TESTNET_RPC, WARD_ORACLE, WARD_QUEUE",
+      "     WARD_QUEUE_LOOKBACK_BLOCKS (default 50000)",
+      "     WARD_TUI_ORACLE_DEPLOY_BLOCK or WARD_TUI_DEEP_BACKFILL=1 for deep policy backfill",
       "",
     ].join("\n"),
   );

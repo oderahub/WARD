@@ -1,6 +1,6 @@
 import { Box, Text } from "ink";
 import type { ReactNode } from "react";
-import type { QueueRecordHeader, StoreEvent } from "@sentry-somnia/sdk";
+import type { QueueRecordHeader, StoreEvent } from "@ward/sdk";
 
 interface Props {
   pending: QueueRecordHeader[];

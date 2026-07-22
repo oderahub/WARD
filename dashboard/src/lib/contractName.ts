@@ -3,7 +3,7 @@
  * suitable for AddressChip display.
  *
  * Resolution order (cheapest → most expensive):
- *   1. Local hardcoded map — the Sentry oracle + queue addresses. Resolved
+ *   1. Local hardcoded map — the Ward oracle + queue addresses. Resolved
  *      synchronously, no I/O.
  *   2. IndexedDB cache — prior explorer lookups within 24h. Survives reloads.
  *   3. Somnia explorer (Blockscout) — Etherscan-style `getsourcecode`
@@ -36,10 +36,10 @@ export type { ContractNameRecord } from "./persistence";
  * same address on a different chain wouldn't accidentally inherit the name.
  */
 const LOCAL = new Map<string, string>([
-  ["50312:0x3c7bf90f243d670a01f512221d9546e09feacc9c", "SentryOracle"],
-  ["50312:0xfb715a37951fc8dcc920120768e91f7c8bba54c4", "SentryQueue"],
-  ["50312:0x68d4b045b24f8d1012974b9d34684ca5aed11ddf", "SentryOracle (v1)"],
-  ["50312:0x98a3f7c38d19edf1dda7e3bc38fa4b935ad590d5", "SentryQueue (v1)"],
+  ["50312:0x3c7bf90f243d670a01f512221d9546e09feacc9c", "WardOracle"],
+  ["50312:0xfb715a37951fc8dcc920120768e91f7c8bba54c4", "WardQueue"],
+  ["50312:0x68d4b045b24f8d1012974b9d34684ca5aed11ddf", "WardOracle (v1)"],
+  ["50312:0x98a3f7c38d19edf1dda7e3bc38fa4b935ad590d5", "WardQueue (v1)"],
 ]);
 
 const POSITIVE_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h — names rarely change

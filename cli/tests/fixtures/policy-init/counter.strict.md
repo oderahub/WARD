@@ -1,4 +1,4 @@
-# Starter Sentry policy
+# Starter Ward policy
 
 ```policy
 version: "0.1"

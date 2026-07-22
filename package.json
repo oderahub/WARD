@@ -1,5 +1,5 @@
 {
-  "name": "sentry-somnia",
+  "name": "ward",
   "version": "0.12.0",
   "private": true,
   "description": "Policy-enforced safe execution for Somnia agents",
@@ -9,8 +9,8 @@
   },
   "scripts": {
     "build": "pnpm -r --if-present run build",
-    "sentry": "node scripts/sentry.mjs",
-    "sentry:tui": "pnpm sentry tui",
+    "ward": "node scripts/ward.mjs",
+    "ward:tui": "pnpm ward tui",
     "test": "LOG=$(mktemp); pnpm -r --if-present run test >\"$LOG\" 2>&1; RC=$?; cat \"$LOG\"; if [ \"$RC\" -ne 0 ] && grep -q 'No test files found' \"$LOG\"; then echo 'Note: test files are not shipped in this public repo. See README test surface section for what is covered.'; rm -f \"$LOG\"; exit 0; fi; rm -f \"$LOG\"; exit \"$RC\"",
     "lint": "pnpm -r --if-present run lint",
     "lint:docs": "node scripts/check-doc-launchers.mjs",

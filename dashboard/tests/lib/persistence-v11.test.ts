@@ -4,13 +4,13 @@ import { openDB } from "idb";
 import type { Address, Hex } from "viem";
 
 import {
-  openSentryDB,
+  openWardDB,
   saveWatchSubscription,
   loadWatchSubscription,
   WATCH_SUBSCRIPTIONS_STORE,
 } from "../../src/lib/persistence";
 
-const DB_NAME = "sentry-store";
+const DB_NAME = "ward-store";
 const OWNER_INDEX_STORE = "ownerIndex";
 const CONTRACT_NAME_STORE = "contractName";
 const CACHED_AGENTS_STORE = "cachedAgents";
@@ -68,7 +68,7 @@ async function seedV10Db(seed: { ownerIndexKey: string; ownerIndexValue: unknown
 
 describe("v10 → v11/v12/v13 additive migration", () => {
   it("DB_VERSION is 13 (v13 telegram-field bump) and the watchSubscriptions store is created on upgrade", async () => {
-    const db = await openSentryDB();
+    const db = await openWardDB();
     try {
       expect(db.version).toBe(13);
       expect(db.objectStoreNames.contains(WATCH_SUBSCRIPTIONS_STORE)).toBe(true);
@@ -81,8 +81,8 @@ describe("v10 → v11/v12/v13 additive migration", () => {
     const KEY = `${CHAIN_ID}:0xoracleplaceholder:0xowner`;
     await seedV10Db({ ownerIndexKey: KEY, ownerIndexValue: null });
 
-    // openSentryDB triggers v10 → v13 in one shot — additive at every step.
-    const upgraded = await openSentryDB();
+    // openWardDB triggers v10 → v13 in one shot — additive at every step.
+    const upgraded = await openWardDB();
     try {
       expect(upgraded.version).toBe(13);
       expect(upgraded.objectStoreNames.contains(WATCH_SUBSCRIPTIONS_STORE)).toBe(true);
@@ -155,7 +155,7 @@ describe("v10 → v11/v12/v13 additive migration", () => {
     // `telegram` key at all, just `slackWebhookUrl`. The v13 type-widening
     // (telegram optional) must accept it without throwing or normalizing it
     // into a telegram-shaped row.
-    const db = await openSentryDB();
+    const db = await openWardDB();
     try {
       const tx = db.transaction(WATCH_SUBSCRIPTIONS_STORE, "readwrite");
       await tx.store.put({

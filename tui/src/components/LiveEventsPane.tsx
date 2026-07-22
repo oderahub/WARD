@@ -1,5 +1,5 @@
 import { Box, Text } from "ink";
-import type { StoreEvent } from "@sentry-somnia/sdk";
+import type { StoreEvent } from "@ward/sdk";
 
 interface Props {
   events: StoreEvent[];

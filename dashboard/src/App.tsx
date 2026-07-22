@@ -50,7 +50,7 @@ function AppShell() {
           >
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <span>Sentry could not connect to RPC, {humanized.headline}</span>
+                <span>Ward could not connect to RPC, {humanized.headline}</span>
                 <span className="ml-2 font-mono text-[11px] text-text-subtle">
                   {truncateRpc(rpc)}
                 </span>

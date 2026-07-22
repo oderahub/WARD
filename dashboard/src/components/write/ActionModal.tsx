@@ -6,7 +6,7 @@ import {
   type PublicClient,
   type WalletClient,
 } from "viem";
-import { type QueueRecordHeader } from "@sentry-somnia/sdk";
+import { type QueueRecordHeader } from "@ward/sdk";
 
 import { useFocusTrapAndEsc } from "../../hooks/useFocusTrapAndEsc";
 import { humanizeWeb3Error } from "../../lib/humanizeError";
@@ -165,7 +165,7 @@ export function ActionModal({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.97, opacity: 0 }}
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-md rounded-md border border-sentry-border bg-bg p-5 text-sm text-text shadow-2xl"
+        className="w-full max-w-md rounded-md border border-ward-border bg-bg p-5 text-sm text-text shadow-2xl"
       >
         <header className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-text">{cfg.title}</h3>
@@ -200,7 +200,7 @@ export function ActionModal({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="e.g. policy revoked"
-              className="w-full rounded-md border border-sentry-border bg-surface px-2 py-1.5 font-mono text-xs text-text focus:border-warn focus:outline-none"
+              className="w-full rounded-md border border-ward-border bg-surface px-2 py-1.5 font-mono text-xs text-text focus:border-warn focus:outline-none"
               autoFocus
             />
             <p className="mt-1 text-[11px] text-text-subtle">{cfg.helperBody}</p>
@@ -263,7 +263,7 @@ function IntentSummary({
   record: QueueRecordHeader;
 }) {
   return (
-    <dl className="space-y-1 rounded-md border border-sentry-border bg-surface p-3 text-xs">
+    <dl className="space-y-1 rounded-md border border-ward-border bg-surface p-3 text-xs">
       <Row label="Request">
         <span className="font-mono tabular-nums text-text">#{execId.toString()}</span>
       </Row>

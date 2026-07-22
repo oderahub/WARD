@@ -12,24 +12,24 @@ interface Props {
  *
  * Tooltips spell out the semantic difference because the two modes look
  * identical at publish time — the divergence is whether your agent code calls
- * checkIntent (enforce) or whether Sentry just observes (watch).
+ * checkIntent (enforce) or whether Ward just observes (watch).
  */
 export function ModeToggle({ value, onChange }: Props) {
   return (
     <div
       role="tablist"
       aria-label="Publish mode"
-      className="flex w-fit divide-x divide-sentry-border rounded-md border-y border-sentry-border overflow-hidden"
+      className="flex w-fit divide-x divide-ward-border rounded-md border-y border-ward-border overflow-hidden"
     >
       <Option
         label="Enforce"
-        title="Your agent calls Sentry inline and refuses any call the policy rejects. Requires 3 lines of Solidity in the agent contract."
+        title="Your agent calls Ward inline and refuses any call the policy rejects. Requires 3 lines of Solidity in the agent contract."
         active={value === "enforce"}
         onClick={() => onChange("enforce")}
       />
       <Option
         label="Watch"
-        title="Sentry watches an already-deployed agent and alerts on policy violations after they happen. No agent code changes; no real-time blocking."
+        title="Ward watches an already-deployed agent and alerts on policy violations after they happen. No agent code changes; no real-time blocking."
         active={value === "watch"}
         onClick={() => onChange("watch")}
       />

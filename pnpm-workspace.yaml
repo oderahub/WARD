@@ -5,7 +5,7 @@ packages:
   - policy-spec
   - dashboard
   - tui
-  - packages/create-sentry-agent
-  - packages/sentry-react
-  - packages/sentry-vite
-  - examples/sentry-react-app
+  - packages/create-ward-agent
+  - packages/ward-react
+  - packages/ward-vite
+  - examples/ward-react-app

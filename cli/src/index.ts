@@ -34,7 +34,7 @@ import { runTuiCmd } from "./cmd/tui.js";
 import { runInteractive } from "./interactive.js";
 import { parseEther, type Address, type Hex } from "viem";
 
-const cli = cac("sentry");
+const cli = cac("ward");
 cli.usage("[command] [options]");
 
 function rawOptionValue(name: string): string | undefined {
@@ -60,14 +60,14 @@ cli.command("compile <path>", "Compile a POLICY.md to canonical JSON").action(as
 });
 
 cli
-  .command("push <path>", "Compile + publish POLICY.md to SentryOracle under your wallet's namespace")
+  .command("push <path>", "Compile + publish POLICY.md to WardOracle under your wallet's namespace")
   .option("--label <name>", "ASCII label (≤32 bytes) for your policy namespace", { default: "default", type: [String] })
   .action(async (path: string, opts: { label?: string }) => {
     await pushCmd(path, { label: stringOption(opts.label, "label") ?? "default" });
   });
 
 cli
-  .command("policyid <label>", "Compute the SentryOracle policyId for a (publisher, label) pair")
+  .command("policyid <label>", "Compute the WardOracle policyId for a (publisher, label) pair")
   .option("--publisher <addr>", "Publisher address (default: wallet from PRIVATE_KEY)", { type: [String] })
   .action(async (label: string, opts: { publisher?: string }) => {
     await policyIdCmd(label, stringOption(opts.publisher, "publisher"));
@@ -80,7 +80,7 @@ cli
   });
 
 cli
-  .command("queue:status <execId>", "Pretty-print a SentryQueue record header (cheap; skips intent.data)")
+  .command("queue:status <execId>", "Pretty-print a WardQueue record header (cheap; skips intent.data)")
   .action(async (id: string) => {
     await queueStatusCmd(id);
   });
@@ -120,7 +120,7 @@ cli
 cli
   .command(
     "queue:enqueue <intent.json> <policyId>",
-    "Submit an Intent to SentryQueue under a policyId (DELAYED / VETO_REQUIRED only)",
+    "Submit an Intent to WardQueue under a policyId (DELAYED / VETO_REQUIRED only)",
   )
   .option("--spent-today <wei>", "Caller's running spent-today in wei (decimal string)", { default: "0", type: [String] })
   .action(async (intentPath: string, policyId: string, opts: { spentToday?: string }) => {
@@ -140,10 +140,10 @@ cli
   });
 
 cli
-  .command("ai:init", "Generate Sentry assistant context files from SKILL.md")
-  .option("--cursor", "Write .cursor/rules/sentry.mdc")
-  .option("--claude", "Write .claude/skills/sentry-integration/SKILL.md")
-  .option("--codex", "Create or update the marked Sentry section in AGENTS.md")
+  .command("ai:init", "Generate Ward assistant context files from SKILL.md")
+  .option("--cursor", "Write .cursor/rules/ward.mdc")
+  .option("--claude", "Write .claude/skills/ward-integration/SKILL.md")
+  .option("--codex", "Create or update the marked Ward section in AGENTS.md")
   .option("--all", "Write Cursor, Claude, and Codex files")
   .option("--force", "Overwrite hand-edited generated destinations")
   .action(async (opts: { cursor?: boolean; claude?: boolean; codex?: boolean; all?: boolean; force?: boolean }) => {
@@ -151,9 +151,9 @@ cli
   });
 
 cli
-  .command("lint <path>", "Lint POLICY.md for common Sentry integration mistakes")
+  .command("lint <path>", "Lint POLICY.md for common Ward integration mistakes")
   .option("--abi <path>", "ABI JSON or Foundry artifact JSON", { type: [String] })
-  .option("--oracle <addr>", "SentryOracle address for on-chain rules", { type: [String] })
+  .option("--oracle <addr>", "WardOracle address for on-chain rules", { type: [String] })
   .option("--rpc <url>", "RPC URL for on-chain rules", { type: [String] })
   .option("--policy-id <id>", "Policy id for policyOwner checks", { type: [String] })
   .option("--fail-on <rules>", "Comma-separated rule ids to promote to errors", { type: [String] })
@@ -216,7 +216,7 @@ cli.help((sections) => {
   const usageIndex = sections.findIndex((section) => section.title === "Usage");
   sections.splice(usageIndex + 1, 0, {
     title: "Interactive",
-    body: "  $ sentry\n    Open the guided menu.",
+    body: "  $ ward\n    Open the guided menu.",
   });
   return sections;
 });

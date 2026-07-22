@@ -1,8 +1,8 @@
 {
-  "name": "@sentry-somnia/sdk",
+  "name": "@ward/sdk",
   "version": "0.10.1",
   "private": true,
-  "description": "Sentry SDK: POLICY.md compiler, PolicyBuilder, contract ABIs, receipt watcher",
+  "description": "Ward SDK: POLICY.md compiler, PolicyBuilder, contract ABIs, receipt watcher",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

@@ -6,7 +6,7 @@ export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
-      // Sentry design system — see /design/DESIGN.md. Semantic tokens map to
+      // Ward design system — see /design/DESIGN.md. Semantic tokens map to
       // CSS variables defined in src/index.css. Prefer these (`bg-bg`,
       // `text-text`) over raw Tailwind palette in new components.
       //
@@ -15,11 +15,11 @@ export default {
       // efferd registry blocks and shadcn primitives render with our brand
       // without us forking their JSX.
       colors: {
-        // Sentry tokens
+        // Ward tokens
         bg: "var(--bg)",
         surface: "var(--surface)",
         "surface-elev": "var(--surface-elev)",
-        "sentry-border": "var(--border)",
+        "ward-border": "var(--border)",
         rule: "var(--rule)",
         text: "var(--text)",
         "text-display": "var(--text-display)",

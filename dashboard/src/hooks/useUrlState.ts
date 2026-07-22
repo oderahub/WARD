@@ -3,8 +3,8 @@ import type { Address, Hex } from "viem";
 import { NETWORKS, getNetwork, ACTIVE_CHAIN_ID, SOMNIA_TESTNET_CHAIN_ID } from "../lib/networks";
 
 /**
- * Default Sentry deployment for the active chain (Shannon unless
- * VITE_SENTRY_CHAIN selects another). Each can be overridden via
+ * Default Ward deployment for the active chain (Shannon unless
+ * VITE_WARD_CHAIN selects another). Each can be overridden via
  * `?rpc=…&oracle=…&queue=…`. Addresses are sourced from the NETWORKS registry
  * so adding a chain doesn't require editing this file.
  */

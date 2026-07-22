@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { compilePolicy, SENTRY_ORACLE_ABI } from "@sentry-somnia/sdk";
+import { compilePolicy, WARD_ORACLE_ABI } from "@ward/sdk";
 import kleur from "kleur";
 import { isAddress, toFunctionSelector, type Address, type Hex } from "viem";
 import { publicClient } from "../lib/env.js";
@@ -79,7 +79,7 @@ export async function lintCmd(path: string, opts: LintOptions = {}): Promise<voi
   if (opts.json) {
     console.log(JSON.stringify({ ok: diagnostics.every((d) => d.severity !== "error"), diagnostics }, null, 2));
   } else {
-    console.log(kleur.bold().cyan("# sentry lint"));
+    console.log(kleur.bold().cyan("# ward lint"));
     if (diagnostics.length === 0) {
       console.log(kleur.green("  OK · no diagnostics"));
     } else {
@@ -183,7 +183,7 @@ export async function lintPolicy(path: string, opts: LintOptions = {}): Promise<
       ? await opts.policyOwner(opts.policyId)
       : ((await publicClient(opts.rpc).readContract({
           address: opts.oracle,
-          abi: SENTRY_ORACLE_ABI as never,
+          abi: WARD_ORACLE_ABI as never,
           functionName: "policyOwner",
           args: [opts.policyId],
         })) as Address);

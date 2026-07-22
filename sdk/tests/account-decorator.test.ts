@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { parseAbi, type Address, type Hex, type WalletClient } from "viem";
-import { withSentryPreflight } from "../src/account-decorator.js";
+import { withWardPreflight } from "../src/account-decorator.js";
 import { REASON_CODES } from "../src/reason-codes.js";
 import type { EvalPolicy } from "../src/policy-eval.js";
 
@@ -38,10 +38,10 @@ function wallet() {
   };
 }
 
-describe("withSentryPreflight", () => {
+describe("withWardPreflight", () => {
   it("gates writeContract with preflight before forwarding", async () => {
     const base = wallet();
-    const decorated = withSentryPreflight(base, {
+    const decorated = withWardPreflight(base, {
       source: { kind: "local", policy: policy(true) },
       spentTodayWei: 0n,
     });
@@ -65,7 +65,7 @@ describe("withSentryPreflight", () => {
   it("throws reasonText and does not forward rejected writeContract calls", async () => {
     const base = wallet();
     const onRejected = vi.fn();
-    const decorated = withSentryPreflight(base, {
+    const decorated = withWardPreflight(base, {
       source: { kind: "local", policy: policy(false) },
       spentTodayWei: 0n,
       onRejected,
@@ -91,7 +91,7 @@ describe("withSentryPreflight", () => {
 
   it("awaits lazy spentTodayWei", async () => {
     const spentTodayWei = vi.fn(async () => 0n);
-    const decorated = withSentryPreflight(wallet(), {
+    const decorated = withWardPreflight(wallet(), {
       source: { kind: "local", policy: policy(true) },
       spentTodayWei,
     });
@@ -109,7 +109,7 @@ describe("withSentryPreflight", () => {
   it("warns and forwards raw sendTransaction without preflight", async () => {
     const base = wallet();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-    const decorated = withSentryPreflight(base, {
+    const decorated = withWardPreflight(base, {
       source: { kind: "local", policy: policy(false) },
       spentTodayWei: 0n,
     });
@@ -123,7 +123,7 @@ describe("withSentryPreflight", () => {
     ).resolves.toBe(HASH);
 
     expect(warn).toHaveBeenCalledWith(
-      "withSentryPreflight: sendTransaction without ABI context skipped — preflight needs functionName+abi",
+      "withWardPreflight: sendTransaction without ABI context skipped — preflight needs functionName+abi",
     );
     expect(base.sendTransaction).toHaveBeenCalledTimes(1);
     warn.mockRestore();
@@ -131,7 +131,7 @@ describe("withSentryPreflight", () => {
 
   it("exposes the original wallet through _underlying", () => {
     const base = wallet();
-    const decorated = withSentryPreflight(base, {
+    const decorated = withWardPreflight(base, {
       source: { kind: "local", policy: policy(true) },
       spentTodayWei: 0n,
     });
@@ -141,7 +141,7 @@ describe("withSentryPreflight", () => {
 
   it("leaves original properties and non-intercepted methods accessible", async () => {
     const base = wallet();
-    const decorated = withSentryPreflight(base, {
+    const decorated = withWardPreflight(base, {
       source: { kind: "local", policy: policy(true) },
       spentTodayWei: 0n,
     });
@@ -152,6 +152,6 @@ describe("withSentryPreflight", () => {
   });
 
   it("is a named ESM export with no setup side effects", () => {
-    expect(withSentryPreflight).toBeTypeOf("function");
+    expect(withWardPreflight).toBeTypeOf("function");
   });
 });

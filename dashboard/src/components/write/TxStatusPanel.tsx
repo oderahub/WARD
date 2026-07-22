@@ -35,7 +35,7 @@ export function TxStatusPanel({ tx, miningVerb }: Props) {
         </Alert>
       )}
       {tx.kind === "mining" && (
-        <div className="mt-3 rounded-md border border-sentry-border bg-surface p-2 text-xs">
+        <div className="mt-3 rounded-md border border-ward-border bg-surface p-2 text-xs">
           <div className="flex items-center justify-between">
             <span className="text-text-muted">Mining {miningVerb}…</span>
             <ExplorerLink txHash={tx.hash} />
@@ -48,7 +48,7 @@ export function TxStatusPanel({ tx, miningVerb }: Props) {
         </div>
       )}
       {tx.kind === "mined" && (
-        <div className="mt-3 rounded-md border border-sentry-border bg-surface p-2 text-xs">
+        <div className="mt-3 rounded-md border border-ward-border bg-surface p-2 text-xs">
           <div className="flex items-center justify-between">
             <span className="text-text-muted">
               Confirmed{" "}
@@ -69,7 +69,7 @@ export function TxStatusPanel({ tx, miningVerb }: Props) {
           </div>
           <div className="mt-1 break-all font-mono text-text">{tx.hash}</div>
           <div className="mt-1 text-text-muted">
-            The Sentry event-store will surface this in the queue shortly.
+            The Ward event-store will surface this in the queue shortly.
           </div>
         </div>
       )}

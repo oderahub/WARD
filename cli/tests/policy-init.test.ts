@@ -52,11 +52,11 @@ const ABIS = {
 
 const PROFILES: PolicyProfile[] = ["strict", "balanced", "aggressive"];
 
-describe("sentry policy:init", () => {
+describe("ward policy:init", () => {
   let dir: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "sentry-policy-init-"));
+    dir = mkdtempSync(join(tmpdir(), "ward-policy-init-"));
   });
 
   afterEach(() => {

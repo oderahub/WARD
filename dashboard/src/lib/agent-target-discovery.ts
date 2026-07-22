@@ -5,7 +5,7 @@
  * Pipeline:
  *   1. Load the agent's ABI via `fetchContractAddressViews`. This filters to
  *      parameter-less view/pure functions returning a single address — the
- *      canonical shape SentryAgentBase derivatives use to expose their
+ *      canonical shape WardAgentBase derivatives use to expose their
  *      immutable targets (counter(), router(), tokenIn(), echoTarget(), …).
  *   2. For each candidate view, readContract it on chain. A per-view revert
  *      is tolerated (logged via the warnings array) — the agent might expose

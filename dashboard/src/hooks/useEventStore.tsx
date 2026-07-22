@@ -14,7 +14,7 @@ import {
   type BackfillProgress,
   type EventStore,
   type StoreEvent,
-} from "@sentry-somnia/sdk";
+} from "@ward/sdk";
 
 import { somniaTestnet } from "../main";
 import { useUrlState } from "./useUrlState";

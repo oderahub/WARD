@@ -9,11 +9,11 @@
  *   3. Publish policy → register agent → save Slack webhook (IDB only) →
  *      send a clearly-marked test alert.
  *
- * Scope honesty: when the agent is NOT Sentry-aware (no SentryOracle /
- * SentryQueue interaction in the lookback window AND no registry row), the
+ * Scope honesty: when the agent is NOT Ward-aware (no WardOracle /
+ * WardQueue interaction in the lookback window AND no registry row), the
  * wizard renders the "observation mode" banner — alerts will fire AFTER the
- * fact, NOT in real time. Real-time gating only works for Sentry-aware
- * agents that call SentryOracle.checkIntent themselves.
+ * fact, NOT in real time. Real-time gating only works for Ward-aware
+ * agents that call WardOracle.checkIntent themselves.
  *
  * Registrar honesty: when the agent is already registered under a DIFFERENT
  * wallet, Sub-cards A (publish) and B (register) are gated off — the
@@ -55,12 +55,12 @@ import { toast } from "sonner";
 
 import {
   policyIdFor,
-  SENTRY_ORACLE_ABI,
+  WARD_ORACLE_ABI,
   TIER_DELAYED,
   TIER_IMMEDIATE,
   TIER_VETO_REQUIRED,
   type PolicyInput,
-} from "@sentry-somnia/sdk";
+} from "@ward/sdk";
 
 import {
   AddressChip,
@@ -424,13 +424,13 @@ export function WatchWizardPage() {
     }
     const lower = checksummed.toLowerCase();
     if (lower === oracleAddress.toLowerCase()) {
-      return { ok: false, error: "This is the Sentry oracle address itself. Watching it would be circular." };
+      return { ok: false, error: "This is the Ward oracle address itself. Watching it would be circular." };
     }
     if (lower === queueAddress.toLowerCase()) {
-      return { ok: false, error: "This is the Sentry queue address itself. Watching it would be circular." };
+      return { ok: false, error: "This is the Ward queue address itself. Watching it would be circular." };
     }
     if (lower === registryAddress.toLowerCase()) {
-      return { ok: false, error: "This is the Sentry registry address itself. Watching it would be circular." };
+      return { ok: false, error: "This is the Ward registry address itself. Watching it would be circular." };
     }
     if (RESERVED_PRECOMPILES.has(lower)) {
       return { ok: false, error: "Reserved address; cannot watch." };
@@ -631,7 +631,7 @@ export function WatchWizardPage() {
       for (const log of receipt.logs) {
         try {
           const parsed = decodeEventLog({
-            abi: SENTRY_ORACLE_ABI,
+            abi: WARD_ORACLE_ABI,
             data: log.data,
             topics: log.topics,
           });
@@ -640,7 +640,7 @@ export function WatchWizardPage() {
             break;
           }
         } catch {
-          // not a SentryOracle event; skip
+          // not a WardOracle event; skip
         }
       }
 
@@ -696,7 +696,7 @@ export function WatchWizardPage() {
         policyId: state.publishedPolicyId,
         name: state.label,
         metadataURI: "",
-        tags: ["sentry-watch-wizard"],
+        tags: ["ward-watch-wizard"],
         chainId: expectedChainId,
       });
       patch({ registerAgent: { kind: "mining", hash: txHash } });
@@ -1440,7 +1440,7 @@ function Step2Sections({
         <Section number="" title="Discovery">
           <div className="flex items-center gap-2 text-[12px] text-text-muted">
             <Spinner />
-            reading SentryAgentRegistry + SentryQueue…
+            reading WardAgentRegistry + WardQueue…
           </div>
           <div className="mt-4">
             <SkeletonLines count={6} />
@@ -1477,7 +1477,7 @@ function Step2Sections({
   }
 
   const report = discovery.report;
-  const sentryAware = report.sentryAware.sentryAware;
+  const wardAware = report.wardAware.wardAware;
   const alreadyRegisteredByOther =
     report.alreadyRegistered.registered &&
     (!connectedWallet ||
@@ -1493,9 +1493,9 @@ function Step2Sections({
     <>
       <Section number="" title="Mode">
         <ModePanel
-          sentryAware={sentryAware}
+          wardAware={wardAware}
           evidence={
-            sentryAware ? report.sentryAware : null
+            wardAware ? report.wardAware : null
           }
         />
         {registryRpcTimeout && (
@@ -1582,7 +1582,7 @@ function Step2Sections({
               {report.lateBinding.policyId ===
               "0x0000000000000000000000000000000000000000000000000000000000000000" ? (
                 <span className="text-warn">
-                  unset — agent is ungated (calls run without Sentry)
+                  unset — agent is ungated (calls run without Ward)
                 </span>
               ) : (
                 <span className="break-all">
@@ -1672,18 +1672,18 @@ function Step2Sections({
 }
 
 interface ModePanelProps {
-  sentryAware: boolean;
-  evidence: DiscoveryReport["sentryAware"] | null;
+  wardAware: boolean;
+  evidence: DiscoveryReport["wardAware"] | null;
 }
 
-function ModePanel({ sentryAware, evidence }: ModePanelProps) {
+function ModePanel({ wardAware, evidence }: ModePanelProps) {
   // Preflight mode: discovery saw the agent registered with the
-  // `preflight-only` tag. The agent isn't Sentry-aware on chain (no oracle
+  // `preflight-only` tag. The agent isn't Ward-aware on chain (no oracle
   // calls) but the operator has opted in to FE-side gating via the SDK's
   // `preflight()`. Informational only; doesn't change publish/register.
   const preflightOnly =
     evidence &&
-    evidence.sentryAware === true &&
+    evidence.wardAware === true &&
     evidence.evidence.kind === "registry" &&
     evidence.evidence.tags.some((t) => t.toLowerCase() === "preflight-only");
 
@@ -1694,17 +1694,17 @@ function ModePanel({ sentryAware, evidence }: ModePanelProps) {
           ◈ Preflight mode (FE SDK)
         </p>
         <p className="mt-1 text-[13px] text-text-muted">
-          This agent isn't Sentry-aware on chain. Gate calls in your FE using
+          This agent isn't Ward-aware on chain. Gate calls in your FE using
           {" "}
           <code className="font-mono text-[12px]">preflight()</code> from{" "}
-          <code className="font-mono text-[12px]">@sentry-somnia/sdk</code>.
+          <code className="font-mono text-[12px]">@ward/sdk</code>.
           See SKILL.md Path D.
         </p>
       </div>
     );
   }
 
-  if (sentryAware && evidence && evidence.sentryAware === true) {
+  if (wardAware && evidence && evidence.wardAware === true) {
     return (
       <div className="border-t border-rule pt-3">
         <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-success">
@@ -1715,7 +1715,7 @@ function ModePanel({ sentryAware, evidence }: ModePanelProps) {
           {evidence.evidence.kind === "registry"
             ? "registry"
             : `queue (block ${evidence.evidence.blockNumber.toString()})`}
-          . SentryOracle.checkIntent can block matching calls before they
+          . WardOracle.checkIntent can block matching calls before they
           execute.
         </p>
       </div>
@@ -1727,10 +1727,10 @@ function ModePanel({ sentryAware, evidence }: ModePanelProps) {
         ◇ Observation mode
       </p>
       <p className="mt-1 text-[13px] text-text-muted">
-        No SentryOracle/Queue interaction found in the last 5,000 blocks. Slack
-        alerts will fire after concerning events, but Sentry cannot block calls
+        No WardOracle/Queue interaction found in the last 5,000 blocks. Slack
+        alerts will fire after concerning events, but Ward cannot block calls
         in real time. To enable real-time gating, the agent must call
-        SentryOracle.checkIntent itself.
+        WardOracle.checkIntent itself.
       </p>
     </div>
   );
@@ -2018,7 +2018,7 @@ function Step3Sections(props: Step3SectionsProps) {
       <Section
         number=""
         title="Publish policy"
-        meta={<span className="font-mono">writes to SentryOracle</span>}
+        meta={<span className="font-mono">writes to WardOracle</span>}
       >
         <SubSectionA
           label={label}
@@ -2041,7 +2041,7 @@ function Step3Sections(props: Step3SectionsProps) {
       <Section
         number=""
         title="Register agent"
-        meta={<span className="font-mono">writes to SentryAgentRegistry</span>}
+        meta={<span className="font-mono">writes to WardAgentRegistry</span>}
       >
         <SubSectionB
           label={label}
@@ -2333,7 +2333,7 @@ function SubSectionA(props: SubSectionAProps) {
             <DialogHeader>
               <DialogTitle>Publish policy</DialogTitle>
               <DialogDescription>
-                Signs a SentryOracle.publishPolicy transaction with the
+                Signs a WardOracle.publishPolicy transaction with the
                 deterministic PolicyInput for the chosen tier. Your wallet will
                 pop up to confirm.
               </DialogDescription>
@@ -2462,7 +2462,7 @@ function SubSectionB(props: SubSectionBProps) {
           <span className="text-text-muted">(empty)</span>
         </MetaRow>
         <MetaRow label="Tags" mono>
-          ["sentry-watch-wizard"]
+          ["ward-watch-wizard"]
         </MetaRow>
       </dl>
 
@@ -2489,7 +2489,7 @@ function SubSectionB(props: SubSectionBProps) {
             <DialogHeader>
               <DialogTitle>Register agent</DialogTitle>
               <DialogDescription>
-                Signs a SentryAgentRegistry.registerAgent transaction binding
+                Signs a WardAgentRegistry.registerAgent transaction binding
                 this agent to the policy you just published. Your wallet will
                 pop up to confirm.
               </DialogDescription>
@@ -2965,7 +2965,7 @@ function SubSectionD(props: SubSectionDProps) {
     <div className="space-y-4">
       <p className="text-[12px] text-text-muted">
         Sends a clearly-marked{" "}
-        <span className="font-mono">[Sentry watch wizard · test]</span> message
+        <span className="font-mono">[Ward watch wizard · test]</span> message
         so you can confirm Slack delivery before relying on real alerts.
       </p>
 
@@ -3001,7 +3001,7 @@ function SubSectionD(props: SubSectionDProps) {
               <DialogTitle>Send test alert</DialogTitle>
               <DialogDescription>
                 POSTs a clearly-marked{" "}
-                <span className="font-mono">[Sentry watch wizard · test]</span>{" "}
+                <span className="font-mono">[Ward watch wizard · test]</span>{" "}
                 message to your saved alert channel (Slack webhook or Telegram
                 bot) so you can verify delivery before relying on real alerts.
               </DialogDescription>
@@ -3038,7 +3038,7 @@ function SubSectionD(props: SubSectionDProps) {
           <p className="mt-1 text-[13px] text-text-muted">
             Accepted at{" "}
             {new Date(sendTestAlertState.sentAt).toLocaleTimeString()}. Check
-            your channel for the [Sentry watch wizard · test] message.
+            your channel for the [Ward watch wizard · test] message.
           </p>
         </div>
       )}

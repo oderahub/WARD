@@ -7,21 +7,21 @@ import {
   type Hex,
 } from "viem";
 
-import { SENTRY_AGENT_BASE_ABI } from "../../src/lib/agent-base-abi";
+import { WARD_AGENT_BASE_ABI } from "../../src/lib/agent-base-abi";
 
 // Sample values for selector / topic derivation. The hexlification mirrors
-// what an on-chain SentryAgentBase tx would carry.
+// what an on-chain WardAgentBase tx would carry.
 const NEW_POLICY = ("0x" + "11".repeat(32)) as Hex;
 const OLD_POLICY = ("0x" + "22".repeat(32)) as Hex;
 const CALLER = "0x000000000000000000000000000000000000B055";
 
-describe("SENTRY_AGENT_BASE_ABI", () => {
+describe("WARD_AGENT_BASE_ABI", () => {
   it("encodes setPolicyId(bytes32) with the canonical 0x30658feb selector", () => {
     // 0x30658feb == keccak256("setPolicyId(bytes32)")[0:4]. If this selector
-    // ever drifts, every dashboard call against an on-chain SentryAgentBase
+    // ever drifts, every dashboard call against an on-chain WardAgentBase
     // will silently target the wrong function, so we pin the byte sequence.
     const calldata = encodeFunctionData({
-      abi: SENTRY_AGENT_BASE_ABI,
+      abi: WARD_AGENT_BASE_ABI,
       functionName: "setPolicyId",
       args: [NEW_POLICY],
     });
@@ -32,12 +32,12 @@ describe("SENTRY_AGENT_BASE_ABI", () => {
 
   it("decodes a PolicyBound event back into the (newPolicyId, oldPolicyId, by) shape", () => {
     const topics = encodeEventTopics({
-      abi: SENTRY_AGENT_BASE_ABI,
+      abi: WARD_AGENT_BASE_ABI,
       eventName: "PolicyBound",
       args: { newPolicyId: NEW_POLICY, oldPolicyId: OLD_POLICY, by: CALLER },
     });
     const parsed = decodeEventLog({
-      abi: SENTRY_AGENT_BASE_ABI,
+      abi: WARD_AGENT_BASE_ABI,
       topics: topics as [Hex, ...Hex[]],
       data: "0x",
     });
@@ -55,7 +55,7 @@ describe("SENTRY_AGENT_BASE_ABI", () => {
   it("includes the NotOwner custom error so viem can resolve revert names", () => {
     // We assert by name rather than by selector because the humanizer keys on
     // revertError.data.errorName, not raw selector bytes.
-    const hasNotOwner = SENTRY_AGENT_BASE_ABI.some(
+    const hasNotOwner = WARD_AGENT_BASE_ABI.some(
       (item) => item.type === "error" && item.name === "NotOwner",
     );
     expect(hasNotOwner).toBe(true);
@@ -67,7 +67,7 @@ describe("SENTRY_AGENT_BASE_ABI", () => {
     // constants creeping back in.
     const mod = await import("../../src/lib/agent-base-abi");
     const exportNames = Object.keys(mod).sort();
-    expect(exportNames).toEqual(["SENTRY_AGENT_BASE_ABI"]);
+    expect(exportNames).toEqual(["WARD_AGENT_BASE_ABI"]);
   });
 
   // Reference to `toHex` so eslint --no-unused-vars stays quiet when the

@@ -40,7 +40,7 @@ import {
   type PublishedCacheEntry,
 } from "../../src/lib/publishedCache";
 
-const DB_NAME = "sentry-store";
+const DB_NAME = "ward-store";
 const CHAIN_ID = 50312;
 const ORACLE = "0x1111111111111111111111111111111111111111" as Address;
 const POLICY_ID = "0xabc0000000000000000000000000000000000000000000000000000000000001" as Hex;
@@ -78,7 +78,7 @@ afterEach(() => {
 
 describe("publishedCache — parseLegacyKey", () => {
   it("parses a well-formed legacy key", () => {
-    const key = `sentry-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`;
+    const key = `ward-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`;
     const parsed = parseLegacyKey(key);
     expect(parsed).toEqual({
       chainId: CHAIN_ID,
@@ -93,24 +93,24 @@ describe("publishedCache — parseLegacyKey", () => {
 
   it("returns null for malformed chainId", () => {
     expect(
-      parseLegacyKey(`sentry-published:notanumber:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`),
+      parseLegacyKey(`ward-published:notanumber:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`),
     ).toBeNull();
   });
 
   it("returns null for malformed oracle address", () => {
     expect(
-      parseLegacyKey(`sentry-published:${CHAIN_ID}:0xnotanaddr:${POLICY_ID.toLowerCase()}`),
+      parseLegacyKey(`ward-published:${CHAIN_ID}:0xnotanaddr:${POLICY_ID.toLowerCase()}`),
     ).toBeNull();
   });
 
   it("returns null for malformed policyId", () => {
     expect(
-      parseLegacyKey(`sentry-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:0xshort`),
+      parseLegacyKey(`ward-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:0xshort`),
     ).toBeNull();
   });
 
   it("returns null when the suffix has the wrong number of colon-separated parts", () => {
-    expect(parseLegacyKey(`sentry-published:${CHAIN_ID}:${ORACLE.toLowerCase()}`)).toBeNull();
+    expect(parseLegacyKey(`ward-published:${CHAIN_ID}:${ORACLE.toLowerCase()}`)).toBeNull();
   });
 });
 
@@ -151,7 +151,7 @@ describe("publishedCache — round-trip via IDB", () => {
 
 describe("publishedCache — localStorage → IDB migration", () => {
   it("migrates a valid legacy entry into IDB and deletes the localStorage key", async () => {
-    const legacyKey = `sentry-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`;
+    const legacyKey = `ward-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`;
     localStorage.setItem(legacyKey, JSON.stringify(SAMPLE_ENTRY));
 
     const count = await migrateLocalStorageIfNeeded();
@@ -169,11 +169,11 @@ describe("publishedCache — localStorage → IDB migration", () => {
     const e1 = SAMPLE_ENTRY;
     const e2: PublishedCacheEntry = { ...SAMPLE_ENTRY, policyId: POLICY_ID_2, label: "two" };
     localStorage.setItem(
-      `sentry-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`,
+      `ward-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`,
       JSON.stringify(e1),
     );
     localStorage.setItem(
-      `sentry-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID_2.toLowerCase()}`,
+      `ward-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID_2.toLowerCase()}`,
       JSON.stringify(e2),
     );
 
@@ -188,7 +188,7 @@ describe("publishedCache — localStorage → IDB migration", () => {
 
   it("is idempotent across multiple calls (only migrates the first time)", async () => {
     localStorage.setItem(
-      `sentry-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`,
+      `ward-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`,
       JSON.stringify(SAMPLE_ENTRY),
     );
 
@@ -203,7 +203,7 @@ describe("publishedCache — localStorage → IDB migration", () => {
 
   it("skips entries that fail the field-shape guard (no policyId/txHash/publisher)", async () => {
     localStorage.setItem(
-      `sentry-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`,
+      `ward-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`,
       JSON.stringify({ yamlText: "orphan body" }),
     );
     const count = await migrateLocalStorageIfNeeded();
@@ -212,14 +212,14 @@ describe("publishedCache — localStorage → IDB migration", () => {
     // because deletion without copy would lose data.
     expect(
       localStorage.getItem(
-        `sentry-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`,
+        `ward-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`,
       ),
     ).not.toBeNull();
   });
 
   it("ignores localStorage keys that don't match the legacy prefix shape", async () => {
     localStorage.setItem("unrelated-key", "garbage");
-    localStorage.setItem("sentry-published:malformed", "garbage");
+    localStorage.setItem("ward-published:malformed", "garbage");
     const count = await migrateLocalStorageIfNeeded();
     expect(count).toBe(0);
     expect(localStorage.getItem("unrelated-key")).toBe("garbage");
@@ -227,7 +227,7 @@ describe("publishedCache — localStorage → IDB migration", () => {
 
   it("readPublished triggers the migration on its first call", async () => {
     localStorage.setItem(
-      `sentry-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`,
+      `ward-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`,
       JSON.stringify(SAMPLE_ENTRY),
     );
 
@@ -237,7 +237,7 @@ describe("publishedCache — localStorage → IDB migration", () => {
     expect(got).toEqual(SAMPLE_ENTRY);
     expect(
       localStorage.getItem(
-        `sentry-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`,
+        `ward-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`,
       ),
     ).toBeNull();
   });
@@ -265,7 +265,7 @@ describe("publishedCache — localStorage → IDB migration", () => {
     };
 
     await cachePublished(CHAIN_ID, ORACLE, newer);
-    const legacyKey = `sentry-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`;
+    const legacyKey = `ward-published:${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}`;
     localStorage.setItem(legacyKey, JSON.stringify(older));
 
     // Migration reports 0 actual writes (the IDB entry blocked the put).

@@ -239,7 +239,7 @@ export default function AgentDiscovery({ onApplyDraft }: Props) {
             {state.targets.map((t) => (
               <div
                 key={t.address}
-                className="rounded-md border border-sentry-border bg-surface p-2 space-y-1"
+                className="rounded-md border border-ward-border bg-surface p-2 space-y-1"
               >
                 <AddressChip address={t.address as `0x${string}`} />
                 <div className="space-y-1">
@@ -251,7 +251,7 @@ export default function AgentDiscovery({ onApplyDraft }: Props) {
                       <label
                         key={key}
                         htmlFor={id}
-                        className="flex items-center gap-2 rounded-md border border-sentry-border bg-surface-elev px-2 py-1 text-sm hover:border-text-muted cursor-pointer"
+                        className="flex items-center gap-2 rounded-md border border-ward-border bg-surface-elev px-2 py-1 text-sm hover:border-text-muted cursor-pointer"
                       >
                         <input
                           id={id}

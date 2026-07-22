@@ -1,0 +1,39 @@
+{
+  "name": "@ward/react",
+  "version": "0.1.0",
+  "description": "React + wagmi hooks for Ward preflight (useWardGuardedWrite, useWardActionPlan).",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@ward/sdk": "workspace:*",
+    "react": "^18.3.0 || ^19.0.0",
+    "viem": "^2.21.0",
+    "wagmi": "^2.12.0"
+  },
+  "devDependencies": {
+    "@ward/sdk": "workspace:*",
+    "@tanstack/react-query": "^5.59.0",
+    "@types/react": "^18.3.0",
+    "react": "^18.3.1",
+    "typescript": "^5.6.0",
+    "viem": "^2.21.0",
+    "vitest": "^2.1.0",
+    "wagmi": "^2.12.0"
+  }
+}

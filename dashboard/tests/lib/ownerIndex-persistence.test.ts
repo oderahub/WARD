@@ -6,13 +6,13 @@ import type { Address, Hex } from "viem";
 import {
   loadOwnerIndex,
   loadOwnerIndexRich,
-  openSentryDB,
+  openWardDB,
   runtimeHealOwnerIndex,
   saveOwnerIndex,
   saveOwnerIndexRich,
 } from "../../src/lib/persistence";
 
-const DB_NAME = "sentry-store";
+const DB_NAME = "ward-store";
 const ORACLE = "0x1111111111111111111111111111111111111111" as Address;
 const ORACLE_UPPER = "0x1111111111111111111111111111111111111111".toUpperCase() as Address;
 const ALICE = "0x000000000000000000000000000000000000A11C" as Address;
@@ -151,8 +151,8 @@ describe("ownerIndex IDB ops", () => {
   });
 
   it("v5 migration: the ownerIndex object store is created on upgrade", async () => {
-    // openSentryDB triggers the upgrade path on a fresh db.
-    const db = await openSentryDB();
+    // openWardDB triggers the upgrade path on a fresh db.
+    const db = await openWardDB();
     expect(db.objectStoreNames.contains("ownerIndex")).toBe(true);
     db.close();
   });
@@ -273,7 +273,7 @@ describe("ownerIndex v8 rich shape", () => {
 const OWNER_INDEX_STORE = "ownerIndex";
 
 /** Seed a fresh v7 db with a legacy `{ policyIds, lastSeenBlock }` ownerIndex
- *  record so the next openSentryDB() triggers the v7→v8 upgrade callback. */
+ *  record so the next openWardDB() triggers the v7→v8 upgrade callback. */
 async function seedV7OwnerIndex(record: {
   key: string;
   policyIds: Hex[];
@@ -315,7 +315,7 @@ describe("ownerIndex v7 → v8 migration", () => {
     });
 
     // Triggers v7 → v8 upgrade.
-    const db = await openSentryDB();
+    const db = await openWardDB();
     db.close();
 
     // After migration, the rich load returns entries with the 0n sentinel.
@@ -344,7 +344,7 @@ describe("ownerIndex v7 → v8 migration", () => {
       lastSeenBlock: "999",
     });
     // Trigger upgrade.
-    const db = await openSentryDB();
+    const db = await openWardDB();
     db.close();
 
     const legacy = await loadOwnerIndex({
@@ -368,7 +368,7 @@ describe("ownerIndex v7 → v8 migration", () => {
       lastSeenBlock: "100",
     });
     // Trigger upgrade.
-    const db = await openSentryDB();
+    const db = await openWardDB();
     db.close();
 
     await saveOwnerIndexRich({
@@ -415,7 +415,7 @@ describe("ownerIndex v7 → v8 migration", () => {
     });
 
     // Force-trigger the v7→v8 upgrade by opening at the current version.
-    const db = await openSentryDB();
+    const db = await openWardDB();
     // Pull the raw stored record (not via loadOwnerIndexRich which masks
     // the legacy fallback path). The migration MUST have written the
     // v8 shape in place.
@@ -456,7 +456,7 @@ describe("ownerIndex v7 → v8 migration", () => {
         lastSeenBlock: 9_000n,
       },
     });
-    const db = await openSentryDB();
+    const db = await openWardDB();
     db.close();
     const rich = await loadOwnerIndexRich({
       chainId: CHAIN_ID,
@@ -469,11 +469,11 @@ describe("ownerIndex v7 → v8 migration", () => {
     expect(rich!.lastSeenBlock).toBe(9_000n);
   });
 
-  it("runtime heal: rewrites a legacy row on first openSentryDB call", async () => {
+  it("runtime heal: rewrites a legacy row on first openWardDB call", async () => {
     // Simulate a db that was stamped at the current version but somehow
     // still carries a legacy-shape row (the upgrade-callback heal didn't
     // commit for whatever IDB lifecycle reason). The runtime heal that
-    // runs inside openSentryDB MUST physically rewrite the row using a
+    // runs inside openWardDB MUST physically rewrite the row using a
     // regular readwrite transaction.
     const KEY = `${CHAIN_ID}:${ORACLE.toLowerCase()}:${ALICE.toLowerCase()}`;
     const broken = await openDB(DB_NAME, 8, {
@@ -503,9 +503,9 @@ describe("ownerIndex v7 → v8 migration", () => {
     });
     broken.close();
 
-    // openSentryDB triggers BOTH the upgrade-callback heal AND the runtime
+    // openWardDB triggers BOTH the upgrade-callback heal AND the runtime
     // heal. Verify the resulting on-disk row is in v8 shape.
-    const db = await openSentryDB();
+    const db = await openWardDB();
     const raw = (await db.get(OWNER_INDEX_STORE, KEY)) as
       | {
           key: string;
@@ -542,7 +542,7 @@ describe("ownerIndex v7 → v8 migration", () => {
         lastSeenBlock: 2_000n,
       },
     });
-    const db = await openSentryDB();
+    const db = await openWardDB();
     try {
       const first = await runtimeHealOwnerIndex(db);
       expect(first).toEqual({ migrated: 0, dropped: 0, alreadyClean: 1 });
@@ -567,7 +567,7 @@ describe("ownerIndex v7 → v8 migration", () => {
     // A row carrying neither `entries` nor `policyIds` can't be salvaged —
     // there's no shape we can rewrite it to. The heal must delete it.
     const KEY = `${CHAIN_ID}:${ORACLE.toLowerCase()}:${ALICE.toLowerCase()}`;
-    const db = await openSentryDB();
+    const db = await openWardDB();
     try {
       // Inject a corrupt row directly via a regular tx.
       const writeTx = db.transaction(OWNER_INDEX_STORE, "readwrite");
@@ -603,7 +603,7 @@ describe("ownerIndex v7 → v8 migration", () => {
     //
     // We simulate the broken-v8 state by opening the db AT version 8
     // with no upgrade body, then writing the legacy-shape record
-    // directly into the ownerIndex store. The next openSentryDB() jumps
+    // directly into the ownerIndex store. The next openWardDB() jumps
     // from v8 → v9 and the heal MUST physically rewrite the row.
     const KEY = `${CHAIN_ID}:${ORACLE.toLowerCase()}:${ALICE.toLowerCase()}`;
     const broken = await openDB(DB_NAME, 8, {
@@ -634,7 +634,7 @@ describe("ownerIndex v7 → v8 migration", () => {
     broken.close();
 
     // Force-trigger the v8 → v9 heal.
-    const db = await openSentryDB();
+    const db = await openWardDB();
     const raw = (await db.get(OWNER_INDEX_STORE, KEY)) as
       | {
           key: string;

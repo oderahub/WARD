@@ -1,6 +1,6 @@
 import { openDB, type IDBPDatabase } from "idb";
 import type { Address, Hex } from "viem";
-import type { PolicyMeta, QueueRecordHeader, StoreEvent } from "@sentry-somnia/sdk";
+import type { PolicyMeta, QueueRecordHeader, StoreEvent } from "@ward/sdk";
 
 /**
  * Dashboard-only IndexedDB snapshot of the SDK event store. The SDK itself
@@ -15,7 +15,7 @@ import type { PolicyMeta, QueueRecordHeader, StoreEvent } from "@sentry-somnia/s
  * and keep the on-disk format inspectable.
  */
 
-const DB_NAME = "sentry-store";
+const DB_NAME = "ward-store";
 // v5 adds two stores. `ownerIndex` lets the Watched page resume an owner-
 // keyed PolicyPublished scan across reloads (the existing snapshots store
 // is keyed by chain/oracle/queue and has no owner facet). `publishedCache`
@@ -39,7 +39,7 @@ const DB_NAME = "sentry-store";
 // healer below skips already-correct rows and rewrites the rest, so
 // bumping to v9 forces every existing db through the heal exactly once.
 // v10 adds cachedAgents store: per-(chainId, registryAddress) snapshot of
-// SentryAgentRegistry for the Tier 3 fallback in agents-catalog.ts.
+// WardAgentRegistry for the Tier 3 fallback in agents-catalog.ts.
 // Rebuilds from chain on first Tier-2 success — safe to skip if missing.
 // Pure additive store: no data migration, no rewrite of existing records.
 // v11 adds watchSubscriptions: per-(chainId, agent) record of the operator-
@@ -119,7 +119,7 @@ function bigintReplacer(_key: string, value: unknown): unknown {
   return typeof value === "bigint" ? value.toString() : value;
 }
 
-export async function openSentryDB(): Promise<IDBPDatabase> {
+export async function openWardDB(): Promise<IDBPDatabase> {
   const db = await openDB(DB_NAME, DB_VERSION, {
     upgrade(db, oldVersion, _newVersion, tx) {
       if (!db.objectStoreNames.contains(STORE)) {
@@ -208,7 +208,7 @@ export async function openSentryDB(): Promise<IDBPDatabase> {
         void healOwnerIndexShape(tx.objectStore(OWNER_INDEX_STORE));
       }
       // v10 adds cachedAgents: per-(chainId, registryAddress) snapshot of
-      // SentryAgentRegistry for the Tier 3 fallback in agents-catalog.ts.
+      // WardAgentRegistry for the Tier 3 fallback in agents-catalog.ts.
       // Same idempotent contains-guarded create pattern as the v5/v6/v7
       // stores above — NOT gated on `oldVersion < 10` per the anti-gate-
       // guard note at lines 144-148. Pure additive: no migration of
@@ -240,13 +240,13 @@ export async function openSentryDB(): Promise<IDBPDatabase> {
     const result = await runtimeHealOwnerIndex(db);
     if (result.migrated > 0 || result.dropped > 0) {
       console.warn(
-        `[sentry-store] runtime ownerIndex heal: migrated ${result.migrated}, dropped ${result.dropped}, already-clean ${result.alreadyClean}`,
+        `[ward-store] runtime ownerIndex heal: migrated ${result.migrated}, dropped ${result.dropped}, already-clean ${result.alreadyClean}`,
       );
     }
   } catch (err) {
     // Heal failure is non-fatal — the db still works, just slower until next
     // heal attempt. Surface to console for diagnosis.
-    console.warn("[sentry-store] runtime ownerIndex heal failed:", err);
+    console.warn("[ward-store] runtime ownerIndex heal failed:", err);
   }
   return db;
 }
@@ -309,7 +309,7 @@ export async function runtimeHealOwnerIndex(
       migrated += 1;
     } else {
       console.warn(
-        "[sentry-store] runtime ownerIndex heal: dropping record missing policyIds or key",
+        "[ward-store] runtime ownerIndex heal: dropping record missing policyIds or key",
         key,
       );
       await store.delete(key);
@@ -392,7 +392,7 @@ async function healOwnerIndexShape(store: any): Promise<number> {
       migrated += 1;
     } else {
       console.warn(
-        "[sentry-store] ownerIndex heal: dropping record missing policyIds or key",
+        "[ward-store] ownerIndex heal: dropping record missing policyIds or key",
         cursor.key,
       );
       await cursor.delete();
@@ -406,7 +406,7 @@ async function healOwnerIndexShape(store: any): Promise<number> {
   if (migrated > 0 || dropped > 0) {
     const droppedSuffix = dropped > 0 ? `, dropped ${dropped} corrupt record(s)` : "";
     console.log(
-      `[sentry-store] ownerIndex heal: enriched ${migrated} record(s)${droppedSuffix}`,
+      `[ward-store] ownerIndex heal: enriched ${migrated} record(s)${droppedSuffix}`,
     );
   }
   return migrated;
@@ -452,7 +452,7 @@ async function rekeyWatchedStoreV3toV4(store: any): Promise<number> {
       rewrites.push({ oldKey: cursor.key as IDBValidKey, newKey, value });
     } else {
       console.warn(
-        "[sentry-store] v4 migration: dropping watched record missing chainId/oracleAddress/policyId/agent",
+        "[ward-store] v4 migration: dropping watched record missing chainId/oracleAddress/policyId/agent",
         cursor.key,
       );
       corruptKeys.push(cursor.key as IDBValidKey);
@@ -479,13 +479,13 @@ async function rekeyWatchedStoreV3toV4(store: any): Promise<number> {
   }
   const droppedSuffix = dropped > 0 ? `, dropped ${dropped} corrupt record(s)` : "";
   console.log(
-    `[sentry-store] v4 migration: rekeyed ${rekeyed} watched record(s)${droppedSuffix}`,
+    `[ward-store] v4 migration: rekeyed ${rekeyed} watched record(s)${droppedSuffix}`,
   );
   return rekeyed;
 }
 
 export async function loadSnapshot(opts: NamespaceOpts): Promise<Snapshot | null> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const key = namespaceKey(opts);
     const rec = (await db.get(STORE, key)) as NamespacedRecord | undefined;
@@ -517,7 +517,7 @@ export interface SaveSnapshotOpts extends NamespaceOpts {
 }
 
 export async function saveSnapshot(opts: SaveSnapshotOpts): Promise<void> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const rec: NamespacedRecord = {
       namespace: namespaceKey(opts),
@@ -541,7 +541,7 @@ export async function saveSnapshot(opts: SaveSnapshotOpts): Promise<void> {
 }
 
 export async function clearSnapshot(opts: NamespaceOpts): Promise<void> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const tx = db.transaction(STORE, "readwrite");
     await tx.store.delete(namespaceKey(opts));
@@ -649,7 +649,7 @@ function entriesFromRecord(rec: OwnerIndexRecord): OwnerIndexEntry[] {
 export async function loadOwnerIndexRich(
   opts: OwnerIndexOpts,
 ): Promise<OwnerIndexRichRecord | null> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const rec = (await db.get(OWNER_INDEX_STORE, ownerIndexKey(opts))) as
       | OwnerIndexRecord
@@ -669,7 +669,7 @@ export interface SaveOwnerIndexRichOpts extends OwnerIndexOpts {
 }
 
 export async function saveOwnerIndexRich(opts: SaveOwnerIndexRichOpts): Promise<void> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     // Defensive dedupe (case-insensitive) keyed by policyId. First-seen
     // metadata wins so a re-scan that re-emits the same publish log doesn't
@@ -767,7 +767,7 @@ export async function loadContractName(
   chainId: number,
   address: Address,
 ): Promise<ContractNameRecord | null> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const rec = (await db.get(CONTRACT_NAME_STORE, contractNameKey(chainId, address))) as
       | ContractNameStored
@@ -789,7 +789,7 @@ export async function saveContractName(
   address: Address,
   record: ContractNameRecord,
 ): Promise<void> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const rec: ContractNameStored = {
       key: contractNameKey(chainId, address),
@@ -809,7 +809,7 @@ export async function saveContractName(
 /* ---------------------------- cachedAgents ---------------------------- */
 
 /**
- * Per-(chainId, registryAddress) snapshot of the SentryAgentRegistry, used as
+ * Per-(chainId, registryAddress) snapshot of the WardAgentRegistry, used as
  * the Tier 2 cold-start fallback by agents-catalog.ts when the on-chain walk
  * (Tier 1) is unavailable / mid-flight.
  *
@@ -861,7 +861,7 @@ export interface CachedAgentsRecord {
 
 /**
  * Structural shape of an agent as supplied by the catalog. Matches
- * `RegistryAgent` from @sentry-somnia/sdk field-for-field, but typed
+ * `RegistryAgent` from @ward/sdk field-for-field, but typed
  * locally so this module doesn't have to depend on the catalog's eventual
  * `CatalogAgent` type — any object with these fields can be persisted.
  */
@@ -885,7 +885,7 @@ export async function loadCachedAgents(
   chainId: number,
   registryAddress: Address,
 ): Promise<CachedAgentsRecord | null> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const rec = (await db.get(CACHED_AGENTS_STORE, agentsCacheKey(chainId, registryAddress))) as
       | CachedAgentsRecord
@@ -902,7 +902,7 @@ export async function saveCachedAgents(
   agents: CatalogAgentLike[],
   sourceTier: "chain",
 ): Promise<void> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const rec: CachedAgentsRecord = {
       key: agentsCacheKey(chainId, registryAddress),
@@ -1000,7 +1000,7 @@ export async function saveWatchSubscription(
       "saveWatchSubscription: exactly one alert channel required (slackWebhookUrl XOR telegram)",
     );
   }
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const agentLower = opts.agent.toLowerCase() as Address;
     const policyLower = opts.policyId.toLowerCase() as Hex;
@@ -1026,7 +1026,7 @@ export async function loadWatchSubscription(
   chainId: number,
   agent: Address,
 ): Promise<WatchSubscriptionRecord | null> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const rec = (await db.get(
       WATCH_SUBSCRIPTIONS_STORE,
@@ -1046,7 +1046,7 @@ export async function loadWatchSubscription(
 export async function loadAllWatchSubscriptions(
   chainId: number,
 ): Promise<WatchSubscriptionRecord[]> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const all = (await db.getAll(WATCH_SUBSCRIPTIONS_STORE)) as WatchSubscriptionRecord[];
     return all.filter((rec) => rec.chainId === chainId);
@@ -1059,7 +1059,7 @@ export async function removeWatchSubscription(
   chainId: number,
   agent: Address,
 ): Promise<void> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const tx = db.transaction(WATCH_SUBSCRIPTIONS_STORE, "readwrite");
     await tx.store.delete(watchSubscriptionKey(chainId, agent));

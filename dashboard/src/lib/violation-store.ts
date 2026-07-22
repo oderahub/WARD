@@ -1,5 +1,5 @@
 import type { Address } from "viem";
-import { openSentryDB } from "./persistence";
+import { openWardDB } from "./persistence";
 
 /**
  * Persisted watch-mode violations. The key includes `observationIndex`
@@ -52,7 +52,7 @@ export function computeKey(opts: ViolationKeyOpts): string {
 }
 
 export async function addViolation(v: PersistedViolation): Promise<void> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const tx = db.transaction(VIOLATIONS_STORE, "readwrite");
     // Idempotent: put() on the same key overwrites with identical content.
@@ -74,7 +74,7 @@ export interface ListViolationsOpts {
 export async function listViolations(
   opts: ListViolationsOpts,
 ): Promise<PersistedViolation[]> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const oracle = opts.oracleAddress.toLowerCase();
     const policyId = opts.policyId?.toLowerCase();
@@ -106,7 +106,7 @@ export interface PruneViolationsOpts {
 export async function pruneViolations(
   opts: PruneViolationsOpts,
 ): Promise<void> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const oracle = opts.oracleAddress.toLowerCase();
     const policyId = opts.policyId.toLowerCase();

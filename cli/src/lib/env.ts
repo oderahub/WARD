@@ -25,10 +25,10 @@ export const avalancheFuji = defineChain({
 const CHAINS = { somnia: somniaTestnet, fuji: avalancheFuji } as const;
 export type ChainKey = keyof typeof CHAINS;
 
-/// Selects the target chain from SENTRY_CHAIN. Defaults to Somnia when unset or
+/// Selects the target chain from WARD_CHAIN. Defaults to Somnia when unset or
 /// unrecognized so existing single-chain workflows are unchanged.
 export function activeChainKey(): ChainKey {
-  const v = (process.env.SENTRY_CHAIN ?? "").trim().toLowerCase();
+  const v = (process.env.WARD_CHAIN ?? "").trim().toLowerCase();
   if (v === "fuji" || v === "avalanche" || v === "avalanche-fuji" || v === "43113") return "fuji";
   return "somnia";
 }
@@ -46,16 +46,16 @@ export function activeRpc(): string {
 
 export interface EnvSettings {
   rpc: string;
-  sentryOracle?: Address;
-  sentryQueue?: Address;
+  wardOracle?: Address;
+  wardQueue?: Address;
   privateKey?: `0x${string}`;
 }
 
 export function loadEnv(): EnvSettings {
   return {
     rpc: activeRpc(),
-    sentryOracle: process.env.SENTRY_ORACLE as Address | undefined,
-    sentryQueue: process.env.SENTRY_QUEUE as Address | undefined,
+    wardOracle: process.env.WARD_ORACLE as Address | undefined,
+    wardQueue: process.env.WARD_QUEUE as Address | undefined,
     privateKey: process.env.PRIVATE_KEY as `0x${string}` | undefined,
   };
 }
@@ -76,18 +76,18 @@ export function walletClient(privateKey: `0x${string}`, rpc?: string) {
   });
 }
 
-export function requireSentryOracle(env: EnvSettings): Address {
-  if (!env.sentryOracle) {
-    throw new Error("SENTRY_ORACLE env var required (the deployed oracle address)");
+export function requireWardOracle(env: EnvSettings): Address {
+  if (!env.wardOracle) {
+    throw new Error("WARD_ORACLE env var required (the deployed oracle address)");
   }
-  return env.sentryOracle;
+  return env.wardOracle;
 }
 
-export function requireSentryQueue(env: EnvSettings): Address {
-  if (!env.sentryQueue) {
-    throw new Error("SENTRY_QUEUE env var required (the deployed queue address)");
+export function requireWardQueue(env: EnvSettings): Address {
+  if (!env.wardQueue) {
+    throw new Error("WARD_QUEUE env var required (the deployed queue address)");
   }
-  return env.sentryQueue;
+  return env.wardQueue;
 }
 
 export function requirePrivateKey(env: EnvSettings): `0x${string}` {

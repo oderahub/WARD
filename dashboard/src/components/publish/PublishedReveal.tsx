@@ -83,7 +83,7 @@ export function PublishedReveal({ result, yamlText, mode, policyInputJSON, chain
   return (
     <div className="space-y-4">
       {/* -------- Hero: the policyId, the artifact -------- */}
-      <section className="rounded-lg border border-sentry-border bg-surface p-5">
+      <section className="rounded-lg border border-ward-border bg-surface p-5">
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="inline-flex items-baseline gap-2 text-base font-semibold text-text-display">
             <CheckCircle
@@ -122,7 +122,7 @@ export function PublishedReveal({ result, yamlText, mode, policyInputJSON, chain
       {/* -------- Next step (watch mode only): bind to one or more agents -------- */}
       {/* Enforce mode used to render a "paste this bytes32 constant into your   */}
       {/* agent contract" block here — that's the legacy hardcode-and-redeploy   */}
-      {/* pattern. With late-binding (SentryAgentBase.setPolicyId), the          */}
+      {/* pattern. With late-binding (WardAgentBase.setPolicyId), the          */}
       {/* PostPublishChecklist below makes the bind a single click + tx, with   */}
       {/* no source edits or redeploy. The constant snippet was redundant +      */}
       {/* actively confused users about which path to take.                      */}
@@ -148,7 +148,7 @@ export function PublishedReveal({ result, yamlText, mode, policyInputJSON, chain
       )}
 
       {/* -------- Metadata strip: label · publisher · tx -------- */}
-      <section className="rounded-lg border border-sentry-border bg-surface p-4">
+      <section className="rounded-lg border border-ward-border bg-surface p-4">
         <div className="grid grid-cols-[6rem_1fr] items-baseline gap-x-4 gap-y-3 text-xs">
           <MetaLabel>Label</MetaLabel>
           <MetaValue>
@@ -173,7 +173,7 @@ export function PublishedReveal({ result, yamlText, mode, policyInputJSON, chain
                     href={explorerTx!}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex shrink-0 items-center gap-1 rounded-md border border-sentry-border px-2 py-1 text-[11px] text-text-muted transition-colors hover:border-accent hover:text-accent"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-md border border-ward-border px-2 py-1 text-[11px] text-text-muted transition-colors hover:border-accent hover:text-accent"
                     style={{ transitionDuration: "var(--motion-feedback)" }}
                   >
                     <ArrowSquareOut size={12} />
@@ -230,11 +230,11 @@ export function PublishedReveal({ result, yamlText, mode, policyInputJSON, chain
         </div>
 
         {chainSnapshot && (
-          <p className="mt-4 border-t border-sentry-border pt-3 text-[11px] text-text-subtle">
+          <p className="mt-4 border-t border-ward-border pt-3 text-[11px] text-text-subtle">
             Per-target details (selectors, tiers, caps, delays) aren't exposed via on-chain view methods —
             only the publisher, status, and expiry can be recovered. To see the full policy, open this URL
             in the browser where you published, or run{" "}
-            <code className="font-mono text-text-muted">sentry compile your-POLICY.md</code> locally.
+            <code className="font-mono text-text-muted">ward compile your-POLICY.md</code> locally.
           </p>
         )}
       </section>
@@ -294,7 +294,7 @@ function IconButton({ onCopy, label, small }: IconButtonProps) {
             className={`inline-flex ${size} shrink-0 items-center justify-center rounded-md border transition-colors ${
               copied
                 ? "border-success bg-success/15 text-success"
-                : "border-sentry-border text-text-muted hover:border-accent hover:text-accent"
+                : "border-ward-border text-text-muted hover:border-accent hover:text-accent"
             }`}
             style={{ transitionDuration: "var(--motion-feedback)" }}
           >
@@ -325,7 +325,7 @@ function ShareLinkButton({ url }: { url: string }) {
       className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] transition-colors ${
         copied
           ? "border-success bg-success/15 text-success"
-          : "border-sentry-border text-text-muted hover:border-accent hover:text-accent"
+          : "border-ward-border text-text-muted hover:border-accent hover:text-accent"
       }`}
       style={{ transitionDuration: "var(--motion-feedback)" }}
     >
@@ -350,7 +350,7 @@ function DownloadMarkdownButton({ label, yamlText }: { label: string; yamlText: 
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }}
-      className="inline-flex items-center gap-1.5 rounded-md border border-sentry-border px-3 py-1.5 text-xs text-text-muted transition-colors hover:border-accent hover:text-accent"
+      className="inline-flex items-center gap-1.5 rounded-md border border-ward-border px-3 py-1.5 text-xs text-text-muted transition-colors hover:border-accent hover:text-accent"
       style={{ transitionDuration: "var(--motion-feedback)" }}
     >
       <DownloadSimple size={13} />

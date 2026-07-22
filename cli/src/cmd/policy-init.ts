@@ -56,7 +56,7 @@ export function generatePolicyStarter(opts: PolicyInitOptions): string {
   const dailySpendWeiCap = profile === "aggressive" ? `"1 ether"  # TODO confirm cap` : `"0 ether"`;
 
   const lines = [
-    "# Starter Sentry policy",
+    "# Starter Ward policy",
     "",
     "```policy",
     'version: "0.1"',

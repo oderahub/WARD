@@ -55,7 +55,7 @@ export async function runInteractive(): Promise<void> {
   };
 
   try {
-    console.log(kleur.bold().cyan("Sentry CLI"));
+    console.log(kleur.bold().cyan("Ward CLI"));
     console.log(kleur.gray("Choose an action. Existing command flags still work for scripts.\n"));
 
     while (true) {
@@ -128,7 +128,7 @@ const CHOICES: Choice[] = [
     key: "3",
     label: "Compile POLICY.md",
     run: async (io) => {
-      const path = await io.required("Policy file", "examples/sentry-counter/policy.md");
+      const path = await io.required("Policy file", "examples/ward-counter/policy.md");
       await compileCmd(path);
     },
   },
@@ -136,7 +136,7 @@ const CHOICES: Choice[] = [
     key: "4",
     label: "Publish or update policy",
     run: async (io) => {
-      const path = await io.required("Policy file", "examples/sentry-counter/policy.md");
+      const path = await io.required("Policy file", "examples/ward-counter/policy.md");
       const label = await io.required("Short label");
       if (!(await io.confirm("This sends an on-chain publish/update transaction. Continue?"))) return;
       await pushCmd(path, { label });

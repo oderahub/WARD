@@ -12,13 +12,13 @@ function approveCalldata(): string {
   return APPROVE_SIG_SELECTOR + "000000000000000000000000" + SPENDER.slice(2).toLowerCase() + AMOUNT_HEX;
 }
 
-describe("sentry inspect", () => {
+describe("ward inspect", () => {
   let dir: string;
   let logs: string[];
   let restore: () => void;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "sentry-inspect-"));
+    dir = mkdtempSync(join(tmpdir(), "ward-inspect-"));
     logs = [];
     const orig = console.log;
     console.log = (...args: unknown[]) => {

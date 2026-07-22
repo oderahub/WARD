@@ -3,10 +3,10 @@ import "fake-indexeddb/auto";
 import { openDB } from "idb";
 import type { Hex } from "viem";
 
-import { openSentryDB } from "../../src/lib/persistence";
+import { openWardDB } from "../../src/lib/persistence";
 import { listWatchedPolicies } from "../../src/lib/watched-policies";
 
-const DB_NAME = "sentry-store";
+const DB_NAME = "ward-store";
 const WATCHED_STORE = "watched";
 
 const POLICY_ID = "0xabc0000000000000000000000000000000000000000000000000000000000001" as Hex;
@@ -75,7 +75,7 @@ describe("v3 → v4 watched-store rekey migration", () => {
     });
 
     // Triggers v3 → v4 upgrade.
-    const db = await openSentryDB();
+    const db = await openWardDB();
     db.close();
 
     const list = await listWatchedPolicies(CHAIN_ID, ORACLE);
@@ -86,7 +86,7 @@ describe("v3 → v4 watched-store rekey migration", () => {
     expect(list[0].label).toBe("seeded-v3");
 
     // The new wide key should be present; the legacy short key should be gone.
-    const db2 = await openSentryDB();
+    const db2 = await openWardDB();
     const newKey = `${CHAIN_ID}:${ORACLE.toLowerCase()}:${POLICY_ID.toLowerCase()}:${AGENT.toLowerCase()}`;
     const newRec = await db2.get(WATCHED_STORE, newKey);
     expect(newRec).toBeDefined();
@@ -136,7 +136,7 @@ describe("v3 → v4 watched-store rekey migration", () => {
     db.close();
 
     // Should not throw.
-    const upgraded = await openSentryDB();
+    const upgraded = await openWardDB();
     upgraded.close();
 
     // listWatchedPolicies must not crash even though the migration encountered
@@ -147,7 +147,7 @@ describe("v3 → v4 watched-store rekey migration", () => {
     expect(list[0].label).toBe("good");
 
     // The corrupt record's old key was deleted during the upgrade tx.
-    const db2 = await openSentryDB();
+    const db2 = await openWardDB();
     const corruptRec = await db2.get(WATCHED_STORE, CORRUPT_KEY);
     expect(corruptRec).toBeUndefined();
     db2.close();

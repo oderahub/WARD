@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { X as XIcon } from "@phosphor-icons/react";
 import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import { getAddress, isAddress, type Address, type Hex, type PublicClient } from "viem";
-import { SENTRY_ORACLE_ABI } from "@sentry-somnia/sdk";
+import { WARD_ORACLE_ABI } from "@ward/sdk";
 
 import { useEventStore } from "../../hooks/useEventStore";
 import { useFocusTrapAndEsc } from "../../hooks/useFocusTrapAndEsc";
@@ -105,7 +105,7 @@ export function TransferOwnershipModal({
     publicClient
       .readContract({
         address: oracleAddress,
-        abi: SENTRY_ORACLE_ABI,
+        abi: WARD_ORACLE_ABI,
         functionName: "pendingPolicyOwner",
         args: [policyId],
       })
@@ -340,7 +340,7 @@ export function TransferOwnershipModal({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.97, opacity: 0 }}
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-md rounded-lg border border-sentry-border bg-surface-elev p-5 text-sm text-text shadow-2xl"
+        className="w-full max-w-md rounded-lg border border-ward-border bg-surface-elev p-5 text-sm text-text shadow-2xl"
       >
         <header className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-text">Transfer policy ownership</h3>
@@ -460,7 +460,7 @@ export function TransferOwnershipModal({
         </div>
 
         {state.kind === "mining" && (
-          <div className="mt-3 rounded-md border border-sentry-border bg-surface p-2 text-xs">
+          <div className="mt-3 rounded-md border border-ward-border bg-surface p-2 text-xs">
             <div className="flex items-center justify-between">
               <span className="text-text-muted">Mining transferPolicyOwnership…</span>
               <ExplorerLink txHash={state.txHash} />

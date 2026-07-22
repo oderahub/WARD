@@ -5,7 +5,7 @@ import {
   type Hex,
   type PublicClient,
 } from "viem";
-import { SENTRY_ORACLE_ABI, type PolicyInput } from "@sentry-somnia/sdk";
+import { WARD_ORACLE_ABI, type PolicyInput } from "@ward/sdk";
 
 import {
   recoverPolicyInputFromChain,
@@ -110,7 +110,7 @@ function buildUpdateTx(hash: Hex, input: PolicyInput): FakeTx {
   return {
     hash,
     input: encodeFunctionData({
-      abi: SENTRY_ORACLE_ABI,
+      abi: WARD_ORACLE_ABI,
       functionName: "updatePolicy",
       args: [POLICY_ID, input],
     }),
@@ -121,7 +121,7 @@ function buildPublishTx(hash: Hex, input: PolicyInput): FakeTx {
   return {
     hash,
     input: encodeFunctionData({
-      abi: SENTRY_ORACLE_ABI,
+      abi: WARD_ORACLE_ABI,
       functionName: "publishPolicy",
       // The label is bytes32 — any 32-byte value works for the decode round-trip.
       args: [

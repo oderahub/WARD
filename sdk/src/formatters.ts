@@ -2,7 +2,7 @@ import type { Address, Hex } from "viem";
 import type { PreflightResult } from "./preflight.js";
 import { decodeReason } from "./reason-codes.js";
 
-export interface SentryDecisionContext {
+export interface WardDecisionContext {
   policyId?: Hex;
   target?: Address;
   selector?: Hex;
@@ -11,8 +11,8 @@ export interface SentryDecisionContext {
   source?: string;
 }
 
-export interface SentryDecisionLog {
-  event: "sentry.decision";
+export interface WardDecisionLog {
+  event: "ward.decision";
   ok: boolean;
   reason: Hex;
   reasonText: string;
@@ -25,12 +25,12 @@ export interface SentryDecisionLog {
   contextSource?: string;
 }
 
-export function formatSentryDecision(
+export function formatWardDecision(
   result: PreflightResult,
-  context: SentryDecisionContext = {},
-): SentryDecisionLog {
+  context: WardDecisionContext = {},
+): WardDecisionLog {
   return {
-    event: "sentry.decision",
+    event: "ward.decision",
     ok: result.ok,
     reason: result.reason,
     reasonText: result.reasonText,
@@ -44,6 +44,6 @@ export function formatSentryDecision(
   };
 }
 
-export function formatSentryUserMessage(reason: Hex): string {
+export function formatWardUserMessage(reason: Hex): string {
   return decodeReason(reason).description;
 }

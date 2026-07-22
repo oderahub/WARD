@@ -2,14 +2,14 @@
 pragma solidity 0.8.26;
 
 import "forge-std/Script.sol";
-import "../src/SentryAgentRegistry.sol";
+import "../src/WardAgentRegistry.sol";
 
-/// @notice Deploys SentryAgentRegistry and writes the address to
+/// @notice Deploys WardAgentRegistry and writes the address to
 ///         `deployments/$CHAINID-registry.json` for the SDK + CLI + seed
 ///         step. The registry is ownerless, permissionless, and holds no
 ///         funds — first-writer-wins per agent address.
 contract DeployRegistry is Script {
-    function run() external returns (SentryAgentRegistry registry) {
+    function run() external returns (WardAgentRegistry registry) {
         uint256 pk = vm.envUint("DEPLOYER_PK");
         address deployer = vm.addr(pk);
         require(deployer.balance >= 0.05 ether, "LOW_STT_BALANCE");
@@ -17,10 +17,10 @@ contract DeployRegistry is Script {
         console2.log("STT balance:", deployer.balance);
 
         vm.startBroadcast(pk);
-        registry = new SentryAgentRegistry();
+        registry = new WardAgentRegistry();
         vm.stopBroadcast();
 
-        console2.log("SentryAgentRegistry deployed at:", address(registry));
+        console2.log("WardAgentRegistry deployed at:", address(registry));
 
         string memory json = "registryDeployment";
         vm.serializeUint(json, "chainId", block.chainid);

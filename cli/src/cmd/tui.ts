@@ -23,7 +23,7 @@ export function runTuiCmd(args: string[] = [], opts: TuiOptions = {}): void {
   const commandArgs = existsSync(dist) ? [dist, ...args] : [src, ...args];
 
   if (!existsSync(command)) {
-    throw new Error("Sentry TUI is not installed yet. Run `pnpm install` first.");
+    throw new Error("Ward TUI is not installed yet. Run `pnpm install` first.");
   }
 
   const result = spawnSync(command, commandArgs, {
@@ -34,10 +34,10 @@ export function runTuiCmd(args: string[] = [], opts: TuiOptions = {}): void {
 
   if (result.signal) {
     if (opts.exitOnFailure !== false) process.kill(process.pid, result.signal);
-    throw new Error(`Sentry TUI exited by signal ${result.signal}`);
+    throw new Error(`Ward TUI exited by signal ${result.signal}`);
   }
   if ((result.status ?? 1) !== 0) {
     if (opts.exitOnFailure !== false) process.exit(result.status ?? 1);
-    throw new Error(`Sentry TUI exited with code ${result.status ?? 1}`);
+    throw new Error(`Ward TUI exited with code ${result.status ?? 1}`);
   }
 }

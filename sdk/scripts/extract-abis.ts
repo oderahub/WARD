@@ -12,9 +12,9 @@ interface Artifact {
 }
 
 const ARTIFACTS = [
-  { name: "SENTRY_ORACLE_ABI", path: "contracts/out/SentryOracle.sol/SentryOracle.json" },
-  { name: "SENTRY_QUEUE_ABI", path: "contracts/out/SentryQueue.sol/SentryQueue.json" },
-  { name: "SENTRY_AGENT_REGISTRY_ABI", path: "contracts/out/SentryAgentRegistry.sol/SentryAgentRegistry.json" },
+  { name: "WARD_ORACLE_ABI", path: "contracts/out/WardOracle.sol/WardOracle.json" },
+  { name: "WARD_QUEUE_ABI", path: "contracts/out/WardQueue.sol/WardQueue.json" },
+  { name: "WARD_AGENT_REGISTRY_ABI", path: "contracts/out/WardAgentRegistry.sol/WardAgentRegistry.json" },
 ];
 
 const banner = `// SPDX-License-Identifier: MIT

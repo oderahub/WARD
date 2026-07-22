@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /*
- * Sentry design tokens — Lane B "Document Grade" (warm paper, editorial).
+ * Ward design tokens — Lane B "Document Grade" (warm paper, editorial).
  *
  * Two layers: raw palette and semantic tokens. Only semantic tokens belong in
  * component className strings; raw tokens are private to this file.

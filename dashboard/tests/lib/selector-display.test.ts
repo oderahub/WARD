@@ -125,8 +125,8 @@ describe("selector-display.lookupTarget", () => {
     expect(lookupTarget("0x0000000000000000000000000000000000000001")).toBeUndefined();
   });
 
-  it("returns undefined for every input — the known-target map is now empty; canonical Sentry addresses are resolved by contractName.ts", () => {
-    // The legacy sentry-swapper / trading-v1 entries were removed when the
+  it("returns undefined for every input — the known-target map is now empty; canonical Ward addresses are resolved by contractName.ts", () => {
+    // The legacy ward-swapper / trading-v1 entries were removed when the
     // example was consolidated; the v2 oracle + queue labels live in the
     // contractName.ts LOCAL map (which is what AddressChip actually reads).
     expect(lookupTarget("0xc41e6098b4e7aefb6ad9733a2914a55e21c25fc6")).toBeUndefined();

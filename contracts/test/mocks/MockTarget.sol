@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-/// @notice Minimal callable target for Sentry tests. Exposes a few selectors with distinct effects so
+/// @notice Minimal callable target for Ward tests. Exposes a few selectors with distinct effects so
 ///         tests can assert that the right call landed with the right value and revert-on-demand.
 contract MockTarget {
     uint256 public pings;

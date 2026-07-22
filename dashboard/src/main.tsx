@@ -38,7 +38,7 @@ export const avalancheFuji = defineChain({
 
 // Both chains are registered so wagmi can read from, and switchChain into,
 // whichever one networks.ts resolves as active. Which one the UI targets is
-// decided there (VITE_SENTRY_CHAIN), not here.
+// decided there (VITE_WARD_CHAIN), not here.
 const wagmiConfig = createConfig({
   chains: [somniaTestnet, avalancheFuji],
   connectors: [injected()],

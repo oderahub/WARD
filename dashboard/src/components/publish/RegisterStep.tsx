@@ -1,5 +1,5 @@
 /**
- * Writes the (agent -> policyId) row to SentryAgentRegistry for downstream
+ * Writes the (agent -> policyId) row to WardAgentRegistry for downstream
  * discovery. BindStep is enough for late-bindable agents to gate calls.
  */
 
@@ -10,9 +10,9 @@ import { Upload, Info, Copy } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import {
-  SENTRY_AGENT_REGISTRY_ABI,
+  WARD_AGENT_REGISTRY_ABI,
   type RegistryAgent,
-} from "@sentry-somnia/sdk";
+} from "@ward/sdk";
 
 import { AddressChip, Alert, Input } from "../primitives";
 import { TxStatusPanel, type TxState } from "../write/TxStatusPanel";
@@ -48,9 +48,9 @@ export interface RegisterStepProps {
    *  (the yellow "REPOINT" strip surfaces this explicitly — see
    *  `policyMismatchWarning` below). */
   publishedPolicyId: Hex;
-  /** SentryAgentRegistry contract address for the current chain. */
+  /** WardAgentRegistry contract address for the current chain. */
   registryAddress: Address;
-  /** SentryOracle contract address — recorded on the registry row so a
+  /** WardOracle contract address — recorded on the registry row so a
    *  reader can resolve the right policy lookup target. */
   oracleAddress: Address;
   /** Fired when the user clicks Skip OR when the register tx is mined OK.
@@ -63,7 +63,7 @@ const ZERO_POLICY_ID =
   "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 // Keep the dashboard registration source distinguishable from CLI / SDK flows.
-const DEFAULT_TAG = "sentry-publish-checklist";
+const DEFAULT_TAG = "ward-publish-checklist";
 
 /**
  * Parses a free-form comma-separated tag input into a deduplicated string[],
@@ -133,7 +133,7 @@ export function RegisterStep({
       try {
         const row = (await publicClient.readContract({
           address: registryAddress,
-          abi: SENTRY_AGENT_REGISTRY_ABI,
+          abi: WARD_AGENT_REGISTRY_ABI,
           functionName: "getAgent",
           args: [agent],
         })) as RegistryAgent;
@@ -330,7 +330,7 @@ export function RegisterStep({
         <summary className="cursor-pointer list-none">
           <div className="flex flex-wrap items-baseline gap-x-3">
             <h3 className="text-[15px] font-medium text-text group-open:underline">
-              Register on SentryAgentRegistry
+              Register on WardAgentRegistry
             </h3>
             <span className="text-[11px] uppercase tracking-wider text-text-subtle">
               optional · click to expand
@@ -440,7 +440,7 @@ function PreCheckBanner({ state }: PreCheckBannerProps) {
   if (state.kind === "loading") {
     return (
       <div className="text-[12px] text-text-muted">
-        Reading SentryAgentRegistry.getAgent…
+        Reading WardAgentRegistry.getAgent…
       </div>
     );
   }
@@ -500,7 +500,7 @@ interface PinnedFieldsProps {
 
 function PinnedFields({ agent, publishedPolicyId, oracleAddress }: PinnedFieldsProps) {
   return (
-    <div className="rounded-md border border-sentry-border bg-surface p-3">
+    <div className="rounded-md border border-ward-border bg-surface p-3">
       <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-text-muted">
         Pinned from Step 1 + publish
       </div>
@@ -684,7 +684,7 @@ function RegisterDialog({
             {rebind ? "Update registry entry" : "Register agent"}
           </DialogTitle>
           <DialogDescription>
-            Signs a SentryAgentRegistry.register transaction. Your wallet
+            Signs a WardAgentRegistry.register transaction. Your wallet
             will pop up to confirm.
           </DialogDescription>
         </DialogHeader>

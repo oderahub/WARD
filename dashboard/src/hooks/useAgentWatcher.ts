@@ -9,10 +9,10 @@ import {
 } from "viem";
 import {
   applyPolicyToObservedCall,
-  SENTRY_ORACLE_ABI,
+  WARD_ORACLE_ABI,
   utcDayBucket,
   type PolicyInput,
-} from "@sentry-somnia/sdk";
+} from "@ward/sdk";
 
 import { useUrlState } from "./useUrlState";
 import {
@@ -620,10 +620,10 @@ export async function fetchPolicyInput(
       ? head - FETCH_POLICY_LOOKBACK_BLOCKS
       : 0n;
 
-  const publishedEvent = SENTRY_ORACLE_ABI.find(
+  const publishedEvent = WARD_ORACLE_ABI.find(
     (a) => a.type === "event" && a.name === "PolicyPublished",
   ) as never;
-  const updatedEvent = SENTRY_ORACLE_ABI.find(
+  const updatedEvent = WARD_ORACLE_ABI.find(
     (a) => a.type === "event" && a.name === "PolicyUpdated",
   ) as never;
 
@@ -690,7 +690,7 @@ export async function fetchPolicyInput(
   if (!tx || tx.input == null) return null;
   try {
     const decoded = decodeFunctionData({
-      abi: SENTRY_ORACLE_ABI,
+      abi: WARD_ORACLE_ABI,
       data: tx.input,
     });
     if (decoded.functionName === "publishPolicy") {

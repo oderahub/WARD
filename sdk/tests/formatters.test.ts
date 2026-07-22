@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Address, Hex } from "viem";
 import {
-  formatSentryDecision,
-  formatSentryUserMessage,
+  formatWardDecision,
+  formatWardUserMessage,
 } from "../src/formatters.js";
 import { preflight, type PreflightResult } from "../src/preflight.js";
 import { REASON_CODES } from "../src/reason-codes.js";
@@ -43,16 +43,16 @@ const policy: EvalPolicy = {
   paused: false,
 };
 
-describe("Sentry formatters", () => {
+describe("Ward formatters", () => {
   it("formats a structured decision log", () => {
     expect(
-      formatSentryDecision(result, {
+      formatWardDecision(result, {
         policyId: POLICY_ID,
         target: TARGET,
         selector: SELECTOR,
       }),
     ).toMatchObject({
-      event: "sentry.decision",
+      event: "ward.decision",
       ok: false,
       reason: REASON_CODES.SELECTOR_NOT_ALLOWED,
       reasonText: result.reasonText,
@@ -64,7 +64,7 @@ describe("Sentry formatters", () => {
   });
 
   it("stringifies bigint ids for logs", () => {
-    const log = formatSentryDecision(result, {
+    const log = formatWardDecision(result, {
       requestId: 123n,
       agentId: 456n,
     });
@@ -74,7 +74,7 @@ describe("Sentry formatters", () => {
   });
 
   it("omits optional context when absent", () => {
-    const log = formatSentryDecision(result);
+    const log = formatWardDecision(result);
 
     expect(log.policyId).toBeUndefined();
     expect(log.target).toBeUndefined();
@@ -82,28 +82,28 @@ describe("Sentry formatters", () => {
   });
 
   it("formats user messages from reason codes", () => {
-    expect(formatSentryUserMessage(REASON_CODES.REQUIRES_DELAY)).toMatch(/queued/i);
+    expect(formatWardUserMessage(REASON_CODES.REQUIRES_DELAY)).toMatch(/queued/i);
   });
 
   it("falls back for unknown reason codes", () => {
     expect(
-      formatSentryUserMessage(
+      formatWardUserMessage(
         "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
       ),
     ).toMatch(/Unknown reason code/i);
   });
 
-  it("preflight calls onSentryDecision with the returned result", async () => {
-    const onSentryDecision = vi.fn();
+  it("preflight calls onWardDecision with the returned result", async () => {
+    const onWardDecision = vi.fn();
 
     const returned = await preflight({
       source: { kind: "local", policy },
       intent,
       spentTodayWei: 0n,
       nowSec: 1_700_000_000n,
-      onSentryDecision,
+      onWardDecision,
     });
 
-    expect(onSentryDecision).toHaveBeenCalledWith(returned);
+    expect(onWardDecision).toHaveBeenCalledWith(returned);
   });
 });

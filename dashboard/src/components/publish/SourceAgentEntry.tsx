@@ -12,8 +12,8 @@
  *      counter() / router() / echoTarget()).
  *   4. Operator clicks Apply → we hand the discovered targets to the parent
  *      via onApplyDraft({ targets, bindAgentAddress? }). bindAgentAddress is
- *      ONLY set when probe.kind === "sentry-agent" (the bind step can act on
- *      it); for non-Sentry contracts we still hand back the targets but skip
+ *      ONLY set when probe.kind === "ward-agent" (the bind step can act on
+ *      it); for non-Ward contracts we still hand back the targets but skip
  *      the bind prefill.
  *
  * State / tokens:
@@ -205,9 +205,9 @@ export function SourceAgentEntry({ onApplyDraft }: SourceAgentEntryProps) {
       ],
     }));
     // bindAgentAddress is only set for genuinely bind-capable agents.
-    // Operators who pasted a non-Sentry contract still get the targets, but
+    // Operators who pasted a non-Ward contract still get the targets, but
     // the BindStep won't be pre-filled with an address that can't be bound.
-    const isBindCapable = probe.kind === "sentry-agent";
+    const isBindCapable = probe.kind === "ward-agent";
     onApplyDraft({
       targets,
       ...(isBindCapable ? { bindAgentAddress: validation.address } : {}),
@@ -314,7 +314,7 @@ function ProbeSummary({ probe }: ProbeSummaryProps) {
   }
   if (probe.kind === "no-set-policy-id") {
     return (
-      <Alert variant="warn" title="Not a Sentry agent">
+      <Alert variant="warn" title="Not a Ward agent">
         This contract does not expose the standard{" "}
         <code className="font-mono text-[11px]">setPolicyId</code> function.
         We can still try to read its targets, but you will need to bind any
@@ -329,10 +329,10 @@ function ProbeSummary({ probe }: ProbeSummaryProps) {
       </Alert>
     );
   }
-  // sentry-agent
+  // ward-agent
   return (
     <div className="text-[11px] text-success">
-      Confirmed: this contract inherits Sentry. We will pre-fill the bind step
+      Confirmed: this contract inherits Ward. We will pre-fill the bind step
       below so you only sign once.
     </div>
   );
@@ -382,7 +382,7 @@ function DiscoveryReport({ state, probeKind, onApply }: DiscoveryReportProps) {
         {state.targets.map((t) => (
           <li
             key={t.address}
-            className="rounded-md border border-sentry-border bg-surface-elev p-2"
+            className="rounded-md border border-ward-border bg-surface-elev p-2"
           >
             <div className="flex flex-wrap items-center gap-2">
               <code className="font-mono text-[11px] text-text break-all">

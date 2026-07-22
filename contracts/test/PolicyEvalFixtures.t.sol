@@ -3,21 +3,21 @@ pragma solidity 0.8.26;
 
 import "forge-std/Test.sol";
 import "../src/PolicyTypes.sol";
-import "../src/SentryOracle.sol";
+import "../src/WardOracle.sol";
 
 /// @notice Generates the parity-test fixture file consumed by the SDK's
 ///         `policy-eval.parity.test.ts`. Each case publishes a fresh policy
-///         against a clean SentryOracle, calls `checkIntent` at a controlled
+///         against a clean WardOracle, calls `checkIntent` at a controlled
 ///         `block.timestamp`, captures `(ok, reason)`, and writes the full
 ///         tuple — policy + intent + spentToday + nowSec + expected result —
 ///         to `sdk/tests/fixtures/policy-eval-fixtures.json`.
 ///
-///         CI gate: any change to PolicyLib or SentryOracle that shifts a
+///         CI gate: any change to PolicyLib or WardOracle that shifts a
 ///         result for an existing fixture rewrites the JSON, and the SDK
 ///         parity test breaks until the TS port is updated to match. That
 ///         drift detector is the whole point of this file.
 contract PolicyEvalFixturesTest is Test {
-    SentryOracle internal oracle;
+    WardOracle internal oracle;
 
     address internal constant TARGET_A = address(0xA000);
     address internal constant TARGET_B = address(0xB000);
@@ -33,7 +33,7 @@ contract PolicyEvalFixturesTest is Test {
     string[] internal entries;
 
     function setUp() public {
-        oracle = new SentryOracle();
+        oracle = new WardOracle();
     }
 
     // ------------------------------------------------------------------

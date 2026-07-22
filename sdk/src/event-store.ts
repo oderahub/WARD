@@ -1,5 +1,5 @@
 import { type Address, type Hex, type PublicClient } from "viem";
-import { SENTRY_ORACLE_ABI, SENTRY_QUEUE_ABI } from "./abi.js";
+import { WARD_ORACLE_ABI, WARD_QUEUE_ABI } from "./abi.js";
 import { createOracleClient, type OracleClient } from "./oracle-client.js";
 import { createQueueClient, type QueueClient, type QueueRecordHeader } from "./queue-client.js";
 
@@ -412,7 +412,7 @@ export function createEventStore(config: EventStoreConfig): EventStore {
       const to = from + chunkSize - 1n > headBlock ? headBlock : from + chunkSize - 1n;
       const logs = await publicClient.getContractEvents({
         address: oracleAddress,
-        abi: SENTRY_ORACLE_ABI as never,
+        abi: WARD_ORACLE_ABI as never,
         fromBlock: from,
         toBlock: to,
       });
@@ -461,7 +461,7 @@ export function createEventStore(config: EventStoreConfig): EventStore {
       const to = from + chunkSize - 1n > headBlock ? headBlock : from + chunkSize - 1n;
       const logs = await publicClient.getContractEvents({
         address: queueAddress,
-        abi: SENTRY_QUEUE_ABI as never,
+        abi: WARD_QUEUE_ABI as never,
         fromBlock: from,
         toBlock: to,
       });
@@ -548,7 +548,7 @@ export function createEventStore(config: EventStoreConfig): EventStore {
   function startLiveWatch(fromBlock: bigint) {
     const unwatchOracle = publicClient.watchContractEvent({
       address: oracleAddress,
-      abi: SENTRY_ORACLE_ABI as never,
+      abi: WARD_ORACLE_ABI as never,
       fromBlock,
       onLogs: (logs: unknown) => {
         for (const log of logs as Array<{
@@ -578,7 +578,7 @@ export function createEventStore(config: EventStoreConfig): EventStore {
     });
     const unwatchQueue = publicClient.watchContractEvent({
       address: queueAddress,
-      abi: SENTRY_QUEUE_ABI as never,
+      abi: WARD_QUEUE_ABI as never,
       fromBlock,
       onLogs: (logs: unknown) => {
         for (const log of logs as Array<{

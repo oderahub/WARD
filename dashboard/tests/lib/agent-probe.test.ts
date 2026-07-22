@@ -3,8 +3,8 @@
  * discriminated branch of ProbeState that probeAgent itself can produce:
  *   - eoa              (no contract code)
  *   - no-set-policy-id (has code, POLICY_ID() reverts)
- *   - sentry-agent     (has code, POLICY_ID() + owner() both succeed)
- *   - sentry-agent w/ owner read failing (returns owner: null)
+ *   - ward-agent     (has code, POLICY_ID() + owner() both succeed)
+ *   - ward-agent w/ owner read failing (returns owner: null)
  *
  * The "idle" / "probing" / "probe-error" branches are state-only — set by
  * call sites around probeAgent, not by probeAgent itself — so they're not
@@ -58,21 +58,21 @@ describe("probeAgent", () => {
     expect(r).toEqual({ kind: "no-set-policy-id" });
   });
 
-  it("returns kind:'sentry-agent' with both POLICY_ID and owner when reads succeed", async () => {
+  it("returns kind:'ward-agent' with both POLICY_ID and owner when reads succeed", async () => {
     const client = makeClient({
       code: "0xdeadbeef",
       policyId: POLICY,
       owner: OWNER,
     });
     const r = await probeAgent(client, AGENT);
-    expect(r.kind).toBe("sentry-agent");
-    if (r.kind !== "sentry-agent") return;
+    expect(r.kind).toBe("ward-agent");
+    if (r.kind !== "ward-agent") return;
     expect(r.currentPolicyId).toBe(POLICY);
     expect(r.owner).toBe(OWNER);
   });
 
   it("returns owner:null when owner() reverts but POLICY_ID succeeded", async () => {
-    // SentryAgentBase derivatives may override owner() visibility — the bind
+    // WardAgentBase derivatives may override owner() visibility — the bind
     // path still works because simulate catches NotOwner. Treat as unknown.
     const client = makeClient({
       code: "0xdeadbeef",
@@ -80,8 +80,8 @@ describe("probeAgent", () => {
       owner: new Error("owner() reverted"),
     });
     const r = await probeAgent(client, AGENT);
-    expect(r.kind).toBe("sentry-agent");
-    if (r.kind !== "sentry-agent") return;
+    expect(r.kind).toBe("ward-agent");
+    if (r.kind !== "ward-agent") return;
     expect(r.currentPolicyId).toBe(POLICY);
     expect(r.owner).toBeNull();
   });

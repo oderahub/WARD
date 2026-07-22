@@ -1,5 +1,5 @@
 import type { Address, Hex, PublicClient } from "viem";
-import { SENTRY_ORACLE_ABI } from "./abi.js";
+import { WARD_ORACLE_ABI } from "./abi.js";
 import { compilePolicy } from "./policy-compiler.js";
 import {
   evalCheckIntent,
@@ -26,7 +26,7 @@ export interface PreflightArgs {
   /** Wei this asker has already spent today against this policy. */
   spentTodayWei: bigint;
   /** Optional observer for structured telemetry and UI state. */
-  onSentryDecision?: (result: PreflightResult) => void;
+  onWardDecision?: (result: PreflightResult) => void;
   /** Unix seconds to evaluate against; defaults to the wall clock at the API boundary. */
   nowSec?: bigint;
 }
@@ -52,21 +52,21 @@ function withDecisionCallback(
   return result;
 }
 
-/** Preflight gate for Sentry-policy-protected calls. Policy rejections return `ok: false`; programmer errors throw. */
+/** Preflight gate for Ward-policy-protected calls. Policy rejections return `ok: false`; programmer errors throw. */
 export async function preflight(args: PreflightArgs): Promise<PreflightResult> {
   const { source, intent, spentTodayWei } = args;
 
   if (source.kind === "chain") {
     const [ok, reason] = (await source.publicClient.readContract({
       address: source.oracleAddress,
-      abi: SENTRY_ORACLE_ABI as never,
+      abi: WARD_ORACLE_ABI as never,
       functionName: "checkIntent",
       args: [source.policyId, intent as never, spentTodayWei],
     })) as readonly [boolean, Hex];
     const { description } = decodeReason(reason);
     return withDecisionCallback(
       { ok, reason, reasonText: description, source: "chain" },
-      args.onSentryDecision,
+      args.onWardDecision,
     );
   }
 
@@ -81,7 +81,7 @@ export async function preflight(args: PreflightArgs): Promise<PreflightResult> {
     const { description } = decodeReason(reason);
     return withDecisionCallback(
       { ok, reason, reasonText: description, source: "local" },
-      args.onSentryDecision,
+      args.onWardDecision,
     );
   }
 
@@ -93,7 +93,7 @@ export async function preflight(args: PreflightArgs): Promise<PreflightResult> {
     const { description } = decodeReason(reason);
     return withDecisionCallback(
       { ok, reason, reasonText: description, source: "spec" },
-      args.onSentryDecision,
+      args.onWardDecision,
     );
   }
 

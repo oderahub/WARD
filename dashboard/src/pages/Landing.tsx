@@ -6,7 +6,7 @@ import { Sun, Moon, Desktop } from "@phosphor-icons/react";
  * Landing — the front door at the bare site root. A single hero built around an
  * animated ASCII radar: the sweep pings five "contacts" (agent calls) as it
  * passes, clearing allowed selectors (green) and flagging denied ones (red).
- * That is the product thesis in one image — Sentry watching an agent and
+ * That is the product thesis in one image — Ward watching an agent and
  * admitting or rejecting each call.
  *
  * Themed off the app's own design tokens (--bg / --text / --accent / --success
@@ -19,9 +19,9 @@ import { Sun, Moon, Desktop } from "@phosphor-icons/react";
 
 /** "View on GitHub" target. TODO(landing): point this at the real repository.
  *  There is no git remote configured in this workspace to infer it from. */
-const GITHUB_URL = "https://github.com/Timidan/sentry-somnia";
+const GITHUB_URL = "https://github.com/Timidan/ward";
 
-/** The surfaces an integrator can reach Sentry through. Each links to the
+/** The surfaces an integrator can reach Ward through. Each links to the
  *  canonical "how do I use this" doc anchor (GitHub slug-rules: lowercased,
  *  spaces → hyphens, em-dash and punctuation stripped, leaving the surrounding
  *  hyphens — so a "## 20. CLI reference — every command" heading slugs as
@@ -29,13 +29,13 @@ const GITHUB_URL = "https://github.com/Timidan/sentry-somnia";
 const SURFACES: Array<{ label: string; href: string }> = [
   { label: "contracts",  href: `${GITHUB_URL}/blob/main/README.md#integrate-into-your-agent` },
   { label: "sdk",        href: `${GITHUB_URL}/blob/main/sdk/README.md` },
-  { label: "react/vite", href: `${GITHUB_URL}/blob/main/sdk/README.md#react-sentry-somniareact` },
+  { label: "react/vite", href: `${GITHUB_URL}/blob/main/sdk/README.md#react-wardreact` },
   { label: "cli",        href: `${GITHUB_URL}/blob/main/SKILL.md#20-cli-reference--every-command-and-flag` },
   { label: "tui",        href: `${GITHUB_URL}/blob/main/SKILL.md#23-operating-the-queue--tui--dashboard` },
   { label: "dashboard",  href: `${GITHUB_URL}/blob/main/README.md#using-the-dashboard` },
 ];
 
-/** Official Sentry mark: a hexagonal gate with an arrow piercing it (a call
+/** Official Ward mark: a hexagonal gate with an arrow piercing it (a call
  *  passing the policy gate). Gate strokes inherit the text colour (so it themes
  *  light/dark); the arrow uses the app accent so the whole hero is one scheme.
  *  Geometry lifted from public/favicon.svg, minus the plate, so it scales crisp. */
@@ -256,7 +256,7 @@ export function Landing() {
               className="font-bold leading-[0.9] tracking-[-0.045em] text-text"
               style={{ fontSize: "clamp(54px, 8vw, 118px)" }}
             >
-              SENTRY
+              WARD
             </span>
           </div>
 

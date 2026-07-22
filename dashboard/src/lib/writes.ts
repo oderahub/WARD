@@ -1,5 +1,5 @@
 /**
- * Pure write helpers for the Sentry dashboard. No React, no hooks.
+ * Pure write helpers for the Ward dashboard. No React, no hooks.
  *
  * Queue writes (veto/dispatch/expire) sign through a viem `WalletClient`
  * directly, since they were written before the publish flow moved to wagmi's
@@ -28,11 +28,11 @@ import {
 import type { useWriteContract } from "wagmi";
 
 import {
-  SENTRY_AGENT_REGISTRY_ABI,
-  SENTRY_ORACLE_ABI,
-  SENTRY_QUEUE_ABI,
+  WARD_AGENT_REGISTRY_ABI,
+  WARD_ORACLE_ABI,
+  WARD_QUEUE_ABI,
   type PolicyInput,
-} from "@sentry-somnia/sdk";
+} from "@ward/sdk";
 
 import { shannonSafeGas } from "./shannonGas";
 import { encodeBytes32Label } from "./encoding";
@@ -67,7 +67,7 @@ export async function simulateAndWritePublish(opts: {
 
   await publicClient.simulateContract({
     address: oracleAddress,
-    abi: SENTRY_ORACLE_ABI,
+    abi: WARD_ORACLE_ABI,
     functionName: "publishPolicy",
     args: [labelHex, policyInput],
     account,
@@ -75,7 +75,7 @@ export async function simulateAndWritePublish(opts: {
 
   const gas = await shannonSafeGas(publicClient, {
     address: oracleAddress,
-    abi: SENTRY_ORACLE_ABI,
+    abi: WARD_ORACLE_ABI,
     functionName: "publishPolicy",
     args: [labelHex, policyInput],
     account,
@@ -83,7 +83,7 @@ export async function simulateAndWritePublish(opts: {
 
   const txHash = await writeContractAsync({
     address: oracleAddress,
-    abi: SENTRY_ORACLE_ABI,
+    abi: WARD_ORACLE_ABI,
     functionName: "publishPolicy",
     args: [labelHex, policyInput],
     gas,
@@ -95,7 +95,7 @@ export async function simulateAndWritePublish(opts: {
 
 /**
  * Simulate `register(agent, oracle, policyId, name, metadataURI, tags)` on
- * SentryAgentRegistry, then submit via wagmi's writeContractAsync. Mirrors
+ * WardAgentRegistry, then submit via wagmi's writeContractAsync. Mirrors
  * `simulateAndWritePublish` line-for-line — same simulate-first / shannonSafeGas
  * / chainId-pinned pattern — so the wizard's Step 3 register sub-card surfaces
  * NotRegistrar (or any other registry revert) before the wallet popup opens.
@@ -136,7 +136,7 @@ export async function simulateAndWriteRegisterAgent(opts: {
 
   await publicClient.simulateContract({
     address: registryAddress,
-    abi: SENTRY_AGENT_REGISTRY_ABI,
+    abi: WARD_AGENT_REGISTRY_ABI,
     functionName: "register",
     args,
     account,
@@ -144,7 +144,7 @@ export async function simulateAndWriteRegisterAgent(opts: {
 
   const gas = await shannonSafeGas(publicClient, {
     address: registryAddress,
-    abi: SENTRY_AGENT_REGISTRY_ABI,
+    abi: WARD_AGENT_REGISTRY_ABI,
     functionName: "register",
     args,
     account,
@@ -152,7 +152,7 @@ export async function simulateAndWriteRegisterAgent(opts: {
 
   const txHash = await writeContractAsync({
     address: registryAddress,
-    abi: SENTRY_AGENT_REGISTRY_ABI,
+    abi: WARD_AGENT_REGISTRY_ABI,
     functionName: "register",
     args,
     gas,
@@ -213,7 +213,7 @@ export async function vetoIntent(args: VetoArgs): Promise<{ txHash: Hex }> {
 
   const { request } = await publicClient.simulateContract({
     address: queueAddress,
-    abi: SENTRY_QUEUE_ABI,
+    abi: WARD_QUEUE_ABI,
     functionName: "veto",
     args: [execId, reasonHex],
     account,
@@ -234,7 +234,7 @@ export async function dispatchIntent(args: DispatchArgs): Promise<{ txHash: Hex 
 
   const { request } = await publicClient.simulateContract({
     address: queueAddress,
-    abi: SENTRY_QUEUE_ABI,
+    abi: WARD_QUEUE_ABI,
     functionName: "dispatch",
     args: [execId],
     account,
@@ -255,7 +255,7 @@ export async function expireIfStaleIntent(args: ExpireArgs): Promise<{ txHash: H
 
   const { request } = await publicClient.simulateContract({
     address: queueAddress,
-    abi: SENTRY_QUEUE_ABI,
+    abi: WARD_QUEUE_ABI,
     functionName: "expireIfStale",
     args: [execId],
     account,
@@ -474,7 +474,7 @@ async function simulateAndWritePolicy(opts: {
 
   await publicClient.simulateContract({
     address: oracleAddress,
-    abi: SENTRY_ORACLE_ABI,
+    abi: WARD_ORACLE_ABI,
     functionName,
     // viem derives a per-function tuple type for `args` from the ABI literal;
     // our helper accepts an opaque `readonly unknown[]` because the four
@@ -486,7 +486,7 @@ async function simulateAndWritePolicy(opts: {
 
   const gas = await shannonSafeGas(publicClient, {
     address: oracleAddress,
-    abi: SENTRY_ORACLE_ABI,
+    abi: WARD_ORACLE_ABI,
     functionName,
     args,
     account,
@@ -517,7 +517,7 @@ async function simulateAndWritePolicy(opts: {
 
   const txHash = await writeContractAsync({
     address: oracleAddress,
-    abi: SENTRY_ORACLE_ABI,
+    abi: WARD_ORACLE_ABI,
     functionName,
     // Same widening rationale as the simulate call above — wagmi derives a
     // per-function tuple for `args` from the ABI literal, but this helper
@@ -545,7 +545,7 @@ export async function readPendingPolicyOwner(
 ): Promise<Address> {
   return (await publicClient.readContract({
     address: oracleAddress,
-    abi: SENTRY_ORACLE_ABI,
+    abi: WARD_ORACLE_ABI,
     functionName: "pendingPolicyOwner",
     args: [policyId],
   })) as Address;
@@ -565,7 +565,7 @@ export async function readChainHealth(
 ): Promise<{ paused: boolean; expiresAt: bigint }> {
   const [paused, expiresAt] = (await publicClient.readContract({
     address: oracleAddress,
-    abi: SENTRY_ORACLE_ABI,
+    abi: WARD_ORACLE_ABI,
     functionName: "policyHealth",
     args: [policyId],
   })) as readonly [boolean, bigint];

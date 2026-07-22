@@ -1,5 +1,5 @@
 /**
- * Shared probe for "is this address a SentryAgentBase-shaped contract that
+ * Shared probe for "is this address a WardAgentBase-shaped contract that
  * the dashboard can re-bind?" Extracted from BindStep so the agent-first
  * Publish entry point (SourceAgentEntry) and the post-publish Bind step
  * call exactly the same code path — one source of truth for the discriminated
@@ -26,7 +26,7 @@ export type ProbeState =
   | { kind: "eoa" } // hasCode === false
   | { kind: "no-set-policy-id" } // hasCode but POLICY_ID() reverts
   | {
-      kind: "sentry-agent";
+      kind: "ward-agent";
       currentPolicyId: Hex | null;
       owner: Address | null;
     }
@@ -53,9 +53,9 @@ const OWNER_VIEW_ABI = [
 ] as const;
 
 /**
- * Probe `address` and report whether it's a SentryAgentBase-style late-bindable
+ * Probe `address` and report whether it's a WardAgentBase-style late-bindable
  * contract. The result discriminates between EOA / no-late-binding /
- * sentry-agent / RPC failure so call sites can render or gate appropriately.
+ * ward-agent / RPC failure so call sites can render or gate appropriately.
  */
 export async function probeAgent(
   publicClient: PublicClient,
@@ -64,10 +64,10 @@ export async function probeAgent(
   const code = await publicClient.getCode({ address });
   if (!code || code === "0x") return { kind: "eoa" };
 
-  // POLICY_ID() first — if this reverts, the contract isn't a SentryAgentBase
+  // POLICY_ID() first — if this reverts, the contract isn't a WardAgentBase
   // derivative and there's nothing more to learn. owner() is a separate read
   // because OZ Ownable's owner() is so common that a contract can expose it
-  // without inheriting SentryAgentBase.
+  // without inheriting WardAgentBase.
   let currentPolicyId: Hex | null = null;
   try {
     currentPolicyId = (await publicClient.readContract({
@@ -87,10 +87,10 @@ export async function probeAgent(
       functionName: "owner",
     })) as Address;
   } catch {
-    // Some valid SentryAgentBase derivatives might not expose owner() publicly
+    // Some valid WardAgentBase derivatives might not expose owner() publicly
     // (e.g. they override visibility). Treat as unknown rather than fatal.
     owner = null;
   }
 
-  return { kind: "sentry-agent", currentPolicyId, owner };
+  return { kind: "ward-agent", currentPolicyId, owner };
 }

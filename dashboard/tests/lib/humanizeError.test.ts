@@ -66,7 +66,7 @@ describe("humanizeWeb3Error — user-action paths (regression)", () => {
   });
 });
 
-describe("humanizeWeb3Error — SentryAgentBase revert names", () => {
+describe("humanizeWeb3Error — WardAgentBase revert names", () => {
   it("humanises NotOwner with an ownership-mismatch sentence", () => {
     const result = humanizeWeb3Error(
       fakeRevertError({ errorName: "NotOwner" }),
@@ -100,7 +100,7 @@ describe("humanizeWeb3Error — setPolicyId-missing detection", () => {
       functionName: "setPolicyId",
     });
     expect(result.headline).toMatch(/doesn't expose a setPolicyId hook/);
-    expect(result.headline).toMatch(/SentryAgentBase/);
+    expect(result.headline).toMatch(/WardAgentBase/);
   });
 
   it("does not mis-attribute undecoded reverts when functionName is something else", () => {

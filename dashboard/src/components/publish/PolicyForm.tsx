@@ -271,7 +271,7 @@ export function PolicyForm({ draft, setDraft, compileResult, shouldShowError, to
           type="button"
           aria-label="Add another contract"
           title="Add another contract"
-          className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-sentry-border text-text-muted hover:border-accent hover:text-accent active:scale-[0.98] transition-transform"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-ward-border text-text-muted hover:border-accent hover:text-accent active:scale-[0.98] transition-transform"
           onClick={() =>
             setDraft({
               ...draft,

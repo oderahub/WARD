@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import type { Hex } from "viem";
-import type { PolicyMeta } from "@sentry-somnia/sdk";
+import type { PolicyMeta } from "@ward/sdk";
 
 // `WatchedPage.tsx` indirectly imports `src/main.tsx` (via the
 // `useEventStore` hook reaching for the `somniaTestnet` chain export),

@@ -58,7 +58,7 @@ export function TargetRow({
   const friendlyName = hasValidAddress ? lookupTarget(target.target) : undefined;
 
   return (
-    <div className="space-y-3 rounded-md border border-sentry-border bg-bg p-4">
+    <div className="space-y-3 rounded-md border border-ward-border bg-bg p-4">
       <div className="flex items-start gap-2">
         <label
           htmlFor={targetId}
@@ -90,7 +90,7 @@ export function TargetRow({
           type="button"
           aria-label={canRemove ? "Remove this contract from the policy" : "At least one contract is required"}
           title={canRemove ? "Remove contract" : "At least one contract is required"}
-          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-sentry-border text-text-muted hover:border-danger hover:text-danger disabled:cursor-not-allowed disabled:opacity-30 active:scale-[0.98] transition-transform"
+          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-ward-border text-text-muted hover:border-danger hover:text-danger disabled:cursor-not-allowed disabled:opacity-30 active:scale-[0.98] transition-transform"
           onClick={onRemove}
           disabled={!canRemove}
         >
@@ -120,7 +120,7 @@ export function TargetRow({
       <div
         className={
           hasValidAddress
-            ? "space-y-3 border-t border-sentry-border pt-3"
+            ? "space-y-3 border-t border-ward-border pt-3"
             : "space-y-3"
         }
       >
@@ -145,7 +145,7 @@ export function TargetRow({
           </p>
         )}
 
-        <div className="divide-y divide-sentry-border/60">
+        <div className="divide-y divide-ward-border/60">
           {target.selectors.map((sel, i) => (
             <SelectorRow
               key={i}
@@ -173,7 +173,7 @@ export function TargetRow({
           type="button"
           aria-label="Add another function"
           title="Add another function"
-          className="mt-3 inline-flex h-7 w-7 items-center justify-center rounded-md border border-sentry-border text-text-muted hover:border-accent hover:text-accent active:scale-[0.98] transition-transform"
+          className="mt-3 inline-flex h-7 w-7 items-center justify-center rounded-md border border-ward-border text-text-muted hover:border-accent hover:text-accent active:scale-[0.98] transition-transform"
           onClick={() =>
             onChange({
               ...target,

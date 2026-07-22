@@ -4,8 +4,8 @@ pragma solidity 0.8.26;
 import "forge-std/Vm.sol";
 import "../src/PolicyTypes.sol";
 
-/// @notice Decodes the canonical `sentry compile POLICY.md` JSON output into a
-///         `PolicyInput` suitable for `SentryOracle.publishPolicy`. Kept in a
+/// @notice Decodes the canonical `ward compile POLICY.md` JSON output into a
+///         `PolicyInput` suitable for `WardOracle.publishPolicy`. Kept in a
 ///         library (not inlined into the script) so the test suite can call it
 ///         directly without an `vm.startBroadcast` block. The JSON shape is the
 ///         one produced by `cli/src/cmd/policy.ts::serialize` — numeric scalars

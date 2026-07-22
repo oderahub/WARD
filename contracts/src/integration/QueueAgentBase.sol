@@ -2,43 +2,43 @@
 pragma solidity 0.8.26;
 
 import "../PolicyTypes.sol";
-import "../SentryQueue.sol";
-import "./SentryAgentBase.sol";
+import "../WardQueue.sol";
+import "./WardAgentBase.sol";
 
-/// @notice Base for agents that route queued tiers through SentryQueue.
+/// @notice Base for agents that route queued tiers through WardQueue.
 /// @dev Queue expiry does not imply refunds; custody integrations override `_onQueueExpire`.
-abstract contract QueueAgentBase is SentryAgentBase {
-    SentryQueue public immutable queue;
+abstract contract QueueAgentBase is WardAgentBase {
+    WardQueue public immutable queue;
 
     error QueueDispatchDidNotCommit(uint256 execId);
 
-    constructor(SentryOracle _oracle, SentryQueue _queue, address _owner) SentryAgentBase(_oracle, _owner) {
+    constructor(WardOracle _oracle, WardQueue _queue, address _owner) WardAgentBase(_oracle, _owner) {
         queue = _queue;
     }
 
-    /// @dev `SentryQueue.enqueue` remains the source of truth for queueability.
-    function _sentryEnqueueDelayed(address target, bytes memory data, uint256 value, uint256 reqId)
+    /// @dev `WardQueue.enqueue` remains the source of truth for queueability.
+    function _wardEnqueueDelayed(address target, bytes memory data, uint256 value, uint256 reqId)
         internal
         returns (uint256 execId)
     {
         Intent memory intent = _buildQueueIntent(target, data, value, reqId);
         _precheckQueueIntent(intent);
-        execId = queue.enqueue(POLICY_ID, intent, _sentrySpentToday());
+        execId = queue.enqueue(POLICY_ID, intent, _wardSpentToday());
         // Reserve the value against the enqueue-day cap so a second over-cap enqueue is
         // rejected. The cap check inside `queue.enqueue` ran against the pre-reservation
         // spend, which is correct for this intent.
-        _sentryReserveQueued(execId, value);
+        _wardReserveQueued(execId, value);
     }
 
-    function _sentryDispatchAndExecute(uint256 execId) internal returns (bytes memory) {
+    function _wardDispatchAndExecute(uint256 execId) internal returns (bytes memory) {
         Intent memory intent;
         try queue.dispatch(execId) returns (Intent memory dispatched) {
             intent = dispatched;
         } catch (bytes memory err) {
             if (_isPastDeadline(err)) {
-                SentryQueue.QueuedIntent memory record = queue.getRecord(execId);
+                WardQueue.QueuedIntent memory record = queue.getRecord(execId);
                 queue.expireIfStale(execId); // mark Expired so retries cannot re-fire the hook
-                _sentryReleaseQueued(execId); // free the enqueue-day reservation for the dead intent
+                _wardReleaseQueued(execId); // free the enqueue-day reservation for the dead intent
                 _onQueueExpire(execId, record.intent.target, record.intent.value);
                 return "";
             }
@@ -47,28 +47,28 @@ abstract contract QueueAgentBase is SentryAgentBase {
             }
         }
 
-        SentryQueue.QueuedIntent memory afterDispatch = queue.getRecord(execId);
-        if (afterDispatch.state != SentryQueue.State.Committed) revert QueueDispatchDidNotCommit(execId);
+        WardQueue.QueuedIntent memory afterDispatch = queue.getRecord(execId);
+        if (afterDispatch.state != WardQueue.State.Committed) revert QueueDispatchDidNotCommit(execId);
 
         // Consume (do not re-reserve): the value was already booked at enqueue, so execute
         // via `_executeReserved` to forward it exactly once without double-counting the cap.
-        _sentryConsumeQueued(execId);
+        _wardConsumeQueued(execId);
         return _executeReserved(intent.target, intent.data, intent.value);
     }
 
     function dispatchQueued(uint256 execId) external onlyOwner returns (bytes memory) {
-        return _sentryDispatchAndExecute(execId);
+        return _wardDispatchAndExecute(execId);
     }
 
     /// @notice Release a reservation for an intent vetoed or expired OFF the dispatch path.
     /// @dev Permissionless but inert unless the queue record is already terminal.
     function settleQueued(uint256 execId) external {
-        SentryQueue.QueuedIntent memory r = queue.getRecord(execId);
+        WardQueue.QueuedIntent memory r = queue.getRecord(execId);
         if (
-            r.state == SentryQueue.State.Vetoed || r.state == SentryQueue.State.Expired
-                || r.state == SentryQueue.State.Committed
+            r.state == WardQueue.State.Vetoed || r.state == WardQueue.State.Expired
+                || r.state == WardQueue.State.Committed
         ) {
-            _sentryReleaseQueued(execId);
+            _wardReleaseQueued(execId);
         }
     }
 
@@ -105,7 +105,7 @@ abstract contract QueueAgentBase is SentryAgentBase {
 
     function _precheckQueueIntent(Intent memory intent) private {
         (bool success, bytes memory returndata) =
-            address(oracle).call(abi.encodeCall(SentryOracle.checkIntent, (POLICY_ID, intent, _sentrySpentToday())));
+            address(oracle).call(abi.encodeCall(WardOracle.checkIntent, (POLICY_ID, intent, _wardSpentToday())));
         if (!success) {
             assembly {
                 revert(add(returndata, 32), mload(returndata))
@@ -120,6 +120,6 @@ abstract contract QueueAgentBase is SentryAgentBase {
         assembly {
             selector := mload(add(err, 32))
         }
-        return selector == SentryQueue.PastDeadline.selector;
+        return selector == WardQueue.PastDeadline.selector;
     }
 }

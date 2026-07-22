@@ -1,5 +1,5 @@
 /**
- * Registry-actions — single canonical import surface for SentryAgentRegistry
+ * Registry-actions — single canonical import surface for WardAgentRegistry
  * writes, shared between the Watch Wizard's register sub-card and the
  * standalone Register step in the post-publish checklist.
  *

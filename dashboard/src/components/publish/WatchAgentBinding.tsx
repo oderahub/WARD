@@ -80,7 +80,7 @@ export function WatchAgentBinding({
   }
 
   return (
-    <div className="space-y-2 rounded-md border border-sentry-border bg-surface p-3">
+    <div className="space-y-2 rounded-md border border-ward-border bg-surface p-3">
       <div className="text-[11px] uppercase tracking-wider text-text-subtle">
         bind an agent to this watch policy
       </div>

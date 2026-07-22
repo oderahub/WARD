@@ -10,7 +10,7 @@ import type { FieldErrors } from "./PolicyForm";
  * Plain-language summaries for each policy tier. Rendered as an INLINE
  * subtitle under the tier <select> (always visible, no hover required) so the
  * decision is keyboard- and screen-reader accessible. Wording mirrors the
- * dispatch authorization enforced in SentryQueue.dispatch — DELAYED is
+ * dispatch authorization enforced in WardQueue.dispatch — DELAYED is
  * asker-dispatchable after the timer, VETO_REQUIRED requires the policy owner
  * to actively dispatch (passive timeout is NOT enough; an unattended queue
  * never auto-executes).
@@ -122,7 +122,7 @@ export function SelectorRow({
           <select
             aria-label="tier"
             aria-describedby={tierDescId}
-            className="h-8 rounded-md border border-sentry-border bg-surface px-2 text-xs focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+            className="h-8 rounded-md border border-ward-border bg-surface px-2 text-xs focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
             value={selector.tier}
             onChange={(e) => {
               const nextTier = e.target.value as Tier;
@@ -165,7 +165,7 @@ export function SelectorRow({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  className="inline-flex h-5 w-5 cursor-help items-center justify-center rounded-full border border-sentry-border bg-transparent text-[10px] text-text-muted hover:border-accent hover:text-accent focus:border-accent focus:text-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="inline-flex h-5 w-5 cursor-help items-center justify-center rounded-full border border-ward-border bg-transparent text-[10px] text-text-muted hover:border-accent hover:text-accent focus:border-accent focus:text-accent focus:outline-none focus:ring-1 focus:ring-accent"
                   aria-label={`Tier semantics: ${TIER_DESCRIPTIONS[selector.tier]}`}
                 >
                   ?
@@ -225,7 +225,7 @@ export function SelectorRow({
       <button
         type="button"
         aria-label={canRemove ? "Remove function" : "Remove function (at least one required)"}
-        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-sentry-border text-text-muted hover:border-danger hover:text-danger disabled:cursor-not-allowed disabled:opacity-30 active:scale-[0.98] transition-transform"
+        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-ward-border text-text-muted hover:border-danger hover:text-danger disabled:cursor-not-allowed disabled:opacity-30 active:scale-[0.98] transition-transform"
         onClick={onRemove}
         disabled={!canRemove}
         title={canRemove ? "Remove function" : "At least one function required"}

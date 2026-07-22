@@ -2,12 +2,12 @@
 import {
   createEventStore,
   type StoreEvent,
-} from "@sentry-somnia/sdk";
+} from "@ward/sdk";
 import {
   resolveEnv,
   makePublicClient,
-  SENTRY_ORACLE_DEPLOY_BLOCK,
-  SENTRY_QUEUE_LOOKBACK_BLOCKS,
+  WARD_ORACLE_DEPLOY_BLOCK,
+  WARD_QUEUE_LOOKBACK_BLOCKS,
 } from "./lib/env.js";
 
 function bigintReplacer(_key: string, value: unknown): unknown {
@@ -21,10 +21,10 @@ export async function runJsonMode(): Promise<void> {
     publicClient,
     oracleAddress: env.oracleAddress,
     queueAddress: env.queueAddress,
-    ...(SENTRY_ORACLE_DEPLOY_BLOCK !== undefined
-      ? { oracleDeploymentBlock: SENTRY_ORACLE_DEPLOY_BLOCK }
+    ...(WARD_ORACLE_DEPLOY_BLOCK !== undefined
+      ? { oracleDeploymentBlock: WARD_ORACLE_DEPLOY_BLOCK }
       : {}),
-    queueLookbackBlocks: SENTRY_QUEUE_LOOKBACK_BLOCKS,
+    queueLookbackBlocks: WARD_QUEUE_LOOKBACK_BLOCKS,
     // Keep stdout pipe-safe; progress goes to stderr during long backfills.
     onProgress: ({ phase, current, total }) => {
       const pct = total > 0n ? ((Number(current) / Number(total)) * 100).toFixed(0) : "—";

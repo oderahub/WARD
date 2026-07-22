@@ -203,7 +203,7 @@ export async function resolveProxyTarget(
  *      `FunctionInfo.ambiguousCandidates` so the UI can flag the collision.
  *
  * View / pure functions are filtered out at the top of the per-function loop —
- * Sentry policies only cover state-changing calls. Each remaining function
+ * Ward policies only cover state-changing calls. Each remaining function
  * gets a suggested tier heuristic the caller can override before publishing.
  */
 export async function fetchContractFunctions(
@@ -299,7 +299,7 @@ export async function fetchContractFunctions(
   }
 }
 
-// SentryAgentBase derivatives expose their immutable target via a view named
+// WardAgentBase derivatives expose their immutable target via a view named
 // after the role: the canonical CounterAgent example has counter(); other
 // agents will expose router() / tokenIn() / echoTarget() / etc. There's no
 // shared interface — the ABI itself is the source of truth. We enumerate

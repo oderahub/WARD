@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { Address, Hex } from "viem";
-import type { PolicyInput } from "@sentry-somnia/sdk";
+import type { PolicyInput } from "@ward/sdk";
 
 import { useWallet } from "../hooks/useWallet";
 import { AddressChip, Button } from "./primitives";
@@ -53,7 +53,7 @@ function sameAddress(a: Address | undefined | null, b: Address | undefined | nul
 }
 
 const NEEDS_BODY_HINT =
-  "Requires the original POLICY.md. Run `sentry push` in this browser to populate the cache, or wait for universal recovery to fetch it from the publish tx.";
+  "Requires the original POLICY.md. Run `ward push` in this browser to populate the cache, or wait for universal recovery to fetch it from the publish tx.";
 
 /**
  * Management panel for the policy drawer. Surfaces every action available to
@@ -101,7 +101,7 @@ export default function PolicyActions({
   };
 
   return (
-    <section className="border-t border-sentry-border pt-3 mt-3 text-xs text-text">
+    <section className="border-t border-ward-border pt-3 mt-3 text-xs text-text">
       <div className="mb-2 text-[11px] uppercase tracking-wider text-text-subtle">
         Owner actions
       </div>
@@ -216,7 +216,7 @@ function OwnerPanel({
   // narrows the message:
   //   - `recovering` → tell the user we're trying to rebuild it from chain.
   //   - `failed`     → tell them the chain probe didn't find a publish/update
-  //                    tx and offer the `sentry push` escape hatch.
+  //                    tx and offer the `ward push` escape hatch.
   //   - `idle`       → cache-miss with no recovery in flight (e.g. parent
   //                    doesn't run recovery yet). Fall back to the original
   //                    "needs POLICY.md" copy so we don't pretend recovery
@@ -227,10 +227,10 @@ function OwnerPanel({
       bodyHelpText = "Recovering policy from chain…";
     } else if (recoveryState === "failed") {
       bodyHelpText =
-        "Could not recover policy from chain. Try again later or run `sentry push` in this browser. Transfer ownership still works.";
+        "Could not recover policy from chain. Try again later or run `ward push` in this browser. Transfer ownership still works.";
     } else {
       bodyHelpText =
-        "Pause / Edit / Extend need the policy body. Run `sentry push` in this browser to populate the cache. Transfer ownership works without it.";
+        "Pause / Edit / Extend need the policy body. Run `ward push` in this browser to populate the cache. Transfer ownership works without it.";
     }
   }
   return (
@@ -269,14 +269,14 @@ function OwnerPanel({
         <p className="text-[11px] text-text-subtle">{bodyHelpText}</p>
       )}
 
-      <div className="flex flex-wrap gap-2 border-t border-sentry-border pt-2">
+      <div className="flex flex-wrap gap-2 border-t border-ward-border pt-2">
         <Button variant="ghost" size="sm" onClick={() => onOpenModal("transfer")}>
           Transfer ownership
         </Button>
       </div>
 
       {pendingOwner && (
-        <div className="rounded-md border border-sentry-border bg-surface p-2">
+        <div className="rounded-md border border-ward-border bg-surface p-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="inline-flex items-center gap-2 text-[11px] text-text-subtle">
               <span className="uppercase tracking-wider">Pending transfer →</span>

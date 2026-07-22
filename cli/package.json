@@ -1,11 +1,11 @@
 {
-  "name": "@sentry-somnia/cli",
+  "name": "@ward/cli",
   "version": "0.10.1",
   "private": true,
-  "description": "Sentry CLI — compile + publish policies to SentryOracle; preflight + inspect intents",
+  "description": "Ward CLI — compile + publish policies to WardOracle; preflight + inspect intents",
   "type": "module",
   "bin": {
-    "sentry": "./dist/index.js"
+    "ward": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json && chmod +x dist/index.js",
@@ -15,7 +15,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@sentry-somnia/sdk": "workspace:*",
+    "@ward/sdk": "workspace:*",
     "cac": "^6.7.14",
     "kleur": "^4.1.5",
     "viem": "^2.21.0"

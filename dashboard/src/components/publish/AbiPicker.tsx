@@ -50,7 +50,7 @@ function tierBadgeClasses(tier: Tier): string {
     case "DELAYED":
       return "text-accent border-accent bg-accent/20";
     case "IMMEDIATE":
-      return "text-text-muted border-sentry-border bg-surface-elev";
+      return "text-text-muted border-ward-border bg-surface-elev";
   }
 }
 
@@ -180,7 +180,7 @@ export function AbiPicker({ address, onAddSelectors, existingSelectors }: Props)
   }
 
   return (
-    <div className="border-t border-sentry-border pt-3 mt-3 space-y-2">
+    <div className="border-t border-ward-border pt-3 mt-3 space-y-2">
       {onWrongChain && (
         <div className="inline-flex items-center gap-1 rounded-full border border-warn bg-warn/20 px-2 py-0.5 text-[11px] text-warn">
           Wallet is on chainId {chainId} — scanning that chain, not Somnia
@@ -192,7 +192,7 @@ export function AbiPicker({ address, onAddSelectors, existingSelectors }: Props)
           type="button"
           aria-label="Scan ABI for callable functions"
           title="Scan ABI for callable functions"
-          className="inline-flex h-8 items-center gap-2 rounded-md border border-sentry-border px-3 text-[12px] text-text-muted hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30 active:scale-[0.98] transition-transform"
+          className="inline-flex h-8 items-center gap-2 rounded-md border border-ward-border px-3 text-[12px] text-text-muted hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30 active:scale-[0.98] transition-transform"
           disabled={scanDisabled}
           onClick={onScan}
         >
@@ -217,7 +217,7 @@ export function AbiPicker({ address, onAddSelectors, existingSelectors }: Props)
             type="button"
             aria-label="Retry scanning ABI for callable functions"
             title="Retry scan"
-            className="inline-flex h-8 items-center gap-2 rounded-md border border-sentry-border px-3 text-[12px] text-text-muted hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30 active:scale-[0.98] transition-transform"
+            className="inline-flex h-8 items-center gap-2 rounded-md border border-ward-border px-3 text-[12px] text-text-muted hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30 active:scale-[0.98] transition-transform"
             disabled={scanDisabled}
             onClick={onScan}
           >
@@ -303,7 +303,7 @@ export function AbiPicker({ address, onAddSelectors, existingSelectors }: Props)
               type="button"
               aria-label="Re-scan ABI for callable functions"
               title="Re-scan"
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-sentry-border text-text-muted hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30 active:scale-[0.98] transition-transform"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-ward-border text-text-muted hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30 active:scale-[0.98] transition-transform"
               disabled={scanDisabled}
               onClick={onScan}
             >

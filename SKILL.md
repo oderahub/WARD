@@ -1,25 +1,25 @@
 ---
-name: sentry-integration
-description: Full Sentry usage manual for Somnia Shannon — publish policies (CLI + dashboard), wire `checkIntent` into a Solidity agent, operate the queue, run watch mode, deploy your own oracle, scaffold a new agent, and onboard with an AI assistant.
+name: ward-integration
+description: Full Ward usage manual for Somnia Shannon — publish policies (CLI + dashboard), wire `checkIntent` into a Solidity agent, operate the queue, run watch mode, deploy your own oracle, scaffold a new agent, and onboard with an AI assistant.
 ---
 
-# Sentry — full integration + usage skill
+# Ward — full integration + usage skill
 
 ## Table of contents
 
 **Part I — Operator + integrator manual**
 
 - [How to use this file](#how-to-use-this-file)
-- [TL;DR — Sentry is already deployed; here's how to use it](#tldr--sentry-is-already-deployed-heres-how-to-use-it)
+- [TL;DR — Ward is already deployed; here's how to use it](#tldr--ward-is-already-deployed-heres-how-to-use-it)
 - [1. Canonical Shannon addresses](#1-canonical-shannon-addresses-dont-deploy-your-own-unless-you-need-to)
-- [2. Three paths to use Sentry](#2-three-paths-to-use-sentry)
+- [2. Three paths to use Ward](#2-three-paths-to-use-ward)
 - [3. POLICY.md format (strict-compiler rules)](#3-policymd-format-strict-compiler-rules)
 - [4. Publish a policy via CLI](#4-publish-a-policy-via-cli)
 - [5. Publish a policy via Dashboard](#5-publish-a-policy-via-dashboard)
 - [6. Integrate into your Solidity agent](#6-integrate-into-your-solidity-agent)
 - [7. Operate the queue](#7-operate-the-queue)
 - [8. Watch mode — observe any deployed agent](#8-watch-mode--observe-any-deployed-agent)
-- [9. Deploy your own Sentry (advanced)](#9-deploy-your-own-sentry-advanced)
+- [9. Deploy your own Ward (advanced)](#9-deploy-your-own-ward-advanced)
 - [10. Reason codes](#10-reason-codes-every-checkintent-return)
 - [11. Gotchas (production-critical)](#11-gotchas-production-critical)
 - [12. Verification checklist](#12-verification-checklist)
@@ -31,13 +31,13 @@ description: Full Sentry usage manual for Somnia Shannon — publish policies (C
 - [15. Tier model — IMMEDIATE / DELAYED / VETO_REQUIRED](#15-tier-model--immediate--delayed--veto_required)
 - [16. Integration models — modifier vs inline picker](#16-integration-models--modifier-vs-inline-picker)
 - [17. Integration guide — deploy + publish + bind walkthrough](#17-integration-guide--deploy--publish--bind-walkthrough)
-- [18. Scaffold a new agent (`pnpm create sentry-agent`)](#18-scaffold-a-new-agent-pnpm-create-sentry-agent)
+- [18. Scaffold a new agent (`pnpm create ward-agent`)](#18-scaffold-a-new-agent-pnpm-create-ward-agent)
 - [19. POLICY.md spec — authoritative grammar](#19-policymd-spec--authoritative-grammar)
 - [20. CLI reference — every command and flag](#20-cli-reference--every-command-and-flag)
 - [21. Contracts reference — full on-chain surface](#21-contracts-reference--full-on-chain-surface)
 - [22. Operating policies — day-2 ops (update, pause, transfer)](#22-operating-policies--day-2-ops-update-pause-transfer)
 - [23. Operating the queue — TUI + dashboard](#23-operating-the-queue--tui--dashboard)
-- [24. Using Sentry with AI assistants — phased onboarding flow + `ai:init`](#24-using-sentry-with-ai-assistants--phased-onboarding-flow--aiinit)
+- [24. Using Ward with AI assistants — phased onboarding flow + `ai:init`](#24-using-ward-with-ai-assistants--phased-onboarding-flow--aiinit)
 - [25. Gotchas appendix — failure modes lookup](#25-gotchas-appendix--failure-modes-lookup)
 
 ---
@@ -46,7 +46,7 @@ description: Full Sentry usage manual for Somnia Shannon — publish policies (C
 
 > **Size:** comfortably fits any modern LLM context (Claude / GPT / Gemini / Cursor — all ≥100k). Paste it whole.
 
-- **Claude Code:** copy to `~/.claude/skills/sentry-integration/SKILL.md` (or symlink the repo path). Auto-discovered via the `description` frontmatter — invoke with `/sentry-integration` or by intent ("wire my agent into Sentry", "publish a policy", "watch this agent").
+- **Claude Code:** copy to `~/.claude/skills/ward-integration/SKILL.md` (or symlink the repo path). Auto-discovered via the `description` frontmatter — invoke with `/ward-integration` or by intent ("wire my agent into Ward", "publish a policy", "watch this agent").
 - **Cursor / Aider / Continue:** add this file to your context (`@SKILL.md` in chat, or `--read SKILL.md`). For Cursor, you can also append the contents to `.cursorrules`.
 - **Paste-into-LLM (ChatGPT, Claude.ai, Codex):** paste the whole file as the first message, prefixed with "Use this spec as the authoritative reference for the following request."
 
@@ -54,12 +54,12 @@ This file is self-contained: every address, command, schema rule, selector, stru
 
 ---
 
-## TL;DR — Sentry is a live agent on Shannon; here's how to use it
+## TL;DR — Ward is a live agent on Shannon; here's how to use it
 
-- **Sentry is live on Somnia Shannon testnet (chainId 50312).** All three contracts (Oracle, Queue, AgentRegistry) are deployed and registered in Sentry's own `SentryAgentRegistry` — they show up by name in `findSentryAgents()` so other agents and tooling can discover the gate without hard-coded addresses.
-- **You almost never deploy Sentry.** Both core contracts are ownerless, fundless, pure metadata/view.
-- **Three things you do:** (1) publish a `POLICY.md` to get a `policyId`, (2) wire `oracle.checkIntent(policyId, intent, spentToday)` in front of every external call in your agent, (3) optionally use `SentryQueue` for delayed / vetoable selectors.
-- **Canonical for new integrations (v0.11.0+):** use the v2 oracle, v2 queue, and registry listed in §1. The v1 oracle and queue in that table stay live for pre-v0.11.0 policies but lack `checkSelector`, so they cannot back the `sentryGuarded` modifier.
+- **Ward is live on Somnia Shannon testnet (chainId 50312).** All three contracts (Oracle, Queue, AgentRegistry) are deployed and registered in Ward's own `WardAgentRegistry` — they show up by name in `findWardAgents()` so other agents and tooling can discover the gate without hard-coded addresses.
+- **You almost never deploy Ward.** Both core contracts are ownerless, fundless, pure metadata/view.
+- **Three things you do:** (1) publish a `POLICY.md` to get a `policyId`, (2) wire `oracle.checkIntent(policyId, intent, spentToday)` in front of every external call in your agent, (3) optionally use `WardQueue` for delayed / vetoable selectors.
+- **Canonical for new integrations (v0.11.0+):** use the v2 oracle, v2 queue, and registry listed in §1. The v1 oracle and queue in that table stay live for pre-v0.11.0 policies but lack `checkSelector`, so they cannot back the `wardGuarded` modifier.
 - **Pragma:** Solidity `0.8.26` everywhere.
 
 ---
@@ -68,11 +68,11 @@ This file is self-contained: every address, command, schema rule, selector, stru
 
 | Thing | Value |
 |---|---|
-| `SentryOracle` *(v2, canonical for new integrations)* | `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c` |
-| `SentryQueue` *(v2)* | `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4` |
-| `SentryAgentRegistry` *(v0.10.0, oracle-agnostic)* | `0x97F743A9AAa5AcAA73075C1B8F1921274755CF70` |
-| `SentryOracle` *(v1, still live for pre-v0.11.0 policies)* | `0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf` |
-| `SentryQueue` *(v1, still live)* | `0x98A3f7C38D19edF1ddA7E3bc38fa4B935aD590D5` |
+| `WardOracle` *(v2, canonical for new integrations)* | `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c` |
+| `WardQueue` *(v2)* | `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4` |
+| `WardAgentRegistry` *(v0.10.0, oracle-agnostic)* | `0x97F743A9AAa5AcAA73075C1B8F1921274755CF70` |
+| `WardOracle` *(v1, still live for pre-v0.11.0 policies)* | `0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf` |
+| `WardQueue` *(v1, still live)* | `0x98A3f7C38D19edF1ddA7E3bc38fa4B935aD590D5` |
 | Somnia agent platform | `0x037Bb9C718F3f7fe5eCBDB0b600D607b52706776` |
 | LLM inference agent id | `12847293847561029384` (uint256) |
 | JSON API agent id | `13174292974160097713` (uint256) |
@@ -85,27 +85,27 @@ These are the **only** addresses your agent should reference unless you've delib
 
 ---
 
-## 2. Three paths to use Sentry
+## 2. Three paths to use Ward
 
 | Path | When | What you do |
 |---|---|---|
-| **A. Publish + integrate (most common)** | You're building a new (or modifying an existing) agent and want it gated. | Inherit `SentryAgentBase` and tag each state-changing entrypoint with `sentryGuarded(this.entryName.selector, value)`. `SentryAgentBase` already supplies the mutable `POLICY_ID` slot, `setPolicyId(bytes32) onlyOwner` with `PolicyBound` events, the spend tracker, and the modifier's no-op-when-unbound shortcut — so deploys ship ungated by default. Author + publish a `POLICY.md` (§4 CLI or §5 dashboard) when ready, then `setPolicyId(0xYOURPOLICY)`. Use `setPolicyId(0x0)` as an emergency kill-switch; use `setPolicyId(0xNEW)` to migrate policies without redeploying. See §6.5 for the canonical shape. |
+| **A. Publish + integrate (most common)** | You're building a new (or modifying an existing) agent and want it gated. | Inherit `WardAgentBase` and tag each state-changing entrypoint with `wardGuarded(this.entryName.selector, value)`. `WardAgentBase` already supplies the mutable `POLICY_ID` slot, `setPolicyId(bytes32) onlyOwner` with `PolicyBound` events, the spend tracker, and the modifier's no-op-when-unbound shortcut — so deploys ship ungated by default. Author + publish a `POLICY.md` (§4 CLI or §5 dashboard) when ready, then `setPolicyId(0xYOURPOLICY)`. Use `setPolicyId(0x0)` as an emergency kill-switch; use `setPolicyId(0xNEW)` to migrate policies without redeploying. See §6.5 for the canonical shape. |
 | **B. Watch an existing agent** | You did NOT write the agent (3rd party, no source, can't redeploy) but want to observe its calls against a policy. | Use dashboard Watch mode (§8). No on-chain change to the target agent; just publishes a `mode=watch` policy and replays the agent's recent txs via `debug_traceTransaction`. |
-| **C. Operate the queue** | You're the asker (DELAYED) or the policy owner (VETO_REQUIRED) for pending intents. | Use `sentry queue:*` CLI (§7) or the dashboard Queue tab. |
-| **D. FE preflight (no on-chain agent)** | Pure FE app — no Sentry-aware contract; you want every outgoing call gated client-side BEFORE signing. | Author a `POLICY.md`, bundle it with the FE, call `preflight({ source: { kind: 'spec', yaml }, intent, spentTodayWei })` before submitting. See `sdk/src/preflight.ts` + the React hook surface in `packages/sentry-react/`. |
+| **C. Operate the queue** | You're the asker (DELAYED) or the policy owner (VETO_REQUIRED) for pending intents. | Use `ward queue:*` CLI (§7) or the dashboard Queue tab. |
+| **D. FE preflight (no on-chain agent)** | Pure FE app — no Ward-aware contract; you want every outgoing call gated client-side BEFORE signing. | Author a `POLICY.md`, bundle it with the FE, call `preflight({ source: { kind: 'spec', yaml }, intent, spentTodayWei })` before submitting. See `sdk/src/preflight.ts` + the React hook surface in `packages/ward-react/`. |
 
-Mental model: Sentry is a **synchronous, view-only on-chain policy oracle**. Four nouns:
+Mental model: Ward is a **synchronous, view-only on-chain policy oracle**. Four nouns:
 
 - **Policy** — stable, namespace-derived rule set (`bytes32 policyId = keccak256(abi.encode(publisher, label))`) listing allowed `(target, selector)` pairs with per-call value caps, a daily wei cap, an expiry, and a tier per selector. Same `(publisher, label)` always yields the same id, across `publishPolicy` and `updatePolicy`.
 - **Intent** — the call your agent is about to make, packed as a struct.
-- **Oracle** — `SentryOracle.checkIntent(policyId, intent, spentToday) returns (bool ok, bytes32 reason)`. Pure view. No funds, no execution.
-- **Queue** (opt-in) — `SentryQueue` coordinates `TIER_DELAYED` and `TIER_VETO_REQUIRED` intents. Still no custody, still no execution — only stores metadata and emits events. The asker calls `dispatch(execId)` and performs the call itself.
+- **Oracle** — `WardOracle.checkIntent(policyId, intent, spentToday) returns (bool ok, bytes32 reason)`. Pure view. No funds, no execution.
+- **Queue** (opt-in) — `WardQueue` coordinates `TIER_DELAYED` and `TIER_VETO_REQUIRED` intents. Still no custody, still no execution — only stores metadata and emits events. The asker calls `dispatch(execId)` and performs the call itself.
 
 ---
 
 ## 3. POLICY.md format (strict-compiler rules)
 
-The compiler is **strict** — unknown fields fail. A `POLICY.md` is a free-form markdown document that contains **exactly one fenced code block with language tag `policy`**. That block holds the canonical `PolicyInput` YAML — the schema. Everything outside the fence (titles, prose, rationale) is for humans and ignored by the compiler. Canonical example: `examples/sentry-counter/policy.md`.
+The compiler is **strict** — unknown fields fail. A `POLICY.md` is a free-form markdown document that contains **exactly one fenced code block with language tag `policy`**. That block holds the canonical `PolicyInput` YAML — the schema. Everything outside the fence (titles, prose, rationale) is for humans and ignored by the compiler. Canonical example: `examples/ward-counter/policy.md`.
 
 ````md
 # My Agent Policy
@@ -148,7 +148,7 @@ Schema rules (compiler is strict — extra/unknown fields are rejected):
 - `dailySpendWeiCap` is the per-UTC-day rolling cap across ALL selectors (native wei only — ERC20 amounts are not summed).
 - `expiresAt` is ISO-8601; after that timestamp `checkIntent` returns `(false, "EXPIRED")`.
 - Caps: `MAX_TARGETS = 20`, `MAX_SELECTORS_PER_TARGET = 10`. Larger policies revert at publish; they do not silently truncate.
-- Reserved target: `SentryOracle` itself (v2 `0x3C7bF90f…CC9c` or v1 `0x68d4B045…11DDf` — whichever your agent binds to) — including it fails compilation.
+- Reserved target: `WardOracle` itself (v2 `0x3C7bF90f…CC9c` or v1 `0x68d4B045…11DDf` — whichever your agent binds to) — including it fails compilation.
 - Labels (separate from the YAML) are encoded as `padHex({size:32, dir:"right"}, stringToBytes(label))` — UTF-8 right-padded with zeros. **Never `keccak256(label)`.** The CLI handles this for you.
 
 For the complete authoritative grammar (every field, every validation rule, EIP-55 enforcement, error messages, `maxSlippageBps` semantics), see [§19 POLICY.md spec](#19-policymd-spec--authoritative-grammar).
@@ -157,36 +157,36 @@ For the complete authoritative grammar (every field, every validation rule, EIP-
 
 ## 4. Publish a policy via CLI
 
-Use `pnpm sentry` for the guided CLI menu, or `pnpm sentry <command>` for direct commands after `pnpm -C cli run build`. Env (`.env` in repo root): `PRIVATE_KEY=0x…`. `SENTRY_ORACLE` / `SENTRY_QUEUE` default to the canonical addresses above.
+Use `pnpm ward` for the guided CLI menu, or `pnpm ward <command>` for direct commands after `pnpm -C cli run build`. Env (`.env` in repo root): `PRIVATE_KEY=0x…`. `WARD_ORACLE` / `WARD_QUEUE` default to the canonical addresses above.
 
 Full direct surface (16 commands + 1 alias, sourced from `cli/src/index.ts`):
 
 | Command | What it does | Example |
 |---|---|---|
-| `sentry compile <path>` | Compile `POLICY.md` → canonical `PolicyInput` JSON. No RPC, no wallet. Validates schema (reserved targets, oversized labels, bad selectors). | `sentry compile ./POLICY.md` |
-| `sentry push <path> [--label <name>]` | Compile + publish (or update) on-chain under `(wallet, label)`; auto-detects publish vs. update via `policyOwner`. Prints tx hash + `OK · policyId = 0x…`. | `sentry push ./POLICY.md --label my-agent` |
-| `sentry policyid <label> [--publisher <addr>]` | Pure helper — compute the deterministic `policyId` for `(publisher, label)` without RPC. Useful to hardcode `POLICY_ID` BEFORE publish. | `sentry policyid my-agent --publisher 0xAbCd…` |
-| `sentry inspect <intent.json>` | Pretty-print an Intent JSON, decode `data` against known ABIs, sanity-check `selector == data[0:4]`. | `sentry inspect ./intent.json` |
-| `sentry lint <path> [--abi <path>] [--oracle <addr>] [--rpc <url>] [--policy-id <id>] [--fail-on <rules>] [--json]` | Lint POLICY.md for common Sentry integration mistakes (8 rules). | `sentry lint ./POLICY.md --abi out/MyAgent.sol/MyAgent.json` |
-| `sentry policy:init --abi <path> --target <addr> [--profile strict\|balanced\|aggressive] [--expires <iso>]` | Generate a starter POLICY.md from a contract ABI. | `sentry policy:init --abi out/MyAgent.sol/MyAgent.json --target 0xAbCd…` |
-| `sentry analyze:gate <path> [--json]` | Static check that every dispatch in an agent contract is gated by `sentryGuarded(...)`, `_sentryCheck(...)`, or `SentryCall.check(...)`. | `sentry analyze:gate src/MyAgent.sol` |
-| `sentry ai:init [--cursor] [--claude] [--codex] [--all] [--force]` | Regenerate Cursor / Claude / Codex (AGENTS.md) context files from this SKILL.md. | `sentry ai:init --codex --force` |
-| `sentry preflight [--min-balance <eth>]` | Verify env (PK shape, platform, agentId, oracle/queue), reach Somnia RPC, fetch chainId + STT balance. Exit 0 if ready, 1 otherwise. | `sentry preflight --min-balance 0.5` |
-| `sentry tui [--json]` | Open the full-screen Ink queue monitor; `--json` streams NDJSON events to stdout instead. | `sentry tui --json \| jq` |
-| `sentry queue:status <execId>` | Cheap header read (skips `intent.data`): `state`, `tier`, `policyId`, `asker`, `target`, `selector`, `value`, `enqueuedAt`, `earliestCommitAt`, `deadline`. | `sentry queue:status 42` |
-| `sentry queue:handoff <execId>` (alias `handoff`) | Print operator handoff guidance for a queued execution (including the agent-side `dispatchQueued(uint256)` wrapper when the ABI exposes it). | `sentry queue:handoff 42 --agent 0xAbCd… --abi out/MyAgent.sol/MyAgent.json` |
-| `sentry queue:enqueue <intent.json> <policyId> [--spent-today <wei>]` | Submit an Intent under a policyId (DELAYED / VETO_REQUIRED only; IMMEDIATE reverts `IMMEDIATE_NO_QUEUE_NEEDED`). Submits the tx and reports the tx hash — it does NOT parse the `Enqueued` event for you. Fetch the execId yourself (see below). | `sentry queue:enqueue ./intent.json 0xb4bd701e…` |
-| `sentry queue:dispatch <execId> [--execute]` | Transition Pending → Committed; with `--execute`, also send the returned Intent from the caller wallet. | `sentry queue:dispatch 42 --execute` |
-| `sentry queue:veto <execId> <reason>` | Policy owner cancels with a ≤32-byte reason (right-padded). Reverts if caller isn't owner or record is terminal. | `sentry queue:veto 42 "owner-reject-bad-call"` |
-| `sentry queue:expire <execId>` | Permissionless GC after `deadline`. Reverts if still in window or already terminal. | `sentry queue:expire 42` |
+| `ward compile <path>` | Compile `POLICY.md` → canonical `PolicyInput` JSON. No RPC, no wallet. Validates schema (reserved targets, oversized labels, bad selectors). | `ward compile ./POLICY.md` |
+| `ward push <path> [--label <name>]` | Compile + publish (or update) on-chain under `(wallet, label)`; auto-detects publish vs. update via `policyOwner`. Prints tx hash + `OK · policyId = 0x…`. | `ward push ./POLICY.md --label my-agent` |
+| `ward policyid <label> [--publisher <addr>]` | Pure helper — compute the deterministic `policyId` for `(publisher, label)` without RPC. Useful to hardcode `POLICY_ID` BEFORE publish. | `ward policyid my-agent --publisher 0xAbCd…` |
+| `ward inspect <intent.json>` | Pretty-print an Intent JSON, decode `data` against known ABIs, sanity-check `selector == data[0:4]`. | `ward inspect ./intent.json` |
+| `ward lint <path> [--abi <path>] [--oracle <addr>] [--rpc <url>] [--policy-id <id>] [--fail-on <rules>] [--json]` | Lint POLICY.md for common Ward integration mistakes (8 rules). | `ward lint ./POLICY.md --abi out/MyAgent.sol/MyAgent.json` |
+| `ward policy:init --abi <path> --target <addr> [--profile strict\|balanced\|aggressive] [--expires <iso>]` | Generate a starter POLICY.md from a contract ABI. | `ward policy:init --abi out/MyAgent.sol/MyAgent.json --target 0xAbCd…` |
+| `ward analyze:gate <path> [--json]` | Static check that every dispatch in an agent contract is gated by `wardGuarded(...)`, `_wardCheck(...)`, or `WardCall.check(...)`. | `ward analyze:gate src/MyAgent.sol` |
+| `ward ai:init [--cursor] [--claude] [--codex] [--all] [--force]` | Regenerate Cursor / Claude / Codex (AGENTS.md) context files from this SKILL.md. | `ward ai:init --codex --force` |
+| `ward preflight [--min-balance <eth>]` | Verify env (PK shape, platform, agentId, oracle/queue), reach Somnia RPC, fetch chainId + STT balance. Exit 0 if ready, 1 otherwise. | `ward preflight --min-balance 0.5` |
+| `ward tui [--json]` | Open the full-screen Ink queue monitor; `--json` streams NDJSON events to stdout instead. | `ward tui --json \| jq` |
+| `ward queue:status <execId>` | Cheap header read (skips `intent.data`): `state`, `tier`, `policyId`, `asker`, `target`, `selector`, `value`, `enqueuedAt`, `earliestCommitAt`, `deadline`. | `ward queue:status 42` |
+| `ward queue:handoff <execId>` (alias `handoff`) | Print operator handoff guidance for a queued execution (including the agent-side `dispatchQueued(uint256)` wrapper when the ABI exposes it). | `ward queue:handoff 42 --agent 0xAbCd… --abi out/MyAgent.sol/MyAgent.json` |
+| `ward queue:enqueue <intent.json> <policyId> [--spent-today <wei>]` | Submit an Intent under a policyId (DELAYED / VETO_REQUIRED only; IMMEDIATE reverts `IMMEDIATE_NO_QUEUE_NEEDED`). Submits the tx and reports the tx hash — it does NOT parse the `Enqueued` event for you. Fetch the execId yourself (see below). | `ward queue:enqueue ./intent.json 0xb4bd701e…` |
+| `ward queue:dispatch <execId> [--execute]` | Transition Pending → Committed; with `--execute`, also send the returned Intent from the caller wallet. | `ward queue:dispatch 42 --execute` |
+| `ward queue:veto <execId> <reason>` | Policy owner cancels with a ≤32-byte reason (right-padded). Reverts if caller isn't owner or record is terminal. | `ward queue:veto 42 "owner-reject-bad-call"` |
+| `ward queue:expire <execId>` | Permissionless GC after `deadline`. Reverts if still in window or already terminal. | `ward queue:expire 42` |
 
 Typical first-publish flow:
 
 ```bash
-sentry preflight                          # verify env + balance
-sentry compile ./POLICY.md                # local validation
-sentry policyid my-agent                  # precompute id (paste into agent)
-sentry push ./POLICY.md --label my-agent  # ship; confirm policyId matches
+ward preflight                          # verify env + balance
+ward compile ./POLICY.md                # local validation
+ward policyid my-agent                  # precompute id (paste into agent)
+ward push ./POLICY.md --label my-agent  # ship; confirm policyId matches
 ```
 
 **Verify the precomputed `policyId` matches the published one.** If they differ, stop — something is wrong with label encoding.
@@ -207,7 +207,7 @@ Enforce-mode publish (8 steps):
 4. **Fill identity.** `policy name`, `short id` (label, ≤32 bytes), `daily limit` (e.g. `1 ether`), `valid until`. Replace placeholder `0x0000…0000` target with your real contract address — compile check (green ✓ / red ✗) blocks publish until valid.
 5. **Tune selectors.** Per row: function signature like `transfer(address,uint256)`, approval mode (`IMMEDIATE` / `DELAYED` / `VETO_REQUIRED`), `valueCapPerCall`, `delaySeconds`.
 6. **Preview with `IntentSimulator`** (below publish button) — paste target+selector+value, see what `checkIntent` would return.
-7. **Click "publish policy"** → wallet prompts for `publishPolicy(PolicyInput)` on `SentryOracle`. ~10s on Shannon.
+7. **Click "publish policy"** → wallet prompts for `publishPolicy(PolicyInput)` on `WardOracle`. ~10s on Shannon.
 8. **Reveal panel** (`PublishedReveal`) shows `bytes32 POLICY_ID = 0x…` (copy as Solidity constant), downloadable `.md`, and updates URL to `?revealed=<policyId>` (shareable; hydrates via cache → EventStore → `lookupPolicyOnChain`).
 
 ---
@@ -217,14 +217,14 @@ Enforce-mode publish (8 steps):
 ABI cheatsheet:
 
 ```solidity
-// SentryOracle (pure view)
+// WardOracle (pure view)
 function checkIntent(bytes32 policyId, Intent calldata intent, uint256 spentToday)
     external view returns (bool ok, bytes32 reason);
 function policyOwner(bytes32 policyId) external view returns (address);
 function policyHealth(bytes32 policyId) external view returns (bool paused, uint64 expiresAt);
 // reverts PolicyNotFound() if never published
 
-// SentryQueue (no custody)
+// WardQueue (no custody)
 function enqueue(bytes32 policyId, Intent calldata intent, uint256 spentToday)
     external returns (uint256 execId);
 function dispatch(uint256 execId) external returns (Intent memory intent);  // asker- or owner-only by tier
@@ -255,7 +255,7 @@ struct Intent {
 `spentToday` (third arg to `checkIntent`) — two valid patterns:
 
 - **Stateless**: pass `0`. Safe when the agent only ever fires `value: 0` calls (so the daily cap never bites), or when the agent fires one call per day. Cheapest.
-- **Stateful**: keep `mapping(uint64 => uint256) _sentryDailySpent;` keyed by `uint64(block.timestamp / 1 days)`, pass that value to `checkIntent`, bump it by `intent.value` after a successful dispatch. Use this whenever your policy can carry native value.
+- **Stateful**: keep `mapping(uint64 => uint256) _wardDailySpent;` keyed by `uint64(block.timestamp / 1 days)`, pass that value to `checkIntent`, bump it by `intent.value` after a successful dispatch. Use this whenever your policy can carry native value.
 
 **`dailySpendWeiCap: "0"` does NOT mean "no daily cap" — it BLOCKS all native spending under the policy.** The cap is always enforced; `0` means only calls with `intent.value == 0` pass (any `intent.value > 0` returns `(false, "DAILY_CAP")`). Same rule applies per-selector: `valueCapPerCall: "0"` blocks any call carrying msg.value > 0. To get effectively "no cap", set a ceiling well above any plausible spend, e.g. `dailySpendWeiCap: "1000 ether"`.
 
@@ -270,16 +270,16 @@ Drop into a new file; replace `target`, `DO_SELECTOR`, `DELAYED_SELECTOR`, and `
 pragma solidity 0.8.26;
 
 /// Remappings required in foundry.toml:
-///   remappings = ["sentry-somnia/=lib/sentry-somnia/contracts/src/"]
+///   remappings = ["ward/=lib/ward/contracts/src/"]
 /// Add as forge dep:
-///   forge install <user>/sentry-somnia
-import "sentry-somnia/SentryOracle.sol";
-import "sentry-somnia/SentryQueue.sol";
-import "sentry-somnia/PolicyTypes.sol";
+///   forge install <user>/ward
+import "ward/WardOracle.sol";
+import "ward/WardQueue.sol";
+import "ward/PolicyTypes.sol";
 
 contract MyAgent {
-    SentryOracle public immutable oracle;
-    SentryQueue  public immutable queue;        // omit if you never queue
+    WardOracle public immutable oracle;
+    WardQueue  public immutable queue;        // omit if you never queue
     bytes32      public immutable POLICY_ID;
     address      public immutable target;
     address      public immutable owner;
@@ -302,7 +302,7 @@ contract MyAgent {
         _;
     }
 
-    constructor(SentryOracle _oracle, SentryQueue _queue, bytes32 _policyId, address _target) {
+    constructor(WardOracle _oracle, WardQueue _queue, bytes32 _policyId, address _target) {
         oracle = _oracle;
         queue = _queue;
         POLICY_ID = _policyId;
@@ -373,7 +373,7 @@ contract MyAgent {
 }
 ```
 
-For an LLM-driven async-callback agent (Somnia platform `createRequest` → `handleResponse` → Sentry gate → dispatch), the integration is identical: build the `Intent` inside `handleResponse` (after asserting `msg.sender == address(PLATFORM)`), call `oracle.checkIntent`, then dispatch yourself. No code in this repo ships an LLM sample; the integration surface is the same five lines as the canonical template above.
+For an LLM-driven async-callback agent (Somnia platform `createRequest` → `handleResponse` → Ward gate → dispatch), the integration is identical: build the `Intent` inside `handleResponse` (after asserting `msg.sender == address(PLATFORM)`), call `oracle.checkIntent`, then dispatch yourself. No code in this repo ships an LLM sample; the integration surface is the same five lines as the canonical template above.
 
 ### 6.1 Self-perpetuating loop pattern
 
@@ -392,14 +392,14 @@ Wrap the self-kickoff in `try/catch` so a platform-side revert flips `paused` in
 
 The template in §6 declares `bytes32 public immutable POLICY_ID`, which is correct when you publish the policy BEFORE deploying the agent. For greenfield work the more ergonomic shape is a **mutable** `POLICY_ID` that the owner binds later — you can ship the agent to testnet, exercise it ungated, and add gating once you've figured out the right policy. The same lever doubles as an emergency kill-switch and a no-redeploy migration path.
 
-The canonical dual-layer shape (full source: `examples/sentry-counter/src/CounterAgent.sol`):
+The canonical dual-layer shape (full source: `examples/ward-counter/src/CounterAgent.sol`):
 
 ```solidity
-import "sentry-somnia/SentryOracle.sol";
-import "sentry-somnia/integration/SentryAgentBase.sol";
+import "ward/WardOracle.sol";
+import "ward/integration/WardAgentBase.sol";
 import {Counter} from "./Counter.sol";
 
-contract MyAgent is SentryAgentBase {
+contract MyAgent is WardAgentBase {
     Counter public immutable counter;
 
     /// Caller allow-list. Owner-managed; independent of POLICY_ID.
@@ -414,15 +414,15 @@ contract MyAgent is SentryAgentBase {
         _;
     }
 
-    constructor(SentryOracle _oracle, Counter _counter, address _owner)
-        SentryAgentBase(_oracle, _owner)
+    constructor(WardOracle _oracle, Counter _counter, address _owner)
+        WardAgentBase(_oracle, _owner)
     {
         counter = _counter;
         // Owner bootstrapped as the initial operator so the deployer can
         // call entrypoints immediately. No POLICY_ID required at deploy —
         // inherited mutable slot starts at bytes32(0) and the
-        // sentryGuarded modifier short-circuits while unbound, so the
-        // agent ships ungated by Sentry (caller allow-list still applies).
+        // wardGuarded modifier short-circuits while unbound, so the
+        // agent ships ungated by Ward (caller allow-list still applies).
         isOperator[_owner] = true;
         emit OperatorAdded(_owner, address(0));
     }
@@ -435,57 +435,57 @@ contract MyAgent is SentryAgentBase {
         if (isOperator[op]) { isOperator[op] = false; emit OperatorRemoved(op, msg.sender); }
     }
 
-    /// Modifier order is deliberate: `onlyOperator sentryGuarded(...)`.
+    /// Modifier order is deliberate: `onlyOperator wardGuarded(...)`.
     /// Solidity runs modifiers left-to-right, so the cheap Solidity ACL
     /// check fires FIRST — non-operators revert with NotOperator before
     /// the oracle staticcall happens, saving gas on doomed calls.
     function doThing(uint256 by)
         external
         onlyOperator
-        sentryGuarded(this.doThing.selector, 0)
+        wardGuarded(this.doThing.selector, 0)
     {
         counter.bump(by);
     }
 }
 ```
 
-`SentryAgentBase` (see `contracts/src/integration/SentryAgentBase.sol`)
+`WardAgentBase` (see `contracts/src/integration/WardAgentBase.sol`)
 gives you the mutable `POLICY_ID` slot, `owner` + `onlyOwner` +
 `transferOwnership`, `setPolicyId` with `PolicyBound` events, and the
 spend tracker — so the per-agent boilerplate collapses to a constructor
 and the modifier-tagged entrypoint(s). For multi-outbound flows that need
-per-outbound gating, drop the modifier and call `_sentryCheck` + `_call`
+per-outbound gating, drop the modifier and call `_wardCheck` + `_call`
 directly.
 
-#### Layering Solidity access control on top of Sentry
+#### Layering Solidity access control on top of Ward
 
-`onlyOperator` and `sentryGuarded` are **orthogonal** access-control
+`onlyOperator` and `wardGuarded` are **orthogonal** access-control
 layers — each one answers a different question and neither subsumes the
 other:
 
 - **`onlyOperator` answers *who can call this?***. It's plain Solidity. A
   `mapping(address => bool)` registry the `owner` manages with
-  `addOperator` / `removeOperator`. Sentry policies have NO visibility
+  `addOperator` / `removeOperator`. Ward policies have NO visibility
   into `msg.sender`, so caller-identity ACLs must live at the Solidity
   layer.
-- **`sentryGuarded` answers *is this call allowed by the policy?***. It
-  staticcalls `SentryOracle.checkSelector(POLICY_ID, address(this),
-  selector, value, spentToday)` and reverts with `SentryRejected(reason)`
+- **`wardGuarded` answers *is this call allowed by the policy?***. It
+  staticcalls `WardOracle.checkSelector(POLICY_ID, address(this),
+  selector, value, spentToday)` and reverts with `WardRejected(reason)`
   if the oracle says no. It enforces what the *agent* can do, regardless
   of who triggered it.
 
-**Modifier order matters.** Write them as `onlyOperator sentryGuarded(...)`.
+**Modifier order matters.** Write them as `onlyOperator wardGuarded(...)`.
 Solidity executes modifiers left-to-right, so the cheap Solidity check
 fires FIRST — non-operators revert with `NotOperator` *before* the agent
 makes the external oracle call, saving gas on doomed calls. Reversing the
-order to `sentryGuarded(...) onlyOperator` is functionally broken in two
-ways: (a) under an unbound `POLICY_ID == 0x0` the `sentryGuarded`
+order to `wardGuarded(...) onlyOperator` is functionally broken in two
+ways: (a) under an unbound `POLICY_ID == 0x0` the `wardGuarded`
 short-circuit lets the call reach `onlyOperator` either way, masking the
 order regression in any unbound-path test; (b) under a *bound* rejecting
 policy, the same unauthorized-caller call would revert
-`SentryRejected("SELECTOR_NOT_ALLOWED")` instead of `NotOperator`,
+`WardRejected("SELECTOR_NOT_ALLOWED")` instead of `NotOperator`,
 silently swapping the two layers' jobs. The dual-layer tests in
-`examples/sentry-counter/test/CounterAgentLateBinding.t.sol` pin a bound
+`examples/ward-counter/test/CounterAgentLateBinding.t.sol` pin a bound
 + unauthorized variant for exactly this reason.
 
 The operator registry is **independent of ownership** — `transferOwnership`
@@ -497,13 +497,13 @@ Three operational primitives the pattern unlocks:
 | Action | Call | Effect |
 |---|---|---|
 | Bind | `setPolicyId(0xPOLICY)` | Agent becomes gated against `0xPOLICY`. |
-| Emergency kill-switch | `setPolicyId(bytes32(0))` | Agent instantly returns to ungated. Use when Sentry misfires. |
+| Emergency kill-switch | `setPolicyId(bytes32(0))` | Agent instantly returns to ungated. Use when Ward misfires. |
 | Migrate | `setPolicyId(0xNEW)` | Swap to a new policyId without redeploying. |
 
 **Trust caveat.** A mutable `POLICY_ID` means the agent's behavior can change AFTER users have interacted with it — a rebind or unbind is a single transaction signed by `owner`. The pattern intentionally mitigates this by:
 
 1. Emitting `PolicyBound(newPolicyId, oldPolicyId, by)` on EVERY change so external observers can detect rebinds.
-2. Exposing `POLICY_ID()` as a public view so the dashboard WatchWizard surfaces the **current** binding in its Step 2 discovery report (a non-zero binding shows the bound policy; `0x0` shows "agent is ungated — calls run without Sentry").
+2. Exposing `POLICY_ID()` as a public view so the dashboard WatchWizard surfaces the **current** binding in its Step 2 discovery report (a non-zero binding shows the bound policy; `0x0` shows "agent is ungated — calls run without Ward").
 
 If your threat model requires immutable bindings (e.g. the agent custodies user funds and policy stability is part of the trust assumption), keep `POLICY_ID` `immutable` as in the §6 template. Otherwise prefer the late-binding shape — it makes both the iteration loop and the emergency response materially cleaner.
 
@@ -521,46 +521,46 @@ CLI:
 
 | Command | Purpose |
 |---|---|
-| `sentry queue:status <execId>` | Cheap header read (skips `intent.data`): `state`, `tier`, `policyId`, `asker`, `target`, `selector`, `value`, `enqueuedAt`, `earliestCommitAt`, `deadline`. |
-| `sentry queue:enqueue <intent.json> <policyId> [--spent-today <wei>]` | Submit an Intent under a policyId (DELAYED / VETO_REQUIRED only; IMMEDIATE reverts `IMMEDIATE_NO_QUEUE_NEEDED`). Submits the tx and reports the tx hash — it does NOT parse the `Enqueued` event for you. Fetch the execId yourself (see below). |
-| `sentry queue:dispatch <execId> [--execute]` | Transition Pending → Committed; with `--execute`, also send the returned Intent from the caller wallet. |
-| `sentry queue:veto <execId> <reason>` | Policy owner cancels with a ≤32-byte reason (right-padded). Reverts if caller isn't owner or record is terminal. |
-| `sentry queue:expire <execId>` | Permissionless GC after `deadline`. Reverts if still in window or already terminal. |
+| `ward queue:status <execId>` | Cheap header read (skips `intent.data`): `state`, `tier`, `policyId`, `asker`, `target`, `selector`, `value`, `enqueuedAt`, `earliestCommitAt`, `deadline`. |
+| `ward queue:enqueue <intent.json> <policyId> [--spent-today <wei>]` | Submit an Intent under a policyId (DELAYED / VETO_REQUIRED only; IMMEDIATE reverts `IMMEDIATE_NO_QUEUE_NEEDED`). Submits the tx and reports the tx hash — it does NOT parse the `Enqueued` event for you. Fetch the execId yourself (see below). |
+| `ward queue:dispatch <execId> [--execute]` | Transition Pending → Committed; with `--execute`, also send the returned Intent from the caller wallet. |
+| `ward queue:veto <execId> <reason>` | Policy owner cancels with a ≤32-byte reason (right-padded). Reverts if caller isn't owner or record is terminal. |
+| `ward queue:expire <execId>` | Permissionless GC after `deadline`. Reverts if still in window or already terminal. |
 
 Per-command example + common failure:
 
 ```bash
 # queue:status — read a known execId
-sentry queue:status 42
+ward queue:status 42
 # common failure: "Pending=false, state=Vetoed" → it's already terminal; can't dispatch.
 
 # queue:enqueue — submit an Intent. Does NOT print execId.
-sentry queue:enqueue ./intent.json 0xb4bd701e2eee… --spent-today 0
+ward queue:enqueue ./intent.json 0xb4bd701e2eee… --spent-today 0
 # common failure: "IMMEDIATE_NO_QUEUE_NEEDED" → that (target, selector) is IMMEDIATE tier; don't queue, call directly.
 
 # queue:dispatch — commit a pending execId, optionally execute
-sentry queue:dispatch 42 --execute
+ward queue:dispatch 42 --execute
 # common failure: "NotYetCommittable" → block.timestamp < earliestCommitAt; wait out delaySeconds.
 
 # queue:veto — policy owner cancels with a short reason
-sentry queue:veto 42 "owner-reject-bad-call"
+ward queue:veto 42 "owner-reject-bad-call"
 # common failure: "NotPolicyOwner" → connected wallet isn't the publisher of policyId.
 
 # queue:expire — anyone, after deadline
-sentry queue:expire 42
+ward queue:expire 42
 # common failure: "NotYetExpired" → still within the 7-day COMMIT_WINDOW_SECONDS.
 ```
 
 **Fetching execId after `queue:enqueue`** — three ways:
 
 1. **Dashboard** — open the Queue tab; the new row shows up under Pending with the execId column.
-2. **`cast logs`** — scan the `Enqueued` event from the enqueue tx forward. The on-chain signature (see `contracts/src/SentryQueue.sol:65`) is:
+2. **`cast logs`** — scan the `Enqueued` event from the enqueue tx forward. The on-chain signature (see `contracts/src/WardQueue.sol:65`) is:
    ```
    Enqueued(uint256 indexed execId, bytes32 indexed policyId, address indexed asker, uint8 tier, uint64 earliestCommitAt, uint64 deadline, bytes32 calldataHash)
    ```
    `execId`, `policyId`, and `asker` are the three indexed topics; `tier`, `earliestCommitAt`, `deadline`, and `calldataHash` live in the non-indexed data. Query:
    ```bash
-   cast logs --address $SENTRY_QUEUE \
+   cast logs --address $WARD_QUEUE \
      --from-block <enqueue-tx-block> --to-block latest \
      "Enqueued(uint256,bytes32,address,uint8,uint64,uint64,bytes32)"
    ```
@@ -579,7 +579,7 @@ Dashboard equivalent: **Queue** tab — Pending list, click row to expand (polic
 
 Source: `dashboard/src/components/QueueTab.tsx`.
 
-For the operator-facing TUI (`sentry tui`), keybindings, NDJSON streaming, and the full op workflow, see [§23 Operating the queue](#23-operating-the-queue--tui--dashboard).
+For the operator-facing TUI (`ward tui`), keybindings, NDJSON streaming, and the full op workflow, see [§23 Operating the queue](#23-operating-the-queue--tui--dashboard).
 
 ---
 
@@ -590,8 +590,8 @@ End state: a watch-mode policy is bound to an agent address; the dashboard polls
 **Canonical onboarding path (v0.10.0+): Watch Wizard.** Open the dashboard and go to `?tab=watch-wizard` (served by `dashboard/src/pages/WatchWizardPage.tsx`) — a 3-step paste-discover-publish flow that turns any deployed Somnia agent address into a published policy + saved Slack webhook in under 60 seconds:
 
 1. **Paste the deployed agent address.** The wizard pre-fills if you arrived via a deep-link (`?address=…&tab=watch-wizard`) — e.g. from the Agents catalog's "Watch in wizard" button.
-2. **Discover** runs `dashboard/src/lib/discovery.ts` — pure read-only chain probes (~7 RPC happy-path / ~20 worst-case). Detects EOA vs contract, ERC-165 / ERC-20 / ERC-721 fingerprints, and the Sentry-aware signal (via `SentryAgentRegistry.AgentRegistered` + `SentryQueue.Enqueued` topic-filtered logs, chunked at 999 blocks). Step 2 surfaces the **honest mode banner** — real-time gating for Sentry-aware agents, observation-only for everyone else.
-3. **Pick a deterministic policy tier** — `CONSERVATIVE` / `BALANCED` / `AGGRESSIVE`, computed by `dashboard/src/lib/policy-recommender.ts` (pure, byte-identical output for a given `(report, nowSec)`). Then publish + register in `SentryAgentRegistry` + save Slack webhook + send a test alert. Webhook URLs are stored in IDB as operator secrets, password-typed input, never logged in full.
+2. **Discover** runs `dashboard/src/lib/discovery.ts` — pure read-only chain probes (~7 RPC happy-path / ~20 worst-case). Detects EOA vs contract, ERC-165 / ERC-20 / ERC-721 fingerprints, and the Ward-aware signal (via `WardAgentRegistry.AgentRegistered` + `WardQueue.Enqueued` topic-filtered logs, chunked at 999 blocks). Step 2 surfaces the **honest mode banner** — real-time gating for Ward-aware agents, observation-only for everyone else.
+3. **Pick a deterministic policy tier** — `CONSERVATIVE` / `BALANCED` / `AGGRESSIVE`, computed by `dashboard/src/lib/policy-recommender.ts` (pure, byte-identical output for a given `(report, nowSec)`). Then publish + register in `WardAgentRegistry` + save Slack webhook + send a test alert. Webhook URLs are stored in IDB as operator secrets, password-typed input, never logged in full.
 
 After the wizard runs, the saved subscription appears in the **Watched tab's** `Subscriptions` section (`id="subscriptions"`) with mask + tier badge + Replace/Remove.
 
@@ -621,7 +621,7 @@ Selectors resolve via (a) verified-source ABI from Shannon explorer if available
 
 ---
 
-## 9. Deploy your own Sentry (advanced)
+## 9. Deploy your own Ward (advanced)
 
 For private oracles, custom chains, or forks of policy semantics. Skip this if you're on Shannon — use the canonical addresses.
 
@@ -645,16 +645,16 @@ forge script script/Deploy.s.sol \
 The script (`contracts/script/Deploy.s.sol`):
 
 1. Reads `DEPLOYER_PK` from env, asserts balance ≥ 0.1 ether.
-2. Deploys `SentryOracle`, then `SentryQueue(oracle)`.
-3. Writes `{chainId, sentryOracle, sentryQueue, deployer, deployedAt}` to `contracts/deployments/$CHAINID.json`.
+2. Deploys `WardOracle`, then `WardQueue(oracle)`.
+3. Writes `{chainId, wardOracle, wardQueue, deployer, deployedAt}` to `contracts/deployments/$CHAINID.json`.
 
 Wire downstream tools:
 
 ```bash
-export SENTRY_ORACLE=0x…   # from deployments/$CHAINID.json
-export SENTRY_QUEUE=0x…
+export WARD_ORACLE=0x…   # from deployments/$CHAINID.json
+export WARD_QUEUE=0x…
 # Optional for TUI backfill bounds:
-# SENTRY_ORACLE_DEPLOY_BLOCK, SENTRY_QUEUE_LOOKBACK_BLOCKS
+# WARD_ORACLE_DEPLOY_BLOCK, WARD_QUEUE_LOOKBACK_BLOCKS
 ```
 
 **Shannon-specific flags (critical):**
@@ -689,19 +689,19 @@ Compiler settings pinned in `foundry.toml`: `solc 0.8.26`, `evm_version = shangh
 
 ## 11. Gotchas (production-critical)
 
-1. **Shannon gas multiplier — every CREATE OOGs without it.** Deploy with `--legacy --gas-estimate-multiplier 2000`; viem: `type: "legacy"` + explicit `gas`. Full Sentry deploy is ~0.2–0.3 STT.
+1. **Shannon gas multiplier — every CREATE OOGs without it.** Deploy with `--legacy --gas-estimate-multiplier 2000`; viem: `type: "legacy"` + explicit `gas`. Full Ward deploy is ~0.2–0.3 STT.
 
 2. **`spentToday` tracks NATIVE value only, not ERC20 amounts.** `DAILY_CAP` checks `intent.value` (wei). ERC20 size limits must be enforced by the asker (`require(amountIn <= MAX)` pre-gate) or by routing the selector through `TIER_DELAYED`.
 
-3. **DELAYED is async — `checkIntent` returns `REQUIRES_DELAY`; you must enqueue and someone must come back to dispatch.** Sentry never executes. Flow: `enqueue` → wait `delaySeconds` → `dispatch(execId)` → execute the returned `Intent` yourself.
+3. **DELAYED is async — `checkIntent` returns `REQUIRES_DELAY`; you must enqueue and someone must come back to dispatch.** Ward never executes. Flow: `enqueue` → wait `delaySeconds` → `dispatch(execId)` → execute the returned `Intent` yourself.
 
 4. **DELAYED dispatcher = original `asker`; VETO_REQUIRED dispatcher = current `policyOwner` (NOT the asker).** For VETO_REQUIRED, "no veto" alone doesn't ship; the owner must call `dispatch`. If the policy owner is a multisig with no execution path into the agent, VETO dispatches revert — prefer DELAYED unless that path is wired.
 
-5. **Mid-flight policy NARROWING does NOT cancel queued intents.** `SentryQueue.dispatch` only re-checks pause + expiry; it does NOT re-validate value caps, daily spend, or target/selector allowlist. Tighten policy → queued intent ships with the LOOSER pre-update validation. Mitigation: pause the policy while tightening + veto in-flight intents.
+5. **Mid-flight policy NARROWING does NOT cancel queued intents.** `WardQueue.dispatch` only re-checks pause + expiry; it does NOT re-validate value caps, daily spend, or target/selector allowlist. Tighten policy → queued intent ships with the LOOSER pre-update validation. Mitigation: pause the policy while tightening + veto in-flight intents.
 
 6. **`updatePolicy` has NO timelock.** Pinning a `policyId` does not protect against in-place edits. Mitigations: never call `updatePolicy` (publish a new label), subscribe to `PolicyUpdated`, or wrap `policyOwner` in a timelock-multisig.
 
-7. **`spentToday` is tracked by the asker, NOT Sentry.** A buggy asker that under-reports defeats `DAILY_CAP`. Use `_dailySpent[uint64(block.timestamp / 1 days)]` and increment after the gate passes.
+7. **`spentToday` is tracked by the asker, NOT Ward.** A buggy asker that under-reports defeats `DAILY_CAP`. Use `_dailySpent[uint64(block.timestamp / 1 days)]` and increment after the gate passes.
 
 8. **Veto/expire does NOT auto-rollback `spentToday`.** The template tallies at enqueue; vetoed or expired intents leak budget until UTC midnight. Production fix: store `(enqueueDay, enqueueAmount)` per `execId` and roll back on hook.
 
@@ -709,7 +709,7 @@ Compiler settings pinned in `foundry.toml`: `solc 0.8.26`, `evm_version = shangh
 
 10. **`COMMIT_WINDOW_SECONDS = 7 days` is hard-coded.** A queued intent not dispatched within 7 days of `earliestCommitAt` is past deadline; anyone may then call `expireIfStale(execId)`.
 
-11. **`SentryQueue.enqueue` is open to ANY caller — no asker allow-list per policy.** Worst case for DELAYED is queue noise (only the hostile enqueuer can dispatch). For VETO_REQUIRED hostile enqueues are inert unless the owner ratifies. Operators should filter `Enqueued` events by `asker`.
+11. **`WardQueue.enqueue` is open to ANY caller — no asker allow-list per policy.** Worst case for DELAYED is queue noise (only the hostile enqueuer can dispatch). For VETO_REQUIRED hostile enqueues are inert unless the owner ratifies. Operators should filter `Enqueued` events by `asker`.
 
 12. **Swap-first reorder pattern — gate BEFORE approve.** Approving the router pre-gate leaves a live allowance on rejection. Run `checkIntent` first; approve + swap only as an atomic pair after both gates pass. If approve-first is unavoidable, reset to 0 on rejection or use permit.
 
@@ -719,7 +719,7 @@ Compiler settings pinned in `foundry.toml`: `solc 0.8.26`, `evm_version = shangh
 
 15. **LLM callback fires async (~5–90s) and `msg.sender` is the platform contract.** Guard the callback: `require(msg.sender == address(PLATFORM))`.
 
-16. **`SentryQueue.dispatch` returns the `Intent` — it does NOT execute the call.** Caller performs `target.call{value: i.value}(i.data)`. Double-dispatch reverts `NotPending`.
+16. **`WardQueue.dispatch` returns the `Intent` — it does NOT execute the call.** Caller performs `target.call{value: i.value}(i.data)`. Double-dispatch reverts `NotPending`.
 
 17. **`Intent` struct field ordering is load-bearing.** Match `PolicyTypes.sol` exactly — the oracle decodes positionally.
 
@@ -727,7 +727,7 @@ Compiler settings pinned in `foundry.toml`: `solc 0.8.26`, `evm_version = shangh
 
 19. **Compromised policy-owner key = full bypass.** Owner can `updatePolicy`, `veto` legitimate intents, or `pause`. Deploy policy from a multisig, or use the two-step `transferPolicyOwnership` / `acceptPolicyOwnership` flow.
 
-20. **Sentry has no `nonReentrant` guards and holds no funds.** Reentrancy safety on the target call lives in your agent.
+20. **Ward has no `nonReentrant` guards and holds no funds.** Reentrancy safety on the target call lives in your agent.
 
 21. **Policy caps: `MAX_TARGETS = 20`, `MAX_SELECTORS_PER_TARGET = 10`.** Larger policies revert at publish — they do not silently truncate.
 
@@ -735,19 +735,19 @@ Compiler settings pinned in `foundry.toml`: `solc 0.8.26`, `evm_version = shangh
 
 23. **`PolicyLib.validate` precedence is fixed and property-tested.** See §10 reason-codes table — fix violations in that order.
 
-24. **Sentry does NOT defend against prompt injection or MEV.** A jailbroken LLM producing policy-valid calldata sails through. Keep policies narrow; the contract validates calldata shape, not intent. MEV/ordering on the dispatch tx is also out of scope.
+24. **Ward does NOT defend against prompt injection or MEV.** A jailbroken LLM producing policy-valid calldata sails through. Keep policies narrow; the contract validates calldata shape, not intent. MEV/ordering on the dispatch tx is also out of scope.
 
-25. **Sentry contracts are unaudited.** Solidity 0.8.26, manual review only. Lean 4 covers 10 theorems (no `sorry`): 5 `PolicyLib.validate` precedence/monotonicity, 3 `SentryQueue` state machine, 2 `SentryOracle` ownership handoff. Solidity has no symbolic / Halmos / Echidna coverage. Do not place high-value flows behind it without independent review.
+25. **Ward contracts are unaudited.** Solidity 0.8.26, manual review only. Lean 4 covers 10 theorems (no `sorry`): 5 `PolicyLib.validate` precedence/monotonicity, 3 `WardQueue` state machine, 2 `WardOracle` ownership handoff. Solidity has no symbolic / Halmos / Echidna coverage. Do not place high-value flows behind it without independent review.
 
 26. **`dispatchQueued`-style wrappers should be `onlyOwner` of the agent, distinct from the policy owner.** Same address is fine; the access-control surfaces are independent.
 
-27. **`policyId = keccak256(abi.encode(publisher, label))` and is STABLE across edits.** Once you hardcode `POLICY_ID` into your agent, `sentry push` to the same `(wallet, label)` runs `updatePolicy` under the hood — the id stays valid, the rules change in place. Changing the **label** or pushing from a **different publisher wallet** produces a new id; editing fields inside the policy does not — no content-hash migration to perform. (See `contracts/src/SentryOracle.sol:43,45` and `cli/src/cmd/policy.ts:100`.)
+27. **`policyId = keccak256(abi.encode(publisher, label))` and is STABLE across edits.** Once you hardcode `POLICY_ID` into your agent, `ward push` to the same `(wallet, label)` runs `updatePolicy` under the hood — the id stays valid, the rules change in place. Changing the **label** or pushing from a **different publisher wallet** produces a new id; editing fields inside the policy does not — no content-hash migration to perform. (See `contracts/src/WardOracle.sol:43,45` and `cli/src/cmd/policy.ts:100`.)
 
 28. **Caps in wei, not STT.** The markdown says `"1 ether"` — the compiler normalizes to `10^18` wei. Don't hand-write hex caps.
 
 29. **CLI tier check.** `compile` will reject `delaySeconds > 0` on IMMEDIATE / VETO_REQUIRED with a clear error. If you wrote `delaySeconds: 60` for an IMMEDIATE selector, you probably meant DELAYED.
 
-30. **Lost publisher key?** `transferPolicyOwnership(bytes32 policyId, address newOwner)` on SentryOracle (only current owner; reverts on zero address). Recovery path — no policy re-publish needed.
+30. **Lost publisher key?** `transferPolicyOwnership(bytes32 policyId, address newOwner)` on WardOracle (only current owner; reverts on zero address). Recovery path — no policy re-publish needed.
 
 For a categorized failure-modes lookup with symptom/cause/rule for each common trap, see [§25 Gotchas appendix](#25-gotchas-appendix--failure-modes-lookup).
 
@@ -763,11 +763,11 @@ Before returning code to the user, the LLM MUST confirm every box:
 4. `spentToday[_today()]` is incremented **after** a successful (or queued) gate, and **only** with `intent.value` (native wei). ERC20 amounts are not summed.
 5. Branching on `reason`: `REQUIRES_DELAY` → enqueue path; any other non-empty reason → reject and return (do NOT silently fall through).
 6. `Intent` struct fields are in the exact order `(uint256 agentId, uint256 requestId, address target, bytes4 selector, bytes data, uint256 value, bytes32 promptHash, uint8 taskClass)` per `PolicyTypes.sol:42`.
-7. If using `SentryQueue`, the dispatcher matches the tier: `dispatchQueued` for DELAYED is the **agent itself** (original asker); for VETO_REQUIRED the **policy owner's EOA / multisig** dispatches off-contract.
-8. Compile your agent against a fresh Foundry project that has `remappings = ["sentry-somnia/=lib/sentry-somnia/contracts/src/"]`. `forge build` (not `forge test`) is what catches missing imports. This public repo ships all `src/` code (contracts/src/, sdk/src/, cli/src/, dashboard/src/, examples/*/src/) but gitignores test files (`contracts/test/`, `sdk/tests/`, `cli/tests/`, `dashboard/tests/`, plus any `*.test.ts`/`*.test.tsx`/`*.t.sol` anywhere). `forge test` / `pnpm test` against a fresh public clone reports zero tests; `forge build` and `pnpm build` work normally. The full test suite is reproducible from source on request.
+7. If using `WardQueue`, the dispatcher matches the tier: `dispatchQueued` for DELAYED is the **agent itself** (original asker); for VETO_REQUIRED the **policy owner's EOA / multisig** dispatches off-contract.
+8. Compile your agent against a fresh Foundry project that has `remappings = ["ward/=lib/ward/contracts/src/"]`. `forge build` (not `forge test`) is what catches missing imports. This public repo ships all `src/` code (contracts/src/, sdk/src/, cli/src/, dashboard/src/, examples/*/src/) but gitignores test files (`contracts/test/`, `sdk/tests/`, `cli/tests/`, `dashboard/tests/`, plus any `*.test.ts`/`*.test.tsx`/`*.t.sol` anywhere). `forge test` / `pnpm test` against a fresh public clone reports zero tests; `forge build` and `pnpm build` work normally. The full test suite is reproducible from source on request.
 9. Confirm Intent struct field order + types match `PolicyTypes.sol` exactly. A mismatched type silently mis-encodes calldata.
 10. Every owner-only function (`triggerImmediate`, `triggerDelayed`, `dispatchQueued`, etc.) carries the `onlyOwner` modifier.
-11. Precomputed `policyId` (via `sentry policyid <label>`) matches the published one. If not, label encoding is wrong — stop.
+11. Precomputed `policyId` (via `ward policyid <label>`) matches the published one. If not, label encoding is wrong — stop.
 
 ---
 
@@ -776,7 +776,7 @@ Before returning code to the user, the LLM MUST confirm every box:
 - **Publish on-chain without explicit dev confirmation** including the wallet address that will sign and the testnet/mainnet target. Show the exact tx that will be sent.
 - **Invent caps from thin air.** Pull them from observed patterns in the agent's code (existing rate-limits, max-amount constants) or ask the dev. If you must guess, mark every cap `# TODO: confirm` in the draft.
 - **Draft a policy without first reading the agent's actual code.** No policies from imagination.
-- **Pretend to publish** ("I would have run `sentry push` for you") — either run it for real with confirmation, or hand the dev the exact command and stop.
+- **Pretend to publish** ("I would have run `ward push` for you") — either run it for real with confirmation, or hand the dev the exact command and stop.
 - **Refactor the dev's agent contract beyond the integration diff.** The integration is 3 lines + 2 imports + 1 storage slot. Touch nothing else. No "improvements", gas tweaks, or bug fixes outside the explicit ask.
 
 ---
@@ -819,7 +819,7 @@ The tier and its companion `delaySeconds` are stored per (target, selector) and 
 
 ### IMMEDIATE
 
-Auto-execute. The agent runs the call inline, in the same transaction that asks Sentry for authorization. No coordination, no waiting, no second party.
+Auto-execute. The agent runs the call inline, in the same transaction that asks Ward for authorization. No coordination, no waiting, no second party.
 
 `IMMEDIATE` is the right choice for low-risk, frequent calls — the ones whose damage is already bounded by `valueCapPerCall` and `dailySpendWeiCap`. For these, the structural policy check *is* the entire control: if the intent passes `validate`, it proceeds.
 
@@ -832,11 +832,11 @@ Auto-execute. The agent runs the call inline, in the same transaction that asks 
   delaySeconds: 0
 ```
 
-`IMMEDIATE` calls never touch SentryQueue and emit no Sentry events — they live entirely inside your agent's dispatch transaction.
+`IMMEDIATE` calls never touch WardQueue and emit no Ward events — they live entirely inside your agent's dispatch transaction.
 
 ### DELAYED
 
-Timelock. The agent does not execute inline; it enqueues the request into SentryQueue. After `delaySeconds` have elapsed, the agent (the *asker*) can execute it. During the wait window, the policy owner can `veto` it.
+Timelock. The agent does not execute inline; it enqueues the request into WardQueue. After `delaySeconds` have elapsed, the agent (the *asker*) can execute it. During the wait window, the policy owner can `veto` it.
 
 `DELAYED` buys a reaction window: "if something looks wrong, I can stop it before it lands." It is the middle ground between fully autonomous (`IMMEDIATE`) and fully gated (`VETO_REQUIRED`) — the call still goes through on its own, but not instantly, and a watching owner retains a veto.
 
@@ -880,8 +880,8 @@ The tier is layered on top of `validate` by the oracle's `checkIntent` / `checkS
 | Tier | Gate result |
 |---|---|
 | `IMMEDIATE` | `ok = true` — the agent executes inline. |
-| `DELAYED` | `ok = false`, reason `REQUIRES_DELAY` — route the intent to SentryQueue and wait out `delaySeconds`. |
-| `VETO_REQUIRED` | `ok = false`, reason `REQUIRES_VETO` — route the intent to SentryQueue and wait for the policy owner. |
+| `DELAYED` | `ok = false`, reason `REQUIRES_DELAY` — route the intent to WardQueue and wait out `delaySeconds`. |
+| `VETO_REQUIRED` | `ok = false`, reason `REQUIRES_VETO` — route the intent to WardQueue and wait for the policy owner. |
 
 `ok = false` here is not "denied" in the sense of `VALUE_CAP` or `TARGET_NOT_ALLOWED`. It is "not authorized *inline* — coordinate first." The reason code tells the consumer which coordination path to take. Because the only path to `ok = true` is `IMMEDIATE`, an agent that naively executes on `ok = true` and reverts otherwise cannot accidentally run a `DELAYED` or `VETO_REQUIRED` call without going through the queue.
 
@@ -889,34 +889,34 @@ The tier is layered on top of `validate` by the oracle's `checkIntent` / `checkS
 
 ## 16. Integration models — modifier vs inline picker
 
-Sentry gives an agent contract two on-chain validators and two idiomatic ways to wire a policy gate into your code. **Pick by how many outbound calls a function makes.**
+Ward gives an agent contract two on-chain validators and two idiomatic ways to wire a policy gate into your code. **Pick by how many outbound calls a function makes.**
 
-- **`checkSelector(policyId, target, selector, value, spentToday)`** — a selector-only check. The `sentryGuarded` modifier uses it for the *entrypoint-policy* model: the policy's `target` is the **agent address itself** and its selector list enumerates the agent's **own entrypoints**.
-- **`check(policyId, target, data, value, spentToday)` / `checkIntent(policyId, intent, spentToday)`** — per-call / full-intent checks against a **downstream** target, used by the inline `_sentryCheck` + `_call` path for multi-outbound functions.
+- **`checkSelector(policyId, target, selector, value, spentToday)`** — a selector-only check. The `wardGuarded` modifier uses it for the *entrypoint-policy* model: the policy's `target` is the **agent address itself** and its selector list enumerates the agent's **own entrypoints**.
+- **`check(policyId, target, data, value, spentToday)` / `checkIntent(policyId, intent, spentToday)`** — per-call / full-intent checks against a **downstream** target, used by the inline `_wardCheck` + `_call` path for multi-outbound functions.
 
 ### TL;DR
 
 | Model | When to use | Policy targets |
 | --- | --- | --- |
-| **`sentryGuarded(selector, value)` modifier** | One outbound call per function; gate colocated with the signature. | The **agent's own** address + entrypoint selectors. |
-| **Inline `_sentryCheck` + `_call`** | Multiple outbound calls per function (`approve` + `swap`), per-call intent shapes, or you want to enqueue `REQUIRES_DELAY` on `SentryQueue` instead of reverting. | The **downstream** contracts + their selectors. |
+| **`wardGuarded(selector, value)` modifier** | One outbound call per function; gate colocated with the signature. | The **agent's own** address + entrypoint selectors. |
+| **Inline `_wardCheck` + `_call`** | Multiple outbound calls per function (`approve` + `swap`), per-call intent shapes, or you want to enqueue `REQUIRES_DELAY` on `WardQueue` instead of reverting. | The **downstream** contracts + their selectors. |
 
-Both share the same `POLICY_ID` semantics, the same daily-spend tracker, and the same revert (`SentryRejected(reason)`). You can mix them in one contract.
+Both share the same `POLICY_ID` semantics, the same daily-spend tracker, and the same revert (`WardRejected(reason)`). You can mix them in one contract.
 
-### Model 1 — `sentryGuarded` modifier (the default)
+### Model 1 — `wardGuarded` modifier (the default)
 
 **Use when**: one outbound call per function, and you want the gate on the function signature so a reviewer can't miss it.
 
 The policy is authored against the **agent's own** entrypoint — its `target` is `address(this)` and its selectors are the agent's functions (the *entrypoint-policy* model), so the gate stays stable even as the body's downstream calls evolve.
 
-What the modifier does (`SentryAgentBase.sol`):
+What the modifier does (`WardAgentBase.sol`):
 
 1. If `POLICY_ID == 0`, skip the gate entirely (ungated bootstrap / kill-switch mode).
-2. Otherwise call `oracle.checkSelector(POLICY_ID, address(this), selector, value, _sentrySpentToday())`. If `ok == false`, revert `SentryRejected(reason)`. Non-immediate tiers surface as `SentryRejected("REQUIRES_DELAY")` / `SentryRejected("REQUIRES_VETO")`, so a caller can't slip a delayed/veto selector through.
+2. Otherwise call `oracle.checkSelector(POLICY_ID, address(this), selector, value, _wardSpentToday())`. If `ok == false`, revert `WardRejected(reason)`. Non-immediate tiers surface as `WardRejected("REQUIRES_DELAY")` / `WardRejected("REQUIRES_VETO")`, so a caller can't slip a delayed/veto selector through.
 3. Pre-reserve `value` against the daily-spend tally **before** running the body, so a reentrant call sees the in-flight spend against the cap.
 4. Run the guarded function body.
 
-> Call the downstream with a **high-level** call (`target.act(n)`) inside a `sentryGuarded` body — not `_call(...)`. The modifier already pre-reserved the spend, so routing through `_call` would double-count.
+> Call the downstream with a **high-level** call (`target.act(n)`) inside a `wardGuarded` body — not `_call(...)`. The modifier already pre-reserved the spend, so routing through `_call` would double-count.
 
 #### Why a selector-only check is enough
 
@@ -924,19 +924,19 @@ What the modifier does (`SentryAgentBase.sol`):
 
 #### Bonus: dispatcher = policy owner for VETO_REQUIRED
 
-`SentryOracle.policyOwner(policyId)` returns the policy publisher (or the recipient of a completed `transferPolicyOwnership`). For `TIER_VETO_REQUIRED` selectors enqueued on `SentryQueue`, **only this address can `dispatch`**. The modifier flags this case via `REQUIRES_VETO` and reverts; the caller is responsible for routing through `SentryQueue` if they want the call to eventually land.
+`WardOracle.policyOwner(policyId)` returns the policy publisher (or the recipient of a completed `transferPolicyOwnership`). For `TIER_VETO_REQUIRED` selectors enqueued on `WardQueue`, **only this address can `dispatch`**. The modifier flags this case via `REQUIRES_VETO` and reverts; the caller is responsible for routing through `WardQueue` if they want the call to eventually land.
 
-### Model 2 — inline `_sentryCheck` + `_call` (multi-outbound)
+### Model 2 — inline `_wardCheck` + `_call` (multi-outbound)
 
-**Use when**: one function fires multiple outbound calls (`approve` + `swap`, mint + transfer, settle + sweep), needs per-argument constraints, or you want to enqueue `REQUIRES_DELAY` on `SentryQueue` instead of reverting.
+**Use when**: one function fires multiple outbound calls (`approve` + `swap`, mint + transfer, settle + sweep), needs per-argument constraints, or you want to enqueue `REQUIRES_DELAY` on `WardQueue` instead of reverting.
 
-Keep `SentryAgentBase` for the spend tracker, drop the modifier, and gate each **downstream** call with `_sentryCheck(target, data, value, spentToday)` before each `_call(target, data, value)`. Here the policy lists the downstream contracts as targets; `_sentryCheck` calls `oracle.check(POLICY_ID, target, data, value, spentToday)` under the hood.
+Keep `WardAgentBase` for the spend tracker, drop the modifier, and gate each **downstream** call with `_wardCheck(target, data, value, spentToday)` before each `_call(target, data, value)`. Here the policy lists the downstream contracts as targets; `_wardCheck` calls `oracle.check(POLICY_ID, target, data, value, spentToday)` under the hood.
 
 Three things to note:
 
 1. **Order matters.** When the function fires both a permission (`approve`) and an action (`swap`), gate the riskier call **first** — view-only, no side effect. Approving before gating the swap would leave a live router allowance behind on a swap-side rejection, draining `tokenIn` to whoever can call `router.transferFrom(agent, ...)`. Gate first, mutate state only after every gate passes.
-2. **`REQUIRES_DELAY` is still a revert.** `_sentryCheck` reverts `SentryRejected("REQUIRES_DELAY")` like the modifier. To enqueue on `SentryQueue` instead, call `oracle.checkIntent(...)` directly and branch on the returned `reason` yourself — or use `QueueAgentBase`.
-3. **`spentToday` is yours to manage.** `SentryAgentBase` ships a per-UTC-day tracker (`_sentrySpentToday()`); `_call` pre-reserves `value` before dispatching, so a reentrant call cannot observe the pre-spend budget. For elaborate accounting (tally-at-enqueue for queued intents, partial rollback on veto) drive the spend slot yourself.
+2. **`REQUIRES_DELAY` is still a revert.** `_wardCheck` reverts `WardRejected("REQUIRES_DELAY")` like the modifier. To enqueue on `WardQueue` instead, call `oracle.checkIntent(...)` directly and branch on the returned `reason` yourself — or use `QueueAgentBase`.
+3. **`spentToday` is yours to manage.** `WardAgentBase` ships a per-UTC-day tracker (`_wardSpentToday()`); `_call` pre-reserves `value` before dispatching, so a reentrant call cannot observe the pre-spend budget. For elaborate accounting (tally-at-enqueue for queued intents, partial rollback on veto) drive the spend slot yourself.
 
 ### Mixing models
 
@@ -944,9 +944,9 @@ Gate single-call paths with the modifier, multi-call paths inline — same `POLI
 
 ### What the modifier is **not**
 
-- Not a replacement for `SentryQueue` — it reverts on `REQUIRES_DELAY` / `REQUIRES_VETO`. Use `SentryQueue.enqueue` (or `QueueAgentBase`) for those tiers.
+- Not a replacement for `WardQueue` — it reverts on `REQUIRES_DELAY` / `REQUIRES_VETO`. Use `WardQueue.enqueue` (or `QueueAgentBase`) for those tiers.
 - Not a reentrancy guard — add `ReentrancyGuard` separately if your target can call back.
-- Not an authorization check — pair with `onlyOwner` (or your access modifier) ahead of `sentryGuarded`. The canonical sample layers `onlyOperator` for this exact reason.
+- Not an authorization check — pair with `onlyOwner` (or your access modifier) ahead of `wardGuarded`. The canonical sample layers `onlyOperator` for this exact reason.
 
 ---
 
@@ -955,31 +955,31 @@ Gate single-call paths with the modifier, multi-call paths inline — same `POLI
 
 Wire an existing or new Somnia agent to enforce a written policy before every outbound call.
 
-This is a how-to: it assumes you already understand what Sentry is and have `forge`, `node 20+`, and `pnpm` installed with STT in a deployer wallet. Sentry holds no funds, owns no agents, and executes no calls — your agent stays in full custody and dispatch control. The oracle only answers "may this call execute under policy P?" synchronously, in the same transaction.
+This is a how-to: it assumes you already understand what Ward is and have `forge`, `node 20+`, and `pnpm` installed with STT in a deployer wallet. Ward holds no funds, owns no agents, and executes no calls — your agent stays in full custody and dispatch control. The oracle only answers "may this call execute under policy P?" synchronously, in the same transaction.
 
-The recommended path for a single-outbound-call function is the **`sentryGuarded` modifier** on `SentryAgentBase`. Everything below leads with that; the multi-outbound inline path is covered in [step 6](#17-6-multi-outbound-paths-inline-_sentrycheck--_call).
+The recommended path for a single-outbound-call function is the **`wardGuarded` modifier** on `WardAgentBase`. Everything below leads with that; the multi-outbound inline path is covered in [step 6](#17-6-multi-outbound-paths-inline-_wardcheck--_call).
 
 ### What you'll build
 
-A contract that inherits `SentryAgentBase`, guards its entrypoints with `sentryGuarded(selector, value)`, and binds a `POLICY_ID` published against the agent's own address (the **entrypoint-policy model**). The canonical worked example is `examples/sentry-counter/`.
+A contract that inherits `WardAgentBase`, guards its entrypoints with `wardGuarded(selector, value)`, and binds a `POLICY_ID` published against the agent's own address (the **entrypoint-policy model**). The canonical worked example is `examples/ward-counter/`.
 
 ```
-1. Choose or deploy a v2 SentryOracle           → verify: have an oracle address
-2. Inherit SentryAgentBase, add sentryGuarded   → verify: contract compiles
+1. Choose or deploy a v2 WardOracle           → verify: have an oracle address
+2. Inherit WardAgentBase, add wardGuarded   → verify: contract compiles
 3. analyze:gate the contract                     → verify: "every dispatch is gated"
 4. Author POLICY.md against the AGENT address    → verify: policy compiles
 5. Publish + late-bind setPolicyId               → verify: POLICY_ID() returns your id
 ```
 
-### 17.1 Choose or deploy a SentryOracle (v2)
+### 17.1 Choose or deploy a WardOracle (v2)
 
 For new integrations use the canonical v2 oracle already live on Somnia Shannon (chain id `50312`):
 
 ```
-SentryOracle (v2) = 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c
+WardOracle (v2) = 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c
 ```
 
-The `sentryGuarded` modifier calls `oracle.checkSelector(...)`, which only exists on the v2 oracle — so the modifier path **requires v2**. The legacy v1 oracle (`0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf`) is still live but reference it only as explicit legacy; bind there only if you are continuing a pre-v0.11.0 policy through the inline `checkIntent` path.
+The `wardGuarded` modifier calls `oracle.checkSelector(...)`, which only exists on the v2 oracle — so the modifier path **requires v2**. The legacy v1 oracle (`0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf`) is still live but reference it only as explicit legacy; bind there only if you are continuing a pre-v0.11.0 policy through the inline `checkIntent` path.
 
 To deploy your own oracle instead, run the repo's deploy script and capture the printed address. The `--gas-estimate-multiplier 2000` is required because Shannon's RPC under-reports gas by roughly 15×.
 
@@ -992,41 +992,41 @@ forge script script/Deploy.s.sol \
   --private-key "$DEPLOYER_PK"
 ```
 
-### 17.2 Inherit `SentryAgentBase` and add the modifier
+### 17.2 Inherit `WardAgentBase` and add the modifier
 
-Import the base (and the oracle type) through the `sentry-somnia/` remapping, which points at `contracts/src` via the `sentry-src` symlink:
+Import the base (and the oracle type) through the `ward/` remapping, which points at `contracts/src` via the `ward-src` symlink:
 
 ```toml
 # foundry.toml
 remappings = [
-    "sentry-somnia/=sentry-src/",
+    "ward/=ward-src/",
 ]
 ```
 
-`SentryAgentBase` gives you, for free:
+`WardAgentBase` gives you, for free:
 
-- `SentryOracle public immutable oracle` — set once in the constructor.
+- `WardOracle public immutable oracle` — set once in the constructor.
 - `bytes32 public POLICY_ID` — a **mutable** storage slot (defaults to `bytes32(0)` = ungated), for late-binding.
 - `address public owner` with `onlyOwner`, `setPolicyId(bytes32)`, and `transferOwnership(address)`.
 - A per-UTC-day spend tracker the modifier and `_call` write through.
 
-The `sentryGuarded(bytes4 selector, uint256 value)` modifier, in order: if `POLICY_ID != 0`, call `oracle.checkSelector(POLICY_ID, address(this), selector, value, _sentrySpentToday())` and revert `SentryRejected(reason)` if `ok == false`; then pre-reserve `value` against today's spend **before** running the body so a re-entrant call can't see a pre-spend budget; then run the body. When `POLICY_ID == 0` the modifier short-circuits and the agent runs ungated.
+The `wardGuarded(bytes4 selector, uint256 value)` modifier, in order: if `POLICY_ID != 0`, call `oracle.checkSelector(POLICY_ID, address(this), selector, value, _wardSpentToday())` and revert `WardRejected(reason)` if `ok == false`; then pre-reserve `value` against today's spend **before** running the body so a re-entrant call can't see a pre-spend budget; then run the body. When `POLICY_ID == 0` the modifier short-circuits and the agent runs ungated.
 
-Here is the canonical `CounterAgent`, copied verbatim from `examples/sentry-counter/src/CounterAgent.sol`:
+Here is the canonical `CounterAgent`, copied verbatim from `examples/ward-counter/src/CounterAgent.sol`:
 
 ```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import "sentry-somnia/SentryOracle.sol";
-import "sentry-somnia/integration/SentryAgentBase.sol";
+import "ward/WardOracle.sol";
+import "ward/integration/WardAgentBase.sol";
 import {Counter} from "./Counter.sol";
 
-contract CounterAgent is SentryAgentBase {
+contract CounterAgent is WardAgentBase {
     Counter public immutable counter;
 
-    constructor(SentryOracle _oracle, Counter _counter, address _owner)
-        SentryAgentBase(_oracle, _owner)
+    constructor(WardOracle _oracle, Counter _counter, address _owner)
+        WardAgentBase(_oracle, _owner)
     {
         counter = _counter;
     }
@@ -1035,12 +1035,12 @@ contract CounterAgent is SentryAgentBase {
     /// selector against POLICY_ID. The body calls the downstream counter
     /// directly — the modifier already reserved spend, so routing through
     /// `_call` would double-count. On a deny the modifier reverts
-    /// `SentryRejected(reason)` and the body never runs.
-    function bump(uint256 by) external sentryGuarded(this.bump.selector, 0) {
+    /// `WardRejected(reason)` and the body never runs.
+    function bump(uint256 by) external wardGuarded(this.bump.selector, 0) {
         counter.bump(by);
     }
 
-    function reset() external sentryGuarded(this.reset.selector, 0) {
+    function reset() external wardGuarded(this.reset.selector, 0) {
         counter.reset();
     }
 }
@@ -1048,20 +1048,20 @@ contract CounterAgent is SentryAgentBase {
 
 Two things to copy into your own agent:
 
-- **Guard the agent's own selector.** `sentryGuarded(this.bump.selector, 0)` passes the agent's *entrypoint* selector, not the downstream `counter.bump` selector. The policy is a stable contract-vs-policy boundary even as the agent's internal downstream calls evolve.
-- **The body calls the downstream target directly.** The modifier already validated and reserved spend; routing the same value through `_call` would double-count it. Use `_call` only on paths the modifier did *not* guard (see [step 6](#17-6-multi-outbound-paths-inline-_sentrycheck--_call)).
+- **Guard the agent's own selector.** `wardGuarded(this.bump.selector, 0)` passes the agent's *entrypoint* selector, not the downstream `counter.bump` selector. The policy is a stable contract-vs-policy boundary even as the agent's internal downstream calls evolve.
+- **The body calls the downstream target directly.** The modifier already validated and reserved spend; routing the same value through `_call` would double-count it. Use `_call` only on paths the modifier did *not* guard (see [step 6](#17-6-multi-outbound-paths-inline-_wardcheck--_call)).
 
-`sentryGuarded` is not an authorization check and not a reentrancy guard. Put `onlyOwner` (or your access modifier) ahead of it, and add OpenZeppelin's `ReentrancyGuard` yourself if your outbound target can call back.
+`wardGuarded` is not an authorization check and not a reentrancy guard. Put `onlyOwner` (or your access modifier) ahead of it, and add OpenZeppelin's `ReentrancyGuard` yourself if your outbound target can call back.
 
-If your function moves native value, pass it as the second modifier argument so the daily cap is enforced and reserved — e.g. `sentryGuarded(this.pay.selector, msg.value)`.
+If your function moves native value, pass it as the second modifier argument so the daily cap is enforced and reserved — e.g. `wardGuarded(this.pay.selector, msg.value)`.
 
 ### 17.3 Verify every dispatch is gated
 
-Before authoring a policy, statically confirm there is no ungated `target.call(...)` hiding in your contract. The CLI ships an analyzer that flags any dispatch not preceded by the modifier, `_gate(...)`, or `SentryCall.check(...)`:
+Before authoring a policy, statically confirm there is no ungated `target.call(...)` hiding in your contract. The CLI ships an analyzer that flags any dispatch not preceded by the modifier, `_gate(...)`, or `WardCall.check(...)`:
 
 ```bash
-pnpm sentry analyze:gate path/to/MyAgent.sol
-# → # sentry analyze:gate
+pnpm ward analyze:gate path/to/MyAgent.sol
+# → # ward analyze:gate
 # →   OK · every dispatch is gated
 ```
 
@@ -1069,7 +1069,7 @@ Add `--json` for machine-readable findings in CI. The analyzer flags low-level d
 
 ### 17.4 Author POLICY.md against the AGENT address
 
-The entrypoint-policy model means the policy's `target` is the **agent contract** (the one inheriting `SentryAgentBase`), and `selectors` enumerates the agent's own entrypoints — *not* the downstream target's selectors. Here is the counter sample's policy, from `examples/sentry-counter/policy.md`:
+The entrypoint-policy model means the policy's `target` is the **agent contract** (the one inheriting `WardAgentBase`), and `selectors` enumerates the agent's own entrypoints — *not* the downstream target's selectors. Here is the counter sample's policy, from `examples/ward-counter/policy.md`:
 
 ````md
 ```policy
@@ -1086,24 +1086,24 @@ targets:
 ```
 ````
 
-Replace the placeholder `target` with your deployed agent address. `reset()` is deliberately omitted from this policy, so a gated call to it reverts `SentryRejected("SELECTOR_NOT_ALLOWED")` — the deny path proof. For the full field grammar (caps, tiers, expiry, value formats) see [§19 POLICY.md spec](#19-policymd-spec--authoritative-grammar). You can scaffold a starter from your ABI with `pnpm sentry policy:init --abi <artifact> --target <addr>`.
+Replace the placeholder `target` with your deployed agent address. `reset()` is deliberately omitted from this policy, so a gated call to it reverts `WardRejected("SELECTOR_NOT_ALLOWED")` — the deny path proof. For the full field grammar (caps, tiers, expiry, value formats) see [§19 POLICY.md spec](#19-policymd-spec--authoritative-grammar). You can scaffold a starter from your ABI with `pnpm ward policy:init --abi <artifact> --target <addr>`.
 
 Compile it as a dry run before publishing:
 
 ```bash
-pnpm sentry compile ./policy.md   # prints the canonical JSON; sends nothing
+pnpm ward compile ./policy.md   # prints the canonical JSON; sends nothing
 ```
 
 ### 17.5 Publish, then late-bind `setPolicyId`
 
-`SentryAgentBase` ships `POLICY_ID` as a mutable slot defaulting to `bytes32(0)`. While unbound the modifier short-circuits and the agent runs ungated, so you can deploy to testnet and exercise the agent *before* a policy exists, then bind once you've settled the policy. This is the recommended flow for new agents.
+`WardAgentBase` ships `POLICY_ID` as a mutable slot defaulting to `bytes32(0)`. While unbound the modifier short-circuits and the agent runs ungated, so you can deploy to testnet and exercise the agent *before* a policy exists, then bind once you've settled the policy. This is the recommended flow for new agents.
 
 Publish the policy. The `policyId` is `keccak256(abi.encode(publisher, label))` — stable across `updatePolicy` calls and namespaced by your wallet:
 
 ```bash
-export SENTRY_ORACLE=0x3C7bF90f243d670a01f512221d9546e09fEaCC9c
+export WARD_ORACLE=0x3C7bF90f243d670a01f512221d9546e09fEaCC9c
 export PRIVATE_KEY=0x…                       # publisher wallet
-pnpm sentry push ./policy.md --label counter-demo
+pnpm ward push ./policy.md --label counter-demo
 # → publishPolicy tx: 0x…
 # → OK · policyId = 0x…
 export POLICY_ID=0x…                          # from the output
@@ -1126,21 +1126,21 @@ From this transaction on, every guarded entrypoint is checked against the policy
 
 Because `POLICY_ID` is mutable, the agent's behavior can change after users interact with it. External observers should subscribe to `PolicyBound` to detect rebinds.
 
-### 17.6 Multi-outbound paths (inline `_sentryCheck` + `_call`)
+### 17.6 Multi-outbound paths (inline `_wardCheck` + `_call`)
 
-The modifier synthesizes a single `(address(this), selector, value)` check — it cannot represent one function that fires *multiple* outbound calls (`approve` + `swap`, mint + transfer, settle + sweep), nor enforce per-argument constraints. For those, keep `SentryAgentBase` for the spend tracker but skip the modifier and gate each outbound separately with `_sentryCheck(target, data, value, spentToday)` before each `_call(target, data, value)`:
+The modifier synthesizes a single `(address(this), selector, value)` check — it cannot represent one function that fires *multiple* outbound calls (`approve` + `swap`, mint + transfer, settle + sweep), nor enforce per-argument constraints. For those, keep `WardAgentBase` for the spend tracker but skip the modifier and gate each outbound separately with `_wardCheck(target, data, value, spentToday)` before each `_call(target, data, value)`:
 
 ```solidity
 function triggerSwap(address tokenIn, address router, bytes calldata approveData, bytes calldata swapData)
     external
     onlyOwner
 {
-    uint256 spent = _sentrySpentToday();
+    uint256 spent = _wardSpentToday();
 
     // 1. Gate the riskier call (the swap) FIRST — view-only, no side effect.
-    _sentryCheck(router,  swapData,    0, spent);
+    _wardCheck(router,  swapData,    0, spent);
     // 2. Then gate the approve.
-    _sentryCheck(tokenIn, approveData, 0, spent);
+    _wardCheck(tokenIn, approveData, 0, spent);
 
     // 3. Only after BOTH gates pass do we touch state.
     _call(tokenIn, approveData, 0);
@@ -1148,20 +1148,20 @@ function triggerSwap(address tokenIn, address router, bytes calldata approveData
 }
 ```
 
-`_sentryCheck` calls `oracle.check(...)` and reverts `SentryRejected(reason)` on failure (it no-ops when `POLICY_ID == 0`). `_call` pre-reserves `value` against the daily tally before dispatching and reverts `SentryCallFailed(returndata)` if the call fails. **Order matters**: approving before the swap gate would leave a live router allowance behind on any swap-side rejection. Gate the riskier call first, approve only after every gate passes. In this multi-outbound model the policy lists the *downstream* targets and their selectors, not the agent's entrypoint.
+`_wardCheck` calls `oracle.check(...)` and reverts `WardRejected(reason)` on failure (it no-ops when `POLICY_ID == 0`). `_call` pre-reserves `value` against the daily tally before dispatching and reverts `WardCallFailed(returndata)` if the call fails. **Order matters**: approving before the swap gate would leave a live router allowance behind on any swap-side rejection. Gate the riskier call first, approve only after every gate passes. In this multi-outbound model the policy lists the *downstream* targets and their selectors, not the agent's entrypoint.
 
-For per-argument intent shapes, or to branch on `REQUIRES_DELAY` / `REQUIRES_VETO` and route through `SentryQueue` instead of reverting, drop to a direct `oracle.checkIntent(policyId, intent, spentToday)` call and inspect the returned `reason` yourself.
+For per-argument intent shapes, or to branch on `REQUIRES_DELAY` / `REQUIRES_VETO` and route through `WardQueue` instead of reverting, drop to a direct `oracle.checkIntent(policyId, intent, spentToday)` call and inspect the returned `reason` yourself.
 
 ### A note on tiers
 
-`checkSelector` (and `checkIntent`) is safe-by-default: `ok == true` only for `TIER_IMMEDIATE` selectors. A `TIER_DELAYED` or `TIER_VETO_REQUIRED` selector returns `(false, "REQUIRES_DELAY")` / `(false, "REQUIRES_VETO")`, so the modifier reverts `SentryRejected("REQUIRES_DELAY" | "REQUIRES_VETO")` — a naive consumer cannot silently bypass the policy author's queue intent. To let those calls eventually land, route them through `SentryQueue` (see [§23 Operating the queue](#23-operating-the-queue--tui--dashboard)). Use `oracle.tierAndDelay(policyId, target, selector)` to distinguish "denied" from "requires queueing" and to size your own wait window.
+`checkSelector` (and `checkIntent`) is safe-by-default: `ok == true` only for `TIER_IMMEDIATE` selectors. A `TIER_DELAYED` or `TIER_VETO_REQUIRED` selector returns `(false, "REQUIRES_DELAY")` / `(false, "REQUIRES_VETO")`, so the modifier reverts `WardRejected("REQUIRES_DELAY" | "REQUIRES_VETO")` — a naive consumer cannot silently bypass the policy author's queue intent. To let those calls eventually land, route them through `WardQueue` (see [§23 Operating the queue](#23-operating-the-queue--tui--dashboard)). Use `oracle.tierAndDelay(policyId, target, selector)` to distinguish "denied" from "requires queueing" and to size your own wait window.
 
 ---
 
 
-## 18. Scaffold a new agent (`pnpm create sentry-agent`)
+## 18. Scaffold a new agent (`pnpm create ward-agent`)
 
-Generate a `SentryAgentBase`-derived Foundry project with one command, then build and test it locally.
+Generate a `WardAgentBase`-derived Foundry project with one command, then build and test it locally.
 
 ### Prerequisites
 
@@ -1177,7 +1177,7 @@ You do not need a funded key to complete this tutorial. The scaffold + build + t
 One command creates the whole project:
 
 ```bash
-pnpm create sentry-agent my-agent
+pnpm create ward-agent my-agent
 ```
 
 `my-agent` is the project name. The scaffolder uses it two ways:
@@ -1189,25 +1189,25 @@ The name must be a single path segment matching `[A-Za-z0-9_-]+` and must not st
 
 If you omit the name, the scaffolder prompts `Agent name:` interactively.
 
-The package exposes a `create-sentry-agent` bin (`./dist/index.js`), so the equivalents work too:
+The package exposes a `create-ward-agent` bin (`./dist/index.js`), so the equivalents work too:
 
 ```bash
-npm create sentry-agent <name>
-yarn create sentry-agent <name>
+npm create ward-agent <name>
+yarn create ward-agent <name>
 ```
 
 ### 18.2 Templates
 
-Two templates are available (`TemplateId = "greenfield" | "counter-fixture"`). Both emit the same `SentryAgentBase` + `sentryGuarded` shape, the same `foundry.toml`, and the same late-binding `Deploy`/`Bind` script pair as `examples/sentry-counter/`.
+Two templates are available (`TemplateId = "greenfield" | "counter-fixture"`). Both emit the same `WardAgentBase` + `wardGuarded` shape, the same `foundry.toml`, and the same late-binding `Deploy`/`Bind` script pair as `examples/ward-counter/`.
 
 #### `greenfield` (default)
 
-A single `SentryAgentBase`-derived agent plus a placeholder target. The agent's dispatch method is `tryDispatch`, and the target is `<Name>Target` exposing one `act(uint256)` selector. The generated agent gates that entrypoint with the modifier:
+A single `WardAgentBase`-derived agent plus a placeholder target. The agent's dispatch method is `tryDispatch`, and the target is `<Name>Target` exposing one `act(uint256)` selector. The generated agent gates that entrypoint with the modifier:
 
 ```solidity
 function tryDispatch(uint256 reqId, uint256 amount)
     external
-    sentryGuarded(this.tryDispatch.selector, 0)
+    wardGuarded(this.tryDispatch.selector, 0)
 {
     <Name>Target(target).act(amount);
     emit Dispatched(reqId, amount);
@@ -1218,21 +1218,21 @@ The starter `POLICY.md` authorizes the agent's own `tryDispatch(uint256,uint256)
 
 #### `counter-fixture`
 
-The same shape as `examples/sentry-counter`, renamed to your chosen contract name so you can grow it without renaming everything. The target is `Counter` (selectors `bump(uint256)` and `reset()`). The agent has two normal entrypoints that demonstrate both the allow and deny paths:
+The same shape as `examples/ward-counter`, renamed to your chosen contract name so you can grow it without renaming everything. The target is `Counter` (selectors `bump(uint256)` and `reset()`). The agent has two normal entrypoints that demonstrate both the allow and deny paths:
 
-- `bump(uint256 by)` — gated with `sentryGuarded(this.bump.selector, 0)`. On allow the body calls `counter.bump(by)`. On deny the modifier reverts with `SentryRejected(reason)`.
-- `reset()` — gated with `sentryGuarded(this.reset.selector, 0)`. Same shape as `bump`; the body calls `counter.reset()`.
+- `bump(uint256 by)` — gated with `wardGuarded(this.bump.selector, 0)`. On allow the body calls `counter.bump(by)`. On deny the modifier reverts with `WardRejected(reason)`.
+- `reset()` — gated with `wardGuarded(this.reset.selector, 0)`. Same shape as `bump`; the body calls `counter.reset()`.
 
-The starter `POLICY.md` authorizes `bump(uint256)` and deliberately omits `reset()`, so calling `reset()` reverts with `SentryRejected("SELECTOR_NOT_ALLOWED")` — the revert IS the deny-path proof, no in-contract catch-and-emit needed.
+The starter `POLICY.md` authorizes `bump(uint256)` and deliberately omits `reset()`, so calling `reset()` reverts with `WardRejected("SELECTOR_NOT_ALLOWED")` — the revert IS the deny-path proof, no in-contract catch-and-emit needed.
 
 ```bash
-pnpm create sentry-agent my-agent --template counter-fixture
+pnpm create ward-agent my-agent --template counter-fixture
 ```
 
 To see what would be written without touching disk, add `--dry-run`:
 
 ```bash
-pnpm create sentry-agent my-agent --dry-run
+pnpm create ward-agent my-agent --dry-run
 ```
 
 On success the CLI prints the created path and a next-steps block:
@@ -1245,12 +1245,12 @@ Created /abs/path/to/my-agent
 Next steps:
   cd my-agent
   forge install foundry-rs/forge-std
-  # If you are inside the sentry-somnia monorepo, link the contracts:
-  #   ln -s ../../contracts/src sentry-src
+  # If you are inside the ward monorepo, link the contracts:
+  #   ln -s ../../contracts/src ward-src
   forge build
 
   # Publish your policy and bind it:
-  pnpm sentry push ./POLICY.md --label my-agent
+  pnpm ward push ./POLICY.md --label my-agent
   forge script script/Deploy.s.sol --rpc-url "$SOMNIA_TESTNET_RPC" \
     --broadcast --legacy --gas-estimate-multiplier 2000
   # Then export AGENT + POLICY_ID and run script/Bind.s.sol.
@@ -1264,11 +1264,11 @@ The `greenfield` template writes eight files into `my-agent/`:
 
 ```text
 my-agent/
-├── foundry.toml          # solc 0.8.26, via_ir, sentry-somnia/ remapping
+├── foundry.toml          # solc 0.8.26, via_ir, ward/ remapping
 ├── .gitignore
 ├── src/
-│   ├── MyAgent.sol       # SentryAgentBase-derived agent (sentryGuarded)
-│   └── MyAgentTarget.sol # downstream target, no Sentry awareness
+│   ├── MyAgent.sol       # WardAgentBase-derived agent (wardGuarded)
+│   └── MyAgentTarget.sol # downstream target, no Ward awareness
 ├── script/
 │   ├── Deploy.s.sol      # deploys target + agent (late-binding)
 │   └── Bind.s.sol        # binds an existing agent to a policy
@@ -1276,36 +1276,36 @@ my-agent/
 └── README.md
 ```
 
-The generated `foundry.toml` pins `solc_version = "0.8.26"`, `evm_version = "shanghai"`, `via_ir = true`, the remappings `sentry-somnia/=sentry-src/` and `forge-std/=lib/forge-std/src/`, and `fs_permissions` write access to `deployments/`.
+The generated `foundry.toml` pins `solc_version = "0.8.26"`, `evm_version = "shanghai"`, `via_ir = true`, the remappings `ward/=ward-src/` and `forge-std/=lib/forge-std/src/`, and `fs_permissions` write access to `deployments/`.
 
 `Deploy.s.sol` uses the late-binding pattern: `POLICY_ID` is read with `vm.envOr("POLICY_ID", bytes32(0))`. If set and non-zero it calls `setPolicyId` in the same broadcast; otherwise the agent ships ungated and you bind later with `script/Bind.s.sol`. It writes `deployments/agent.json` with the deployed addresses.
 
-#### The agent: `SentryAgentBase` + the `sentryGuarded` modifier
+#### The agent: `WardAgentBase` + the `wardGuarded` modifier
 
-`src/MyAgent.sol` inherits `SentryAgentBase` and gates its single entrypoint with the `sentryGuarded` modifier — the recommended path for single-outbound-call functions:
+`src/MyAgent.sol` inherits `WardAgentBase` and gates its single entrypoint with the `wardGuarded` modifier — the recommended path for single-outbound-call functions:
 
 ```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-import "sentry-somnia/SentryOracle.sol";
-import "sentry-somnia/integration/SentryAgentBase.sol";
+import "ward/WardOracle.sol";
+import "ward/integration/WardAgentBase.sol";
 import {MyAgentTarget} from "./MyAgentTarget.sol";
 
-contract MyAgent is SentryAgentBase {
+contract MyAgent is WardAgentBase {
     address public immutable target;
 
     event Dispatched(uint256 indexed reqId, uint256 amount);
 
-    constructor(SentryOracle _oracle, address _target, address _owner)
-        SentryAgentBase(_oracle, _owner)
+    constructor(WardOracle _oracle, address _target, address _owner)
+        WardAgentBase(_oracle, _owner)
     {
         target = _target;
     }
 
     function tryDispatch(uint256 reqId, uint256 amount)
         external
-        sentryGuarded(this.tryDispatch.selector, 0)
+        wardGuarded(this.tryDispatch.selector, 0)
     {
         MyAgentTarget(target).act(amount);
         emit Dispatched(reqId, amount);
@@ -1313,13 +1313,13 @@ contract MyAgent is SentryAgentBase {
 }
 ```
 
-Inheriting `SentryAgentBase` gives you:
+Inheriting `WardAgentBase` gives you:
 
 - an immutable `oracle`,
 - a mutable `POLICY_ID` storage slot (the late-binding pattern),
 - `owner` + `onlyOwner` + `transferOwnership`,
-- `sentryGuarded` (the modifier that checks the oracle and reserves spend),
-- `_sentryCheck` (lower-level: reverts if the oracle denies), and
+- `wardGuarded` (the modifier that checks the oracle and reserves spend),
+- `_wardCheck` (lower-level: reverts if the oracle denies), and
 - `_call` (forwards a call and tracks daily spend).
 
 The modifier takes `(this.tryDispatch.selector, 0)` — the agent's **own** selector and the `msg.value` for the call. This is the **entrypoint-policy model**: the policy targets the agent address itself with the agent's own selectors, not the downstream target's. The body is then free to call `MyAgentTarget(target).act(...)` without per-target policy entries.
@@ -1328,16 +1328,16 @@ The modifier takes `(this.tryDispatch.selector, 0)` — the agent's **own** sele
 
 #### The remapping
 
-`foundry.toml` wires the `sentry-somnia/` import prefix to a local `sentry-src/` directory:
+`foundry.toml` wires the `ward/` import prefix to a local `ward-src/` directory:
 
 ```toml
 remappings = [
-    "sentry-somnia/=sentry-src/",
+    "ward/=ward-src/",
     "forge-std/=lib/forge-std/src/",
 ]
 ```
 
-That is why `import "sentry-somnia/SentryOracle.sol";` resolves. You supply `sentry-src/` in the build step (a symlink in the monorepo, or a hand-copy if standalone).
+That is why `import "ward/WardOracle.sol";` resolves. You supply `ward-src/` in the build step (a symlink in the monorepo, or a hand-copy if standalone).
 
 #### The starter `POLICY.md`
 
@@ -1360,33 +1360,33 @@ Note the selector is the full ABI signature `tryDispatch(uint256,uint256)` — t
 
 ### 18.4 Build the generated project
 
-Enter the directory, install `forge-std`, and supply the Sentry sources behind the `sentry-somnia/` remapping:
+Enter the directory, install `forge-std`, and supply the Ward sources behind the `ward/` remapping:
 
 ```bash
 cd my-agent
 forge install foundry-rs/forge-std
 
-# Inside the sentry-somnia monorepo, symlink the contracts:
-ln -s ../../contracts/src sentry-src
-# Standalone: copy the Sentry sources into ./sentry-src/ by hand instead.
+# Inside the ward monorepo, symlink the contracts:
+ln -s ../../contracts/src ward-src
+# Standalone: copy the Ward sources into ./ward-src/ by hand instead.
 
 forge build
 ```
 
-`forge build` compiles the agent, the target, and both scripts. A clean build confirms the remapping and the `SentryAgentBase` inheritance resolve.
+`forge build` compiles the agent, the target, and both scripts. A clean build confirms the remapping and the `WardAgentBase` inheritance resolve.
 
 ### 18.5 Test it
 
-The scaffolder does not generate a test file — the generated project is the integration surface, not a test fixture. To verify behavior, write a Foundry test under `test/` that deploys `MyAgent` against a `SentryOracle` and asserts the ungated path. Use the canonical `examples/sentry-counter` test as your model; it exercises both the allow path (a bound, authorized selector) and the deny path.
+The scaffolder does not generate a test file — the generated project is the integration surface, not a test fixture. To verify behavior, write a Foundry test under `test/` that deploys `MyAgent` against a `WardOracle` and asserts the ungated path. Use the canonical `examples/ward-counter` test as your model; it exercises both the allow path (a bound, authorized selector) and the deny path.
 
-If you scaffolded `--template counter-fixture`, your agent already has the two-entrypoint allow/deny shape: `bump(uint256)` and `reset()`, each gated by the `sentryGuarded` modifier. The bundled `POLICY.md` authorizes `bump` but omits `reset`, so the deny path surfaces as `SentryRejected("SELECTOR_NOT_ALLOWED")` when you call `reset()` against the bound policy.
+If you scaffolded `--template counter-fixture`, your agent already has the two-entrypoint allow/deny shape: `bump(uint256)` and `reset()`, each gated by the `wardGuarded` modifier. The bundled `POLICY.md` authorizes `bump` but omits `reset`, so the deny path surfaces as `WardRejected("SELECTOR_NOT_ALLOWED")` when you call `reset()` against the bound policy.
 
 ### 18.6 Build, deploy, bind (the full publish path)
 
 Publish the policy (after replacing the placeholder `target` in `POLICY.md` with the **agent** address from `deployments/agent.json`):
 
 ```bash
-pnpm sentry push ./POLICY.md --label <name>
+pnpm ward push ./POLICY.md --label <name>
 ```
 
 Deploy ungated, then bind once you trust the policy:
@@ -1403,7 +1403,7 @@ forge script script/Bind.s.sol \
   --broadcast --legacy --gas-estimate-multiplier 2000
 ```
 
-`Deploy.s.sol` reads `DEPLOYER_PK` and `SENTRY_ORACLE` from the environment; `Bind.s.sol` reads `DEPLOYER_PK`, `AGENT`, and `POLICY_ID` (and requires `POLICY_ID != bytes32(0)`).
+`Deploy.s.sol` reads `DEPLOYER_PK` and `WARD_ORACLE` from the environment; `Bind.s.sol` reads `DEPLOYER_PK`, `AGENT`, and `POLICY_ID` (and requires `POLICY_ID != bytes32(0)`).
 
 ### 18.7 Develop the scaffolder itself
 
@@ -1418,14 +1418,14 @@ pnpm lint    # tsc --noEmit
 
 ## 19. POLICY.md spec — authoritative grammar
 
-`POLICY.md` is the human-authoring surface for Sentry. A document is a markdown wrapper around exactly one fenced code block — prefer ` ```policy `, with a fallback to a single untagged block. The block contents are YAML matching the schema below. The SDK's `compilePolicy` turns that YAML into a canonical `PolicyInput` struct, which is submitted to `SentryOracle` via `publishPolicy(label, input)` (first publish under a `(publisher, label)` pair) or `updatePolicy(policyId, input)` (subsequent edits by the policy owner).
+`POLICY.md` is the human-authoring surface for Ward. A document is a markdown wrapper around exactly one fenced code block — prefer ` ```policy `, with a fallback to a single untagged block. The block contents are YAML matching the schema below. The SDK's `compilePolicy` turns that YAML into a canonical `PolicyInput` struct, which is submitted to `WardOracle` via `publishPolicy(label, input)` (first publish under a `(publisher, label)` pair) or `updatePolicy(policyId, input)` (subsequent edits by the policy owner).
 
 ### Minimal example
 
 ````md
 # Conservative Trading Policy
 
-> Authored: alice — Sentry POLICY.md v0.1
+> Authored: alice — Ward POLICY.md v0.1
 
 ```policy
 version: "0.1"
@@ -1452,7 +1452,7 @@ targets:
 ```
 ````
 
-Worked, copy-pasteable policies live at [conservative-policy](#191-worked-example-conservative-trading-policy) below and in the sample at `examples/sentry-counter/policy.md`.
+Worked, copy-pasteable policies live at [conservative-policy](#191-worked-example-conservative-trading-policy) below and in the sample at `examples/ward-counter/policy.md`.
 
 ### Schema (canonical)
 
@@ -1495,15 +1495,15 @@ The compiler validates the fenced YAML against a strict schema (`additionalPrope
 - A raw integer wei string: `"1000000000000000000"`.
 - A hex wei string: `"0x..."`.
 
-`ether` is the **only** supported unit. `gwei`, `eth`, `wei`, `finney`, and scientific notation are rejected. Near-miss typos get a hint — e.g. `"1 eth"` errors with `Unrecognized unit in "1 eth" — did you mean "1 ether"? (Supported: plain wei integer, or "N ether" for native STT.)`. Native STT (`msg.value`) is the only unit Sentry meters; ERC-20 amounts encoded in calldata are never parsed as values.
+`ether` is the **only** supported unit. `gwei`, `eth`, `wei`, `finney`, and scientific notation are rejected. Near-miss typos get a hint — e.g. `"1 eth"` errors with `Unrecognized unit in "1 eth" — did you mean "1 ether"? (Supported: plain wei integer, or "N ether" for native STT.)`. Native STT (`msg.value`) is the only unit Ward meters; ERC-20 amounts encoded in calldata are never parsed as values.
 
 ### Tier semantics (recap)
 
-`SentryOracle.checkIntent` / `checkSelector` return `(bool ok, bytes32 reason)`. The tier determines what a *legal* intent resolves to:
+`WardOracle.checkIntent` / `checkSelector` return `(bool ok, bytes32 reason)`. The tier determines what a *legal* intent resolves to:
 
 - **`IMMEDIATE`** — returns `(true, 0)` when legality passes. The asking agent dispatches synchronously.
-- **`DELAYED`** — returns `(false, "REQUIRES_DELAY")` even when legality passes. The agent routes through the opt-in `SentryQueue` (enqueue → wait `delaySeconds` → dispatch from the asker), or reads `tierAndDelay(policyId, target, selector)` and runs its own waiting structure.
-- **`VETO_REQUIRED`** — returns `(false, "REQUIRES_VETO")` even when legality passes. Routes through `SentryQueue` with `policyOwner(policyId)` as the dispatcher (not the asker), or an equivalent owner-only flow. The owner can `veto(execId, reason)` during the commit window.
+- **`DELAYED`** — returns `(false, "REQUIRES_DELAY")` even when legality passes. The agent routes through the opt-in `WardQueue` (enqueue → wait `delaySeconds` → dispatch from the asker), or reads `tierAndDelay(policyId, target, selector)` and runs its own waiting structure.
+- **`VETO_REQUIRED`** — returns `(false, "REQUIRES_VETO")` even when legality passes. Routes through `WardQueue` with `policyOwner(policyId)` as the dispatcher (not the asker), or an equivalent owner-only flow. The owner can `veto(execId, reason)` during the commit window.
 
 Safe-by-default: a naive integrator calling only `checkIntent` cannot bypass `DELAYED` / `VETO_REQUIRED` — both surface as `ok == false`. The worst outcome of misuse is "enforcement is overly strict", never "enforcement is silently skipped." See [§15 Tier model](#15-tier-model--immediate--delayed--veto_required).
 
@@ -1531,13 +1531,13 @@ if (spentToday > p.dailySpendWeiCap || i.value > p.dailySpendWeiCap - spentToday
 }
 ```
 
-With `dailySpendWeiCap == 0`, any intent carrying `value > 0` fails with `DAILY_CAP`. A policy whose selectors all have `valueCapPerCall: "0"` (no native value moves) can safely set `dailySpendWeiCap: "0"` — that is exactly what the sentry-counter sample does. The cap meters native STT only; ERC-20 transfers do not count toward it. To bound token spend, add the token contract as a target and tier its `transfer` / `approve` selectors directly.
+With `dailySpendWeiCap == 0`, any intent carrying `value > 0` fails with `DAILY_CAP`. A policy whose selectors all have `valueCapPerCall: "0"` (no native value moves) can safely set `dailySpendWeiCap: "0"` — that is exactly what the ward-counter sample does. The cap meters native STT only; ERC-20 transfers do not count toward it. To bound token spend, add the token contract as a target and tier its `transfer` / `approve` selectors directly.
 
 #### Past or zero `expiresAt` is blocked at compile time
 
 On-chain, the gate is `block.timestamp > p.expiresAt → EXPIRED`, so a literal `0` is the sentinel for "already expired" and any past timestamp fails every call. The compiler refuses both before they reach the chain:
 
-- `expiresAt: 0` → `Policy expiresAt cannot be 0 (Sentry treats 0 as already-expired).`
+- `expiresAt: 0` → `Policy expiresAt cannot be 0 (Ward treats 0 as already-expired).`
 - A timestamp at or before `now + 60s` (a 60-second clock-skew safety window) → rejected with the actual `now` and the window in the message.
 - Above `uint64` range → rejected (the on-chain field is `uint64`).
 - More than 5 years out → rejected (lifetime cap).
@@ -1602,9 +1602,9 @@ A successful immediate check returns `(true, bytes32(0))`. A reference to a `pol
 
 ### Entrypoint-policy model
 
-The recommended integration ([§16 Integration models](#16-integration-models--modifier-vs-inline-picker)) gates an agent's own entrypoints, not the downstream contracts it calls. In this model the policy `target` is the **agent contract address** (the one that inherits `SentryAgentBase`), and `selectors` enumerates the agent's own entrypoint signatures — not the selectors of whatever the agent calls underneath.
+The recommended integration ([§16 Integration models](#16-integration-models--modifier-vs-inline-picker)) gates an agent's own entrypoints, not the downstream contracts it calls. In this model the policy `target` is the **agent contract address** (the one that inherits `WardAgentBase`), and `selectors` enumerates the agent's own entrypoint signatures — not the selectors of whatever the agent calls underneath.
 
-The sentry-counter sample is authored exactly this way: `target` is the agent address and the only authorized selector is the agent's own `bump(uint256)`. `reset()` is deliberately omitted so a gated call to it reverts `SentryRejected("SELECTOR_NOT_ALLOWED")` — the typed revert is the deny-path proof, no in-contract catch-and-emit needed. No native value moves on either entrypoint, so every `valueCapPerCall` is `"0"` and `dailySpendWeiCap` is `"0"`:
+The ward-counter sample is authored exactly this way: `target` is the agent address and the only authorized selector is the agent's own `bump(uint256)`. `reset()` is deliberately omitted so a gated call to it reverts `WardRejected("SELECTOR_NOT_ALLOWED")` — the typed revert is the deny-path proof, no in-contract catch-and-emit needed. No native value moves on either entrypoint, so every `valueCapPerCall` is `"0"` and `dailySpendWeiCap` is `"0"`:
 
 ```policy
 version: "0.1"
@@ -1625,7 +1625,7 @@ Replace the placeholder `target` with the deployed agent address (the `agent` fi
 
 Adopters coming from off-chain TypeScript SDKs will notice three structural differences:
 
-1. **Per-selector granularity.** Sentry policies key on `(target, selector)` pairs, not `target` alone, so you can authorize `approve(...)` without authorizing `transfer(...)` on the same token.
+1. **Per-selector granularity.** Ward policies key on `(target, selector)` pairs, not `target` alone, so you can authorize `approve(...)` without authorizing `transfer(...)` on the same token.
 2. **Risk tiers replace allow/block/review flags.** `IMMEDIATE` ≈ allow, `DELAYED` ≈ review-with-timer, `VETO_REQUIRED` ≈ review-with-human-approval.
 3. **On-chain policy registry.** Policies are published on-chain under `(publisher, label)` namespaces and referenced by a stable `policyId`. The on-chain `Policy` struct — not an off-chain audit log — is the durable artifact other Somnia apps consume.
 
@@ -1672,22 +1672,22 @@ What this policy authorizes:
 
 ## 20. CLI reference — every command and flag
 
-Exhaustive reference for every `sentry` command, flag, and environment variable.
+Exhaustive reference for every `ward` command, flag, and environment variable.
 
-The `sentry` CLI compiles `POLICY.md` files, publishes them to `SentryOracle`, inspects intents, drives the `SentryQueue` lifecycle, runs static checks on agent contracts, and opens the queue-monitor TUI. Commands are either **offline** (no RPC, no wallet) or **on-chain** (read or write against Somnia Shannon testnet, chain id `50312`).
+The `ward` CLI compiles `POLICY.md` files, publishes them to `WardOracle`, inspects intents, drives the `WardQueue` lifecycle, runs static checks on agent contracts, and opens the queue-monitor TUI. Commands are either **offline** (no RPC, no wallet) or **on-chain** (read or write against Somnia Shannon testnet, chain id `50312`).
 
 ### Invocation
 
-From the repo root the CLI is run through the `sentry` script, which launches the built `cli/dist/index.js` if present and otherwise falls back to running `cli/src/index.ts` under `tsx`:
+From the repo root the CLI is run through the `ward` script, which launches the built `cli/dist/index.js` if present and otherwise falls back to running `cli/src/index.ts` under `tsx`:
 
 ```bash
-pnpm sentry <command> [args] [flags]
+pnpm ward <command> [args] [flags]
 ```
 
 Running with **no arguments** opens the guided interactive menu instead of parsing a command:
 
 ```bash
-pnpm sentry
+pnpm ward
 ```
 
 The menu prints a numbered list of actions and prompts for each input the command needs. It is a thin wrapper over the same command functions; every flag documented below still works for scripted (non-interactive) use. On-chain menu actions ask for an explicit `[y/N]` confirmation before sending a transaction. The menu's choices are:
@@ -1707,7 +1707,7 @@ The menu prints a numbered list of actions and prompts for each input the comman
 | 11 | Queue expire | `queue:expire` |
 | 0 / q | Exit | — |
 
-`pnpm sentry --help` lists all commands; `pnpm sentry --version` prints the CLI version read from `cli/package.json`.
+`pnpm ward --help` lists all commands; `pnpm ward --version` prints the CLI version read from `cli/package.json`.
 
 ### Environment
 
@@ -1717,13 +1717,13 @@ On startup the CLI auto-loads a `.env` file from the current working directory (
 |---|---|---|---|
 | `PRIVATE_KEY` | every write command (`push`, `queue:*`) and `preflight` | — | `0x`-prefixed 32-byte hex. The signing wallet. |
 | `DEPLOYER_PK` | `preflight` only (fallback for `PRIVATE_KEY`) | — | Read only by `preflight`; if it differs from `PRIVATE_KEY` while both are set, `preflight` warns. |
-| `SENTRY_ORACLE` | `push`, `queue:handoff` (for a `VETO_REQUIRED` record) | — | Deployed `SentryOracle` address. Canonical (v2): `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`. `lint` reads the oracle from its own `--oracle` flag, not this variable. |
-| `SENTRY_QUEUE` | `queue:status`, `queue:enqueue`, `queue:dispatch`, `queue:veto`, `queue:expire`, `queue:handoff` | — | Deployed `SentryQueue` address. Canonical (v2): `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4`. |
+| `WARD_ORACLE` | `push`, `queue:handoff` (for a `VETO_REQUIRED` record) | — | Deployed `WardOracle` address. Canonical (v2): `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`. `lint` reads the oracle from its own `--oracle` flag, not this variable. |
+| `WARD_QUEUE` | `queue:status`, `queue:enqueue`, `queue:dispatch`, `queue:veto`, `queue:expire`, `queue:handoff` | — | Deployed `WardQueue` address. Canonical (v2): `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4`. |
 | `SOMNIA_TESTNET_RPC` | every on-chain command | `https://dream-rpc.somnia.network` | RPC URL for chain id `50312`. |
 | `SOMNIA_AGENT_PLATFORM` | `preflight` (sanity warning) | — | Compared against canonical platform `0x037Bb9C718F3f7fe5eCBDB0b600D607b52706776`. |
 | `LLM_INFERENCE_AGENT_ID` | `preflight` (sanity warning) | — | Compared against canonical id `12847293847561029384`. |
 
-Commands that need a missing variable fail fast with an explicit error, e.g. `SENTRY_ORACLE env var required (the deployed oracle address)`, `SENTRY_QUEUE env var required (the deployed queue address)`, or `PRIVATE_KEY env var required`.
+Commands that need a missing variable fail fast with an explicit error, e.g. `WARD_ORACLE env var required (the deployed oracle address)`, `WARD_QUEUE env var required (the deployed queue address)`, or `PRIVATE_KEY env var required`.
 
 ### Commands
 
@@ -1734,39 +1734,39 @@ Each entry lists the positional arguments, flags, what the command requires from
 Compile a `POLICY.md` to canonical JSON and print it. **Offline.**
 
 - **Argument:** `<path>` — the `POLICY.md` file.
-- **Env:** reads optional `SENTRY_ORACLE` / `SENTRY_QUEUE` so the compiler can reject a policy whose `target` matches its own gatekeeper. No RPC, no wallet.
+- **Env:** reads optional `WARD_ORACLE` / `WARD_QUEUE` so the compiler can reject a policy whose `target` matches its own gatekeeper. No RPC, no wallet.
 - **Output:** a `# compiled PolicyInput` heading followed by the serialized `PolicyInput` (BigInt fields rendered as decimal strings).
 
 The label is not bound at compile time — it is only chosen at `push --label` time. See [§19 POLICY.md spec](#19-policymd-spec--authoritative-grammar) for the grammar this consumes.
 
 ```bash
-pnpm sentry compile examples/sentry-counter/policy.md
+pnpm ward compile examples/ward-counter/policy.md
 ```
 
 #### `push <path>`
 
-Compile and publish (or update) a `POLICY.md` to `SentryOracle` under your wallet's namespace. **On-chain write.**
+Compile and publish (or update) a `POLICY.md` to `WardOracle` under your wallet's namespace. **On-chain write.**
 
 - **Argument:** `<path>` — the `POLICY.md` file.
 - **Flag:** `--label <name>` — ASCII label (≤ 32 bytes) for your policy namespace (default `default`). Right-padded to `bytes32`.
-- **Env:** requires `PRIVATE_KEY` and `SENTRY_ORACLE`; reads `SOMNIA_TESTNET_RPC` and optional `SENTRY_QUEUE`.
+- **Env:** requires `PRIVATE_KEY` and `WARD_ORACLE`; reads `SOMNIA_TESTNET_RPC` and optional `WARD_QUEUE`.
 
 The command computes `policyId = policyIdFor(walletAddress, label)`, reads `policyOwner(policyId)` on-chain to auto-detect publish vs. update, and refuses to overwrite a policy owned by another wallet (error: `policyId … is owned by …, not your wallet …; pick a different --label`). It **simulates first**, so a revert surfaces as `publishPolicy would revert: <reason>` / `updatePolicy would revert: <reason>` before any gas is paid; only on a clean simulation does it submit. On success it prints `OK · policyId = <id>` — that id is stable across updates and is what you reference in the agent contract.
 
 ```bash
-pnpm sentry push examples/sentry-counter/policy.md --label counter-v1
+pnpm ward push examples/ward-counter/policy.md --label counter-v1
 ```
 
 #### `policyid <label>`
 
-Compute the `SentryOracle` policyId for a `(publisher, label)` pair. **Offline** (pure; no RPC), unless `--publisher` is omitted.
+Compute the `WardOracle` policyId for a `(publisher, label)` pair. **Offline** (pure; no RPC), unless `--publisher` is omitted.
 
 - **Argument:** `<label>` — ASCII label (≤ 32 bytes).
 - **Flag:** `--publisher <addr>` — publisher address. When omitted, the publisher defaults to the wallet derived from `PRIVATE_KEY` (so omitting it requires `PRIVATE_KEY` to be set).
 - **Output:** the `publisher`, `label`, and computed `id`.
 
 ```bash
-pnpm sentry policyid counter-v1 --publisher 0xYourPublisher
+pnpm ward policyid counter-v1 --publisher 0xYourPublisher
 ```
 
 #### `inspect <intent.json>`
@@ -1774,31 +1774,31 @@ pnpm sentry policyid counter-v1 --publisher 0xYourPublisher
 Pretty-print an Intent JSON with its calldata decoded. **Offline.**
 
 - **Argument:** `<intent.json>` — a JSON file with `agentId`, `requestId`, `target`, `selector`, `data`, `value`, `promptHash`, `taskClass`.
-- **Output:** the intent fields, a calldata inspector that decodes the function when the selector is known, and a check that the first 4 bytes of `data` match the claimed `selector`. On mismatch it warns `intent.selector … does not match first 4 bytes of intent.data …. Sentry will reject with SELECTOR_MISMATCH.`; on match it prints `selector / calldata first-4-bytes: ✓ match`.
+- **Output:** the intent fields, a calldata inspector that decodes the function when the selector is known, and a check that the first 4 bytes of `data` match the claimed `selector`. On mismatch it warns `intent.selector … does not match first 4 bytes of intent.data …. Ward will reject with SELECTOR_MISMATCH.`; on match it prints `selector / calldata first-4-bytes: ✓ match`.
 
 ```bash
-pnpm sentry inspect intent.json
+pnpm ward inspect intent.json
 ```
 
 #### `lint <path>`
 
-Lint a `POLICY.md` for common Sentry integration mistakes. **Offline by default**; on-chain rules activate only when `--oracle` + `--rpc` are supplied.
+Lint a `POLICY.md` for common Ward integration mistakes. **Offline by default**; on-chain rules activate only when `--oracle` + `--rpc` are supplied.
 
 - **Argument:** `<path>` — the `POLICY.md` file.
 - **Flags:**
   - `--abi <path>` — ABI JSON or Foundry artifact JSON, enabling selector and state-mutability rules.
-  - `--oracle <addr>` — `SentryOracle` address for on-chain rules.
+  - `--oracle <addr>` — `WardOracle` address for on-chain rules.
   - `--rpc <url>` — RPC URL for on-chain rules.
   - `--policy-id <id>` — policy id used by the `vetoRequiredWithoutOwner` check.
   - `--fail-on <rules>` — comma-separated rule ids to promote from `warn` to `error`.
   - `--json` — print machine-readable diagnostics (`{ ok, diagnostics: [...] }`).
-- **Output:** a `# sentry lint` heading and one line per diagnostic (`file:line:col SEVERITY rule message`), or `OK · no diagnostics`.
+- **Output:** a `# ward lint` heading and one line per diagnostic (`file:line:col SEVERITY rule message`), or `OK · no diagnostics`.
 
 Rules: `dailyCapZeroWithPayable`, `vetoRequiredWithoutOwner`, `targetHasNoCode`, `selectorNotInAbi`, `immediateWithDelay`, `delayedWithZeroDelay`, `viewFunctionGated`, `policyExpired`. The default-error rules are `immediateWithDelay`, `policyExpired`, and `vetoRequiredWithoutOwner`; everything else is a warning unless named in `--fail-on`. `targetHasNoCode` runs only when `--oracle` + `--rpc` are set; `vetoRequiredWithoutOwner` additionally needs `--policy-id`. **Exit code 1** if any diagnostic is an error.
 
 ```bash
-pnpm sentry lint examples/sentry-counter/policy.md \
-  --abi examples/sentry-counter/out/CounterAgent.sol/CounterAgent.json
+pnpm ward lint examples/ward-counter/policy.md \
+  --abi examples/ward-counter/out/CounterAgent.sol/CounterAgent.json
 ```
 
 #### `analyze:gate <path>`
@@ -1807,16 +1807,16 @@ Static check that every dispatch in an agent contract is gated. **Offline.**
 
 - **Argument:** `<path>` — a Solidity source file.
 - **Flag:** `--json` — print machine-readable findings (`{ ok, findings: [...] }`).
-- **Output:** a `# sentry analyze:gate` heading and one `WARN` line per ungated dispatch, or `OK · every dispatch is gated`.
+- **Output:** a `# ward analyze:gate` heading and one `WARN` line per ungated dispatch, or `OK · every dispatch is gated`.
 
-It strips comments and strings, extracts each function, skips `pure` / `view` functions and functions carrying an `onlyOwner` modifier, then flags any function that performs a dispatch (`<x>.call(...)` / `<x>.call{value: …}(...)`, `safeTransferETH(...)`, `sendValue(...)`) without first being gated. A dispatch is considered gated when preceded by `_gate(...)`, an `oracle.checkIntent(...)` call, or `SentryCall.check(...)` / `SentryCall.guardedCall(...)` — and a dispatch that *is* a `SentryCall.check(...)` / `SentryCall.guardedCall(...)` is treated as self-gated. Findings read `dispatch in <fn>(...) is not preceded by _gate(...) or SentryCall.check(...)`.
+It strips comments and strings, extracts each function, skips `pure` / `view` functions and functions carrying an `onlyOwner` modifier, then flags any function that performs a dispatch (`<x>.call(...)` / `<x>.call{value: …}(...)`, `safeTransferETH(...)`, `sendValue(...)`) without first being gated. A dispatch is considered gated when preceded by `_gate(...)`, an `oracle.checkIntent(...)` call, or `WardCall.check(...)` / `WardCall.guardedCall(...)` — and a dispatch that *is* a `WardCall.check(...)` / `WardCall.guardedCall(...)` is treated as self-gated. Findings read `dispatch in <fn>(...) is not preceded by _gate(...) or WardCall.check(...)`.
 
-This complements, but does not replace, the `sentryGuarded(selector, value)` modifier on `SentryAgentBase` and the inline `_sentryCheck(...)` / `SentryCall.check(...)` paths described in [§16 Integration models](#16-integration-models--modifier-vs-inline-picker): the modifier's gate is invisible to this textual analyzer, so a function whose only gate is `sentryGuarded(...)` will not be flagged because the modifier injects the check ahead of the body. The analyzer's job is to catch the *inline* path — a hand-written `.call(...)` with no `_sentryCheck(...)` / `SentryCall.check(...)` in front of it.
+This complements, but does not replace, the `wardGuarded(selector, value)` modifier on `WardAgentBase` and the inline `_wardCheck(...)` / `WardCall.check(...)` paths described in [§16 Integration models](#16-integration-models--modifier-vs-inline-picker): the modifier's gate is invisible to this textual analyzer, so a function whose only gate is `wardGuarded(...)` will not be flagged because the modifier injects the check ahead of the body. The analyzer's job is to catch the *inline* path — a hand-written `.call(...)` with no `_wardCheck(...)` / `WardCall.check(...)` in front of it.
 
 - **Exit codes:** `1` if any finding is reported; `2` on file-not-found or read / parse error.
 
 ```bash
-pnpm sentry analyze:gate examples/sentry-counter/src/CounterAgent.sol
+pnpm ward analyze:gate examples/ward-counter/src/CounterAgent.sol
 ```
 
 #### `policy:init`
@@ -1833,27 +1833,27 @@ Generate a starter `POLICY.md` from a contract ABI and print it to stdout. **Off
 Errors fast on a missing `--abi`/`--target`, an invalid `--target`, an unknown `--profile`, or an ABI with no non-view/non-pure functions.
 
 ```bash
-pnpm sentry policy:init \
-  --abi examples/sentry-counter/out/CounterAgent.sol/CounterAgent.json \
+pnpm ward policy:init \
+  --abi examples/ward-counter/out/CounterAgent.sol/CounterAgent.json \
   --target 0xYourAgent \
   --profile balanced > POLICY.md
 ```
 
 #### `ai:init`
 
-Generate Sentry assistant context files from the repo's `SKILL.md`. **Offline.**
+Generate Ward assistant context files from the repo's `SKILL.md`. **Offline.**
 
 - **Flags:**
-  - `--cursor` — write `.cursor/rules/sentry.mdc`.
-  - `--claude` — write `.claude/skills/sentry-integration/SKILL.md`.
-  - `--codex` — create or update the marked Sentry section in `AGENTS.md`.
+  - `--cursor` — write `.cursor/rules/ward.mdc`.
+  - `--claude` — write `.claude/skills/ward-integration/SKILL.md`.
+  - `--codex` — create or update the marked Ward section in `AGENTS.md`.
   - `--all` — write the Cursor, Claude, and Codex files.
   - `--force` — overwrite hand-edited generated destinations.
-- **Behaviour:** with none of `--cursor` / `--claude` / `--codex` / `--all`, **all three** targets are written. Each generated file carries a `GENERATED — edit /SKILL.md and rerun \`sentry ai:init\`` header; the command refuses to clobber a destination that does not look generated (or a hand-edited `AGENTS.md` Sentry section) unless `--force` is passed. Reads `SKILL.md` from the current working directory.
-- **Output:** a `# sentry ai:init` heading and one `wrote <path>` line per file.
+- **Behaviour:** with none of `--cursor` / `--claude` / `--codex` / `--all`, **all three** targets are written. Each generated file carries a `GENERATED — edit /SKILL.md and rerun \`ward ai:init\`` header; the command refuses to clobber a destination that does not look generated (or a hand-edited `AGENTS.md` Ward section) unless `--force` is passed. Reads `SKILL.md` from the current working directory.
+- **Output:** a `# ward ai:init` heading and one `wrote <path>` line per file.
 
 ```bash
-pnpm sentry ai:init --all
+pnpm ward ai:init --all
 ```
 
 #### `preflight`
@@ -1861,37 +1861,37 @@ pnpm sentry ai:init --all
 Check env + wallet balance against Somnia testnet. **On-chain read** (RPC only, no transaction).
 
 - **Flag:** `--min-balance <eth>` — minimum recommended balance in STT (default `0.5`).
-- **Env:** reads `PRIVATE_KEY` (or `DEPLOYER_PK`), `SOMNIA_TESTNET_RPC`, and the optional `SENTRY_ORACLE` / `SENTRY_QUEUE` / `SOMNIA_AGENT_PLATFORM` / `LLM_INFERENCE_AGENT_ID` variables.
-- **Output:** a `# sentry preflight` report of rpc, chainId, wallet, balance, platform, agentId, and the two Sentry addresses, followed by any `ERROR` / `WARN` lines, faucet links when the balance is low, and a final `preflight: OK` / `preflight: NOT READY`. It errors on a missing or malformed key, an invalid `SENTRY_ORACLE` / `SENTRY_QUEUE` address shape, or an unreachable RPC; it warns on a chainId other than `50312`, a low balance, or a non-canonical platform / agent id.
+- **Env:** reads `PRIVATE_KEY` (or `DEPLOYER_PK`), `SOMNIA_TESTNET_RPC`, and the optional `WARD_ORACLE` / `WARD_QUEUE` / `SOMNIA_AGENT_PLATFORM` / `LLM_INFERENCE_AGENT_ID` variables.
+- **Output:** a `# ward preflight` report of rpc, chainId, wallet, balance, platform, agentId, and the two Ward addresses, followed by any `ERROR` / `WARN` lines, faucet links when the balance is low, and a final `preflight: OK` / `preflight: NOT READY`. It errors on a missing or malformed key, an invalid `WARD_ORACLE` / `WARD_QUEUE` address shape, or an unreachable RPC; it warns on a chainId other than `50312`, a low balance, or a non-canonical platform / agent id.
 - **Exit code:** `1` when not ready (any error present).
 
 ```bash
-pnpm sentry preflight --min-balance 0.5
+pnpm ward preflight --min-balance 0.5
 ```
 
 #### `queue:status <execId>`
 
-Pretty-print a `SentryQueue` record header (cheap; skips the unbounded `intent.data` field). **On-chain read.**
+Pretty-print a `WardQueue` record header (cheap; skips the unbounded `intent.data` field). **On-chain read.**
 
 - **Argument:** `<execId>` — the queued execution id (decimal).
-- **Env:** requires `SENTRY_QUEUE`; reads `SOMNIA_TESTNET_RPC`.
+- **Env:** requires `WARD_QUEUE`; reads `SOMNIA_TESTNET_RPC`.
 - **Output:** a `# queue record execId=<id>` block: `state` (`None`/`Pending`/`Committed`/`Vetoed`/`Expired`), `tier` (`IMMEDIATE`/`DELAYED`/`VETO_REQUIRED`), `policyId`, `asker`, `target`, `selector`, `value`, `requestId`, `enqueuedAt`, `earliestCommit`, `deadline`, and a `timing` line. The reader tolerates both the canonical and a legacy `RecordHeader` layout.
 
 ```bash
-pnpm sentry queue:status 7
+pnpm ward queue:status 7
 ```
 
 #### `queue:enqueue <intent.json> <policyId>`
 
-Submit an Intent to `SentryQueue` under a `policyId` (for `DELAYED` / `VETO_REQUIRED` tiers only). **On-chain write.**
+Submit an Intent to `WardQueue` under a `policyId` (for `DELAYED` / `VETO_REQUIRED` tiers only). **On-chain write.**
 
 - **Arguments:** `<intent.json>` — Intent JSON file; `<policyId>` — 32-byte hex (`0x` + 64 hex chars).
 - **Flag:** `--spent-today <wei>` — the caller's running spent-today in wei as a decimal string (default `0`). For accurate cap enforcement, pass your wallet's real daily-spent total.
-- **Env:** requires `PRIVATE_KEY` and `SENTRY_QUEUE`; reads `SOMNIA_TESTNET_RPC`.
+- **Env:** requires `PRIVATE_KEY` and `WARD_QUEUE`; reads `SOMNIA_TESTNET_RPC`.
 - **Behaviour:** validates the policyId shape, reshapes the JSON intent into the `enqueue` tuple, **simulates first** (surfacing oracle rejections like `REQUIRES_DELAY` as `enqueue would revert: <reason>`), then submits. The contract reverts `IMMEDIATE_NO_QUEUE_NEEDED` for tier `IMMEDIATE` intents — those are dispatched synchronously and must never touch the queue. On success it prints `enqueued OK` and a hint to read `queue:status <execId>` once the `Enqueued` event is indexed.
 
 ```bash
-pnpm sentry queue:enqueue intent.json 0x<64-hex> --spent-today 0
+pnpm ward queue:enqueue intent.json 0x<64-hex> --spent-today 0
 ```
 
 #### `queue:dispatch <execId>`
@@ -1900,11 +1900,11 @@ Mark a queued intent `Committed`; with `--execute` also send the intent's transa
 
 - **Argument:** `<execId>` — the queued execution id (decimal).
 - **Flag:** `--execute` — after `dispatch` succeeds, send the returned intent (`to=target`, `data`, `value`) from this wallet. Off by default, because `dispatch` alone is non-destructive (it only transitions state to `Committed`); the external call is what moves funds.
-- **Env:** requires `PRIVATE_KEY` and `SENTRY_QUEUE`; reads `SOMNIA_TESTNET_RPC`.
+- **Env:** requires `PRIVATE_KEY` and `WARD_QUEUE`; reads `SOMNIA_TESTNET_RPC`.
 - **Behaviour:** simulates `dispatch` first (capturing the returned Intent calldata and surfacing reverts as `dispatch would revert: <reason>`), submits the `dispatch` tx, and — only with `--execute` — sends the follow-up intent transaction. Without `--execute` it prints `dispatched OK — caller now executes the intent themselves`.
 
 ```bash
-pnpm sentry queue:dispatch 7 --execute
+pnpm ward queue:dispatch 7 --execute
 ```
 
 #### `queue:veto <execId> <reason>`
@@ -1912,11 +1912,11 @@ pnpm sentry queue:dispatch 7 --execute
 Veto a pending queued intent (policy owner only; ≤ 32-byte reason). **On-chain write.**
 
 - **Arguments:** `<execId>` — the queued execution id (decimal); `<reason>` — an ASCII reason, at most 32 bytes (right-padded to `bytes32`).
-- **Env:** requires `PRIVATE_KEY` and `SENTRY_QUEUE`; reads `SOMNIA_TESTNET_RPC`.
+- **Env:** requires `PRIVATE_KEY` and `WARD_QUEUE`; reads `SOMNIA_TESTNET_RPC`.
 - **Behaviour:** rejects an over-long reason locally, then calls `veto(execId, reason)`. On a revert it notes the likely cause (`not policy owner, or already terminal`).
 
 ```bash
-pnpm sentry queue:veto 7 "policy changed"
+pnpm ward queue:veto 7 "policy changed"
 ```
 
 #### `queue:expire <execId>`
@@ -1924,11 +1924,11 @@ pnpm sentry queue:veto 7 "policy changed"
 Mark a stale pending queued intent `Expired` (anyone can call after the deadline). **On-chain write.**
 
 - **Argument:** `<execId>` — the queued execution id (decimal).
-- **Env:** requires `PRIVATE_KEY` and `SENTRY_QUEUE`; reads `SOMNIA_TESTNET_RPC`.
+- **Env:** requires `PRIVATE_KEY` and `WARD_QUEUE`; reads `SOMNIA_TESTNET_RPC`.
 - **Behaviour:** calls `expireIfStale(execId)`. On a revert it notes the likely cause (`still in window, or already terminal`).
 
 ```bash
-pnpm sentry queue:expire 7
+pnpm ward queue:expire 7
 ```
 
 #### `queue:handoff <execId>` (alias: `handoff <execId>`)
@@ -1939,15 +1939,15 @@ Print operator handoff guidance for a queued execution. **On-chain read.**
 - **Flags:**
   - `--agent <addr>` — integrator agent address; used when its ABI exposes `dispatchQueued(uint256)`.
   - `--abi <path>` — agent ABI JSON or Foundry artifact JSON, scanned for `dispatchQueued(uint256)`.
-- **Env:** requires `SENTRY_QUEUE`; for a `VETO_REQUIRED` record it also reads `policyOwner` from `SENTRY_ORACLE`. Reads `SOMNIA_TESTNET_RPC`.
+- **Env:** requires `WARD_QUEUE`; for a `VETO_REQUIRED` record it also reads `policyOwner` from `WARD_ORACLE`. Reads `SOMNIA_TESTNET_RPC`.
 - **Output:** a `# queue handoff execId=<id>` block with state, tier, policyId, requester, target, optional policy owner / agent / ABI detection, a recommendation summary and detail, and — when applicable — a ready-to-run `cast` command for the dispatcher to execute.
 
 `handoff` is a direct alias of `queue:handoff` with identical flags.
 
 ```bash
-pnpm sentry queue:handoff 7 \
+pnpm ward queue:handoff 7 \
   --agent 0xYourAgent \
-  --abi examples/sentry-counter/out/CounterAgent.sol/CounterAgent.json
+  --abi examples/ward-counter/out/CounterAgent.sol/CounterAgent.json
 ```
 
 #### `tui [...args]`
@@ -1956,11 +1956,11 @@ Open the full-screen Ink queue-monitor TUI. **On-chain read** (the TUI streams q
 
 - **Argument:** `[...args]` — forwarded verbatim to the TUI binary (unknown options are allowed).
 - **Flag:** `--json` — stream queue events as NDJSON instead of opening the full-screen TUI.
-- **Behaviour:** runs `tui/dist/index.js` under Node when built, otherwise `tui/src/index.tsx` under `tsx`; errors with `Sentry TUI is not installed yet. Run \`pnpm install\` first.` if neither is available. Exit code mirrors the TUI process.
+- **Behaviour:** runs `tui/dist/index.js` under Node when built, otherwise `tui/src/index.tsx` under `tsx`; errors with `Ward TUI is not installed yet. Run \`pnpm install\` first.` if neither is available. Exit code mirrors the TUI process.
 
 ```bash
-pnpm sentry tui
-pnpm sentry tui --json
+pnpm ward tui
+pnpm ward tui --json
 ```
 
 ### Exit codes
@@ -1976,7 +1976,7 @@ pnpm sentry tui --json
 
 ## 21. Contracts reference — full on-chain surface
 
-Exhaustive reference for Sentry's on-chain surface: the three core contracts, their data types, the integration base contracts and library, and the network constants. Every signature, event, error, and constant below is copied from `contracts/src/`.
+Exhaustive reference for Ward's on-chain surface: the three core contracts, their data types, the integration base contracts and library, and the network constants. Every signature, event, error, and constant below is copied from `contracts/src/`.
 
 ### Canonical addresses (Somnia Shannon, chain id 50312)
 
@@ -1984,36 +1984,36 @@ Use the canonical table in §1. Contract-specific ABI details start below; RPC a
 
 ### Import paths & remapping
 
-Integrators consume Sentry sources through the `sentry-somnia/` remapping, which points at `sentry-src/` — a symlink to `contracts/src`. Integration base contracts live under the `integration/` subpath.
+Integrators consume Ward sources through the `ward/` remapping, which points at `ward-src/` — a symlink to `contracts/src`. Integration base contracts live under the `integration/` subpath.
 
 ```toml
 # foundry.toml remappings
-sentry-somnia/=sentry-src/
+ward/=ward-src/
 ```
 
 ```solidity
-import "sentry-somnia/SentryOracle.sol";
-import "sentry-somnia/SentryQueue.sol";
-import "sentry-somnia/SentryAgentRegistry.sol";
-import "sentry-somnia/PolicyTypes.sol";          // Intent, Policy structs, tier constants
-import "sentry-somnia/integration/SentryAgentBase.sol";
-import "sentry-somnia/integration/QueueAgentBase.sol";
-import "sentry-somnia/integration/SentryCall.sol";
-import "sentry-somnia/constants/SomniaTestnet.sol";
+import "ward/WardOracle.sol";
+import "ward/WardQueue.sol";
+import "ward/WardAgentRegistry.sol";
+import "ward/PolicyTypes.sol";          // Intent, Policy structs, tier constants
+import "ward/integration/WardAgentBase.sol";
+import "ward/integration/QueueAgentBase.sol";
+import "ward/integration/WardCall.sol";
+import "ward/constants/SomniaTestnet.sol";
 ```
 
 All sources compile with `pragma solidity 0.8.26;`.
 
-### Decision guide: `sentryGuarded` modifier vs inline `checkIntent`
+### Decision guide: `wardGuarded` modifier vs inline `checkIntent`
 
 | Use | When | Mechanism |
 |---|---|---|
-| `sentryGuarded(selector, value)` modifier | Single outbound call per function; entrypoint-policy model. The recommended default. | Inherit [`SentryAgentBase`](#sentryagentbase); the modifier calls `oracle.checkSelector(...)` against `(address(this), selector, value)`. v2-oracle-only. |
-| Inline `oracle.checkIntent(...)` / `SentryAgentBase._sentryCheck` + `_call` | Multiple outbound calls in one function (e.g. approve+swap, mint+transfer), or per-argument constraints. | Call the oracle directly, or use the base's `_sentryCheck`/`_call` pair. Works against v1 or v2 oracles. |
+| `wardGuarded(selector, value)` modifier | Single outbound call per function; entrypoint-policy model. The recommended default. | Inherit [`WardAgentBase`](#wardagentbase); the modifier calls `oracle.checkSelector(...)` against `(address(this), selector, value)`. v2-oracle-only. |
+| Inline `oracle.checkIntent(...)` / `WardAgentBase._wardCheck` + `_call` | Multiple outbound calls in one function (e.g. approve+swap, mint+transfer), or per-argument constraints. | Call the oracle directly, or use the base's `_wardCheck`/`_call` pair. Works against v1 or v2 oracles. |
 
 The modifier guards the agent's *own* selector under the entrypoint-policy model: the policy targets the agent address and enumerates the agent's own entrypoints. Full rationale and worked examples are in [§16 Integration models](#16-integration-models--modifier-vs-inline-picker).
 
-### SentryOracle
+### WardOracle
 
 Pure on-chain policy registry. A publisher calls `publishPolicy` once and hard-codes the returned `policyId` in the consuming agent; the agent calls `checkIntent` / `checkSelector` synchronously before dispatching. No custody, no async, no Somnia agent-platform involvement.
 
@@ -2058,7 +2058,7 @@ Both run [`PolicyLib.validate`](#policylib-validation-rules) first; on a legalit
 | `TIER_DELAYED` | `(false, "REQUIRES_DELAY")` |
 | `TIER_VETO_REQUIRED` | `(false, "REQUIRES_VETO")` |
 
-Both **revert** `PolicyNotFound` if `policyId` was never published, so a misconfigured reference cannot be silently read as "policy denied". `checkSelector` synthesizes an `Intent` with `data = abi.encodePacked(selector)` and zeroed `agentId`/`requestId`/`promptHash`/`taskClass`; it is the calldata-less variant used by the `sentryGuarded` modifier.
+Both **revert** `PolicyNotFound` if `policyId` was never published, so a misconfigured reference cannot be silently read as "policy denied". `checkSelector` synthesizes an `Intent` with `data = abi.encodePacked(selector)` and zeroed `agentId`/`requestId`/`promptHash`/`taskClass`; it is the calldata-less variant used by the `wardGuarded` modifier.
 
 #### Tier, delay, health & helper views
 
@@ -2073,7 +2073,7 @@ function policyIdFor(address publisher, bytes32 label) external pure returns (by
 ```
 
 - `tierAndDelay` distinguishes "denied" from "must queue" and reports the delay window for `TIER_DELAYED`. Reverts `PolicyNotFound` if unpublished.
-- `policyHealth` is a cheap read of the kill-switch fields (`paused`, `expiresAt`); `SentryQueue.dispatch` uses it to re-validate without the asker's `spentToday`. Reverts `PolicyNotFound` if unpublished.
+- `policyHealth` is a cheap read of the kill-switch fields (`paused`, `expiresAt`); `WardQueue.dispatch` uses it to re-validate without the asker's `spentToday`. Reverts `PolicyNotFound` if unpublished.
 - `policyIdFor` is a pure precompute of the id a `(publisher, label)` pair would receive — no storage read, never reverts.
 
 #### Two-step ownership
@@ -2107,18 +2107,18 @@ error PolicyNotFound();
 error ZeroAddress();
 ```
 
-### SentryQueue
+### WardQueue
 
-Coordination layer for `TIER_DELAYED` and `TIER_VETO_REQUIRED` intents. An asking agent enqueues an intent whose `checkIntent` returned `REQUIRES_DELAY` / `REQUIRES_VETO`, waits the configured delay, then dispatches — the queue marks the intent committed and returns it so the **asker executes the call themselves**. SentryQueue holds no funds, owns no agents, and executes no calls; it is a metadata + state-machine + audit-trail contract. The asker owns value-cap and daily-cap correctness (the queue cannot see the asker's spend state).
+Coordination layer for `TIER_DELAYED` and `TIER_VETO_REQUIRED` intents. An asking agent enqueues an intent whose `checkIntent` returned `REQUIRES_DELAY` / `REQUIRES_VETO`, waits the configured delay, then dispatches — the queue marks the intent committed and returns it so the **asker executes the call themselves**. WardQueue holds no funds, owns no agents, and executes no calls; it is a metadata + state-machine + audit-trail contract. The asker owns value-cap and daily-cap correctness (the queue cannot see the asker's spend state).
 
 #### Constructor & constants
 
 ```solidity
-SentryOracle public immutable oracle;
+WardOracle public immutable oracle;
 uint32 public constant COMMIT_WINDOW_SECONDS = 7 days;
 uint256 public nextExecId = 1;
 
-constructor(SentryOracle _oracle);
+constructor(WardOracle _oracle);
 ```
 
 `deadline = earliestCommitAt + COMMIT_WINDOW_SECONDS`. `execId`s are assigned from `nextExecId` starting at 1.
@@ -2227,37 +2227,37 @@ error PolicyChanged(bytes32 reason);
 
 ### Integration helpers
 
-#### SentryAgentBase
+#### WardAgentBase
 
-Minimal base for agents that synchronously gate target calls through `SentryOracle`. Holds the oracle reference, the bound `POLICY_ID`, an `owner`, and per-UTC-day spend accounting.
+Minimal base for agents that synchronously gate target calls through `WardOracle`. Holds the oracle reference, the bound `POLICY_ID`, an `owner`, and per-UTC-day spend accounting.
 
 ```solidity
-SentryOracle public immutable oracle;
+WardOracle public immutable oracle;
 bytes32 public POLICY_ID;
 address public owner;
 
-constructor(SentryOracle _oracle, address _owner);  // reverts ZeroOwner if _owner == 0
+constructor(WardOracle _oracle, address _owner);  // reverts ZeroOwner if _owner == 0
 ```
 
-##### `sentryGuarded` modifier
+##### `wardGuarded` modifier
 
 ```solidity
-modifier sentryGuarded(bytes4 selector, uint256 value);
+modifier wardGuarded(bytes4 selector, uint256 value);
 ```
 
-One-shot guard for the entrypoint-policy model. When `POLICY_ID != 0`, it calls `oracle.checkSelector(POLICY_ID, address(this), selector, value, _sentrySpentToday())` and reverts `SentryRejected(reason)` on `!ok`. It then reserves the spend (`sentrySpentByDay[today] += value` when `value != 0`) **before** running the guarded body, so a reentrant call cannot observe a pre-spend daily budget. `POLICY_ID == 0` is an ungated kill-switch mode that skips the oracle call. The policy author publishes a policy whose `target` is the agent address and whose selectors are the agent's own entrypoints (e.g. `bump(uint256)`), not the downstream target's selectors.
+One-shot guard for the entrypoint-policy model. When `POLICY_ID != 0`, it calls `oracle.checkSelector(POLICY_ID, address(this), selector, value, _wardSpentToday())` and reverts `WardRejected(reason)` on `!ok`. It then reserves the spend (`wardSpentByDay[today] += value` when `value != 0`) **before** running the guarded body, so a reentrant call cannot observe a pre-spend daily budget. `POLICY_ID == 0` is an ungated kill-switch mode that skips the oracle call. The policy author publishes a policy whose `target` is the agent address and whose selectors are the agent's own entrypoints (e.g. `bump(uint256)`), not the downstream target's selectors.
 
 ##### Inline check + call (multi-outbound path)
 
 ```solidity
-function _sentryCheck(address target, bytes memory data, uint256 value, uint256 spentToday) internal;
+function _wardCheck(address target, bytes memory data, uint256 value, uint256 spentToday) internal;
 function _call(address target, bytes memory data, uint256 value) internal returns (bytes memory returndata);
-function _sentrySpentToday() internal view returns (uint256);
+function _wardSpentToday() internal view returns (uint256);
 ```
 
-- `_sentryCheck` returns early when `POLICY_ID == 0`; otherwise it calls `oracle.check(...)` (the `SentryCall` library) and reverts `SentryRejected(reason)` on `!ok`. It does not reserve spend — pair it with `_call`.
-- `_call` pre-reserves `value` into the day bucket **before** the external `target.call{value: value}(data)`, then reverts `SentryCallFailed(returndata)` if the call fails (the failed-tx revert unwinds the reservation). Use one `_sentryCheck` + `_call` pair per outbound call in a multi-call function.
-- `_sentrySpentToday` reads the current UTC-day bucket (`block.timestamp / 1 days`).
+- `_wardCheck` returns early when `POLICY_ID == 0`; otherwise it calls `oracle.check(...)` (the `WardCall` library) and reverts `WardRejected(reason)` on `!ok`. It does not reserve spend — pair it with `_call`.
+- `_call` pre-reserves `value` into the day bucket **before** the external `target.call{value: value}(data)`, then reverts `WardCallFailed(returndata)` if the call fails (the failed-tx revert unwinds the reservation). Use one `_wardCheck` + `_call` pair per outbound call in a multi-call function.
+- `_wardSpentToday` reads the current UTC-day bucket (`block.timestamp / 1 days`).
 
 ##### Owner & policy management
 
@@ -2274,41 +2274,41 @@ event OwnershipTransferred(address indexed previousOwner, address indexed newOwn
 
 error NotOwner();
 error ZeroOwner();
-error SentryRejected(bytes32 reason);
-error SentryCallFailed(bytes returndata);
+error WardRejected(bytes32 reason);
+error WardCallFailed(bytes returndata);
 ```
 
 #### QueueAgentBase
 
-Extends `SentryAgentBase` for agents that route `TIER_DELAYED` / `TIER_VETO_REQUIRED` intents through `SentryQueue`. The queue stores metadata only — it never holds or refunds funds, and this base does not roll back local spend accounting on expiry.
+Extends `WardAgentBase` for agents that route `TIER_DELAYED` / `TIER_VETO_REQUIRED` intents through `WardQueue`. The queue stores metadata only — it never holds or refunds funds, and this base does not roll back local spend accounting on expiry.
 
 ```solidity
-SentryQueue public immutable queue;
+WardQueue public immutable queue;
 
-constructor(SentryOracle _oracle, SentryQueue _queue, address _owner);  // chains SentryAgentBase(_oracle, _owner)
+constructor(WardOracle _oracle, WardQueue _queue, address _owner);  // chains WardAgentBase(_oracle, _owner)
 
-function _sentryEnqueueDelayed(address target, bytes memory data, uint256 value, uint256 reqId) internal returns (uint256 execId);
-function _sentryDispatchAndExecute(uint256 execId) internal returns (bytes memory);
+function _wardEnqueueDelayed(address target, bytes memory data, uint256 value, uint256 reqId) internal returns (uint256 execId);
+function _wardDispatchAndExecute(uint256 execId) internal returns (bytes memory);
 function dispatchQueued(uint256 execId) external onlyOwner returns (bytes memory);
 function _onQueueExpire(uint256 execId, address target, uint256 value) internal virtual;  // default no-op
 
 error QueueDispatchDidNotCommit(uint256 execId);
 ```
 
-- `_sentryEnqueueDelayed` builds the `Intent` (extracting the selector from the first 4 bytes of `data`), prechecks it against `oracle.checkIntent` (bubbling any revert), then calls `queue.enqueue(POLICY_ID, intent, _sentrySpentToday())`. It deliberately does not short-circuit IMMEDIATE results — `SentryQueue.enqueue` remains the source of truth and passes through `NotQueueable("IMMEDIATE_NO_QUEUE_NEEDED")`.
-- `_sentryDispatchAndExecute` calls `queue.dispatch(execId)`; on a `PastDeadline` revert it invokes `_onQueueExpire` and returns `""`, otherwise it re-bubbles. After a successful dispatch it asserts `state == Committed` (else reverts `QueueDispatchDidNotCommit`) and executes the stored call via `_call`.
+- `_wardEnqueueDelayed` builds the `Intent` (extracting the selector from the first 4 bytes of `data`), prechecks it against `oracle.checkIntent` (bubbling any revert), then calls `queue.enqueue(POLICY_ID, intent, _wardSpentToday())`. It deliberately does not short-circuit IMMEDIATE results — `WardQueue.enqueue` remains the source of truth and passes through `NotQueueable("IMMEDIATE_NO_QUEUE_NEEDED")`.
+- `_wardDispatchAndExecute` calls `queue.dispatch(execId)`; on a `PastDeadline` revert it invokes `_onQueueExpire` and returns `""`, otherwise it re-bubbles. After a successful dispatch it asserts `state == Committed` (else reverts `QueueDispatchDidNotCommit`) and executes the stored call via `_call`.
 - Override `_onQueueExpire` to release reservations or refund custody on expiry; the default is intentionally empty because the base does not assume funds were reserved at enqueue time.
 
-#### SentryCall library
+#### WardCall library
 
 ```solidity
-library SentryCall {
-    function check(SentryOracle oracle, bytes32 policyId, address target, bytes memory data, uint256 value, uint256 spentToday)
+library WardCall {
+    function check(WardOracle oracle, bytes32 policyId, address target, bytes memory data, uint256 value, uint256 spentToday)
         internal returns (bool ok, bytes32 reason);
 }
 ```
 
-Selector-safe helper used by `SentryAgentBase._sentryCheck`. It extracts the selector from the first 4 bytes of `data` (empty selector if `data.length < 4`), builds an `Intent`, and calls `SentryOracle.checkIntent` via a low-level `call` so a `PolicyNotFound` revert bubbles cleanly rather than corrupting decode. Returns the decoded `(ok, reason)`.
+Selector-safe helper used by `WardAgentBase._wardCheck`. It extracts the selector from the first 4 bytes of `data` (empty selector if `data.length < 4`), builds an `Intent`, and calls `WardOracle.checkIntent` via a low-level `call` so a `PolicyNotFound` revert bubbles cleanly rather than corrupting decode. Returns the decoded `(ok, reason)`.
 
 ### Data types
 
@@ -2383,7 +2383,7 @@ The `Policy` storage struct flattens these into per-`(target, selector)` mapping
 
 #### Reason codes → integrator handling
 
-These reasons reach your agent as the `reason` in `SentryRejected(reason)` (from the base contracts) or as the second return value of a direct `checkIntent`/`checkSelector` call:
+These reasons reach your agent as the `reason` in `WardRejected(reason)` (from the base contracts) or as the second return value of a direct `checkIntent`/`checkSelector` call:
 
 | reason | Meaning | Recommended handling |
 |---|---|---|
@@ -2392,7 +2392,7 @@ These reasons reach your agent as the `reason` in `SentryRejected(reason)` (from
 | `"BAD_CALLDATA"` / `"SELECTOR_MISMATCH"` | Malformed intent | Bug in caller — fix the call construction |
 | `"TARGET_NOT_ALLOWED"` / `"SELECTOR_NOT_ALLOWED"` | Not permitted by policy | Abort; this action is out of policy |
 | `"VALUE_CAP"` / `"DAILY_CAP"` | Within policy but over a spend limit | Abort or retry with a smaller value / next UTC day |
-| `"REQUIRES_DELAY"` | Tier is `TIER_DELAYED` | Route through `SentryQueue.enqueue`, wait, then `dispatch` |
+| `"REQUIRES_DELAY"` | Tier is `TIER_DELAYED` | Route through `WardQueue.enqueue`, wait, then `dispatch` |
 | `"REQUIRES_VETO"` | Tier is `TIER_VETO_REQUIRED` | Enqueue; policy owner must actively `dispatch` |
 | revert `PolicyNotFound` | `policyId` never published | Misconfiguration — fix the bound `POLICY_ID` |
 
@@ -2416,9 +2416,9 @@ error TooManySelectors(address target, uint256 count, uint256 max);
 
 Notably: `InvalidTier` reverts if `tier > TIER_VETO_REQUIRED`, and `InvalidDelay` reverts if `delaySeconds != 0` for any tier other than `TIER_DELAYED`.
 
-### SentryAgentRegistry
+### WardAgentRegistry
 
-Permissionless, ownerless directory of Sentry-gated agents for off-chain discovery. Each entry is owned by its registrar (first writer); only that address may update or deactivate it.
+Permissionless, ownerless directory of Ward-gated agents for off-chain discovery. Each entry is owned by its registrar (first writer); only that address may update or deactivate it.
 
 ```solidity
 struct Agent {
@@ -2482,7 +2482,7 @@ library SomniaTestnet {
 }
 ```
 
-`AGENT_PLATFORM` is the real Somnia Agents platform; its ABI is in `contracts/src/interfaces/ISomniaAgentPlatform.sol`. Sentry's core contracts do not depend on the agent platform — the interface and these agent-id constants exist only for agents that additionally call the Somnia platform (the oracle gate is independent of it).
+`AGENT_PLATFORM` is the real Somnia Agents platform; its ABI is in `contracts/src/interfaces/ISomniaAgentPlatform.sol`. Ward's core contracts do not depend on the agent platform — the interface and these agent-id constants exist only for agents that additionally call the Somnia platform (the oracle gate is independent of it).
 
 ---
 
@@ -2491,7 +2491,7 @@ library SomniaTestnet {
 
 Day-two operations for a live policy: update it, kill it, hand it off, and keep its queue clean.
 
-This section assumes you have already published a policy and know its `policyId`. Every operation here is an owner-only write against the canonical v2 `SentryOracle` or its `SentryQueue` on Somnia Shannon (chain id `50312`, RPC `https://dream-rpc.somnia.network`). Use the addresses in §1; substitute v1 only if the policy was published against the v1 oracle.
+This section assumes you have already published a policy and know its `policyId`. Every operation here is an owner-only write against the canonical v2 `WardOracle` or its `WardQueue` on Somnia Shannon (chain id `50312`, RPC `https://dream-rpc.somnia.network`). Use the addresses in §1; substitute v1 only if the policy was published against the v1 oracle.
 
 ### Which operations the SDK client covers
 
@@ -2504,7 +2504,7 @@ checkIntent(policyId, intent, spentToday) // read
 tierAndDelay(policyId, target, selector)  // read
 ```
 
-Everything else here — pause/expire (done *through* `updatePolicy`), ownership transfer/accept/cancel, and all queue operations — has no typed client helper. Drive those with the `sentry` CLI (queue ops) or a raw ABI call (`cast send`, or viem `writeContract` against `SENTRY_ORACLE_ABI` / `SENTRY_QUEUE_ABI`). Each section below states which path applies.
+Everything else here — pause/expire (done *through* `updatePolicy`), ownership transfer/accept/cancel, and all queue operations — has no typed client helper. Drive those with the `ward` CLI (queue ops) or a raw ABI call (`cast send`, or viem `writeContract` against `WARD_ORACLE_ABI` / `WARD_QUEUE_ABI`). Each section below states which path applies.
 
 ### Publish vs update a policy
 
@@ -2517,7 +2517,7 @@ policyId = keccak256(abi.encode(msg.sender, label));
 if (policyOwner[policyId] != address(0)) revert PolicyExists();
 ```
 
-So you cannot "re-publish" to change a live policy — re-running `sentry push my-policy.md --label my-bot-v1` against an existing label fails. To change a policy in place, call `updatePolicy(policyId, input)`:
+So you cannot "re-publish" to change a live policy — re-running `ward push my-policy.md --label my-bot-v1` against an existing label fails. To change a policy in place, call `updatePolicy(policyId, input)`:
 
 ```solidity
 function updatePolicy(bytes32 policyId, PolicyInput calldata input) external {
@@ -2540,7 +2540,7 @@ or a raw ABI call against `updatePolicy(bytes32,(...))`.
 
 > **In-place-update risk.** `updatePolicy` mutates a policy that running agents already depend on. Two consequences to plan for:
 >
-> 1. **It bumps `policyVersion`.** Every increment invalidates any intent already sitting in `SentryQueue` under the old version. On `dispatch`, the queue re-checks the version and reverts with `PolicyChanged("UPDATED")`. Updating a policy with pending queued intents silently strands them — they can no longer be dispatched, only vetoed or expired.
+> 1. **It bumps `policyVersion`.** Every increment invalidates any intent already sitting in `WardQueue` under the old version. On `dispatch`, the queue re-checks the version and reverts with `PolicyChanged("UPDATED")`. Updating a policy with pending queued intents silently strands them — they can no longer be dispatched, only vetoed or expired.
 > 2. **There is no staging or timelock.** The change is live the instant the tx confirms. An agent mid-dispatch in the next block sees the new rules. Tighten caps or remove a selector and in-flight `IMMEDIATE` calls that were legal a block ago now revert with the normal policy-denied reasons.
 >
 > For risky edits, prefer publishing a *new* policy under a new label and migrating the agent's hard-coded `policyId`, rather than mutating the one in production.
@@ -2573,8 +2573,8 @@ function policyHealth(bytes32 policyId) external view returns (bool paused, uint
 
 What pausing/expiring actually blocks depends on the consumer's check path, both of which run the policy's `validate` before returning. A paused or expired policy fails `validate`, so:
 
-- `checkIntent` / `checkSelector` return `(false, reason)` for an inline agent guard — the agent's `sentryGuarded` modifier or `_sentryCheck` aborts the dispatch.
-- `SentryQueue.dispatch` re-runs `policyHealth` in `_checkPolicyStillActive` and reverts a pending intent's dispatch:
+- `checkIntent` / `checkSelector` return `(false, reason)` for an inline agent guard — the agent's `wardGuarded` modifier or `_wardCheck` aborts the dispatch.
+- `WardQueue.dispatch` re-runs `policyHealth` in `_checkPolicyStillActive` and reverts a pending intent's dispatch:
 
 ```solidity
 (bool paused, uint64 expiresAt) = oracle.policyHealth(q.policyId);
@@ -2650,7 +2650,7 @@ cast send 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c \
 
 ### Queue housekeeping
 
-`SentryQueue` holds no funds and runs no calls — it is a state machine over `Pending → Committed / Vetoed / Expired`. As policy owner you have two housekeeping actions: **veto** a pending intent you do not want dispatched, and **expire** stale records to clear them.
+`WardQueue` holds no funds and runs no calls — it is a state machine over `Pending → Committed / Vetoed / Expired`. As policy owner you have two housekeeping actions: **veto** a pending intent you do not want dispatched, and **expire** stale records to clear them.
 
 #### Veto a pending intent (owner only)
 
@@ -2669,7 +2669,7 @@ function veto(uint256 execId, bytes32 reason) external {
 Veto is the active reject for both DELAYED and VETO_REQUIRED records. (For DELAYED intents, dispatch is asker-driven on a timer, so veto is your react-in-time stop during the wait window; for VETO_REQUIRED, nothing dispatches unless *you* dispatch it, so veto just closes the record out.) The `reason` is a `bytes32` — the CLI packs your text right-padded (`padHex(..., { dir: "right" })`, the standard `bytes32` string layout) and rejects anything over 32 bytes:
 
 ```bash
-sentry queue:veto <execId> "too risky"
+ward queue:veto <execId> "too risky"
 ```
 
 #### Expire stale records (anyone, after the deadline)
@@ -2687,14 +2687,14 @@ function expireIfStale(uint256 execId) external {
 ```
 
 ```bash
-sentry queue:expire <execId>
+ward queue:expire <execId>
 ```
 
-Reverts before the deadline (`TooEarly`) or if the record is already terminal (`NotPending`). The TUI sweeps these in bulk — `sentry tui`, then `[s]` to sweep all expirable records.
+Reverts before the deadline (`TooEarly`) or if the record is already terminal (`NotPending`). The TUI sweeps these in bulk — `ward tui`, then `[s]` to sweep all expirable records.
 
 #### Inspect before acting
 
-`sentry queue:status <execId>` prints the record header (state, tier, asker, target, and the `earliestCommitAt` / `deadline` timing) without loading the unbounded `intent.data`. Use it to confirm a record is genuinely past its deadline (expirable) or still inside its window (veto-able) before you spend gas.
+`ward queue:status <execId>` prints the record header (state, tier, asker, target, and the `earliestCommitAt` / `deadline` timing) without loading the unbounded `intent.data`. Use it to confirm a record is genuinely past its deadline (expirable) or still inside its window (veto-able) before you spend gas.
 
 #### What a policy update does to the queue
 
@@ -2727,43 +2727,43 @@ Caveats specific to rotation:
 
 | Operation | Function | Tool |
 |---|---|---|
-| Create a policy | `publishPolicy(label, input)` | `sentry push`, SDK `publishPolicy` |
+| Create a policy | `publishPolicy(label, input)` | `ward push`, SDK `publishPolicy` |
 | Change a policy | `updatePolicy(policyId, input)` | SDK `updatePolicy` or raw ABI |
 | Pause / un-pause | `updatePolicy` with `paused` flag | SDK `updatePolicy` or raw ABI |
 | Expire | `updatePolicy` with `expiresAt` | SDK `updatePolicy` or raw ABI |
 | Nominate new owner | `transferPolicyOwnership(policyId, newOwner)` | raw ABI (`cast`) |
 | Accept ownership | `acceptPolicyOwnership(policyId)` | raw ABI (`cast`) |
 | Cancel nomination | `cancelPolicyOwnershipTransfer(policyId)` | raw ABI (`cast`) |
-| Veto a queued intent | `veto(execId, reason)` | `sentry queue:veto` |
-| Expire a stale record | `expireIfStale(execId)` | `sentry queue:expire`, TUI sweep |
-| Inspect a record | `getRecordHeader(execId)` | `sentry queue:status` |
+| Veto a queued intent | `veto(execId, reason)` | `ward queue:veto` |
+| Expire a stale record | `expireIfStale(execId)` | `ward queue:expire`, TUI sweep |
+| Inspect a record | `getRecordHeader(execId)` | `ward queue:status` |
 
 ---
 
 
 ## 23. Operating the queue — TUI + dashboard
 
-Watch live `SentryQueue` activity and fire `expireIfStale` on stale records from a terminal, or stream queue events as NDJSON. This section covers the `sentry tui` operator console end-to-end (the same surface ships as `@sentry-somnia/tui` with the `sentry-tui` bin).
+Watch live `WardQueue` activity and fire `expireIfStale` on stale records from a terminal, or stream queue events as NDJSON. This section covers the `ward tui` operator console end-to-end (the same surface ships as `@ward/tui` with the `ward-tui` bin).
 
 ### Launch
 
 From the repo root:
 
 ```bash
-pnpm sentry tui
+pnpm ward tui
 ```
 
-`sentry tui` spawns the Ink app in `tui/` (built `dist/index.js` if present, otherwise `tsx src/index.tsx`). Unknown flags are forwarded verbatim, so `pnpm sentry tui --help` and `pnpm sentry tui --json` reach the TUI binary.
+`ward tui` spawns the Ink app in `tui/` (built `dist/index.js` if present, otherwise `tsx src/index.tsx`). Unknown flags are forwarded verbatim, so `pnpm ward tui --help` and `pnpm ward tui --json` reach the TUI binary.
 
-Direct package invocations (private package — `sentry-tui` bin → `./dist/index.js`):
+Direct package invocations (private package — `ward-tui` bin → `./dist/index.js`):
 
 ```bash
 # build, then run the compiled bin
-pnpm --filter @sentry-somnia/tui build
+pnpm --filter @ward/tui build
 node tui/dist/index.js
 
 # or run from source without building
-pnpm --filter @sentry-somnia/tui start
+pnpm --filter @ward/tui start
 ```
 
 `build` runs `tsc -p tsconfig.json && chmod +x dist/index.js`; `start` runs `tsx src/index.tsx`.
@@ -2772,21 +2772,21 @@ The TUI runs against the canonical v2 deployment by default — no flags or conf
 
 | Setting | Default | Override env var |
 | --- | --- | --- |
-| Oracle | `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c` | `SENTRY_ORACLE` |
-| Queue | `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4` | `SENTRY_QUEUE` |
+| Oracle | `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c` | `WARD_ORACLE` |
+| Queue | `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4` | `WARD_QUEUE` |
 | RPC | `https://dream-rpc.somnia.network` (chain `50312`) | `SOMNIA_TESTNET_RPC` |
-| Queue lookback | `50000` blocks | `SENTRY_QUEUE_LOOKBACK_BLOCKS` |
+| Queue lookback | `50000` blocks | `WARD_QUEUE_LOOKBACK_BLOCKS` |
 
 On launch the TUI backfills the recent queue window, then goes live. The header status reads `SYNCING` during backfill and `LIVE` once `store.init()` resolves.
 
 `.env` in the working directory is auto-loaded (`KEY=VALUE` lines, `#` comments, shell env wins). `PRIVATE_KEY` is **optional**: without it the TUI runs read-only and the header wallet field shows `(read-only — set PRIVATE_KEY to enable writes)`. Expire actions need a signer.
 
 ```bash
-pnpm sentry tui --help     # usage + env vars
-pnpm sentry tui --version  # prints 0.9.0
+pnpm ward tui --help     # usage + env vars
+pnpm ward tui --version  # prints 0.9.0
 ```
 
-> Deep history is off by default. The oracle policy backfill starts from the same bounded recent window as queue events. Set `SENTRY_TUI_ORACLE_DEPLOY_BLOCK=<block>`, or `SENTRY_TUI_DEEP_BACKFILL=1` to reuse the repo-wide `SENTRY_ORACLE_DEPLOY_BLOCK`, only when you explicitly want a full historical policy sweep.
+> Deep history is off by default. The oracle policy backfill starts from the same bounded recent window as queue events. Set `WARD_TUI_ORACLE_DEPLOY_BLOCK=<block>`, or `WARD_TUI_DEEP_BACKFILL=1` to reuse the repo-wide `WARD_ORACLE_DEPLOY_BLOCK`, only when you explicitly want a full historical policy sweep.
 
 ### Panes
 
@@ -2794,7 +2794,7 @@ The screen is a single live surface, top to bottom. Layout switches to a two-col
 
 #### Header + health scope
 
-The double-bordered header carries the `SENTRY / SOMNIA` banner, the current block (`cursor()`), and the connected oracle/queue/wallet/RPC. Its raster "scope" animates from queue activity, and three meters track `pending`, `expired` (expirable), and `events`. The status label is derived, not cosmetic:
+The double-bordered header carries the `WARD / SOMNIA` banner, the current block (`cursor()`), and the connected oracle/queue/wallet/RPC. Its raster "scope" animates from queue activity, and three meters track `pending`, `expired` (expirable), and `events`. The status label is derived, not cosmetic:
 
 | Label | Condition |
 | --- | --- |
@@ -2846,7 +2846,7 @@ These mutate on-chain state and require `PRIVATE_KEY`:
 | `c` | catch-up — re-derive the visible lists from the live store cursor |
 | `q` (or `Ctrl-C`) | quit |
 
-Each action sends a real `writeContract` to `SentryQueue.expireIfStale(uint256)` and waits for the receipt. A per-`execId` in-flight guard prevents a fast operator or an overlapping sweep from double-submitting the same record (which would burn gas and produce duplicate revert spam). If `PRIVATE_KEY` is unset, `x`/`s` surface `expireIfStale needs PRIVATE_KEY set in env; readonly mode.` and do nothing.
+Each action sends a real `writeContract` to `WardQueue.expireIfStale(uint256)` and waits for the receipt. A per-`execId` in-flight guard prevents a fast operator or an overlapping sweep from double-submitting the same record (which would burn gas and produce duplicate revert spam). If `PRIVATE_KEY` is unset, `x`/`s` surface `expireIfStale needs PRIVATE_KEY set in env; readonly mode.` and do nothing.
 
 `expireIfStale` is the **only** write the TUI performs. There is no dispatch or veto action here — those belong to the policy owner and intent flow, not the operator surface.
 
@@ -2855,7 +2855,7 @@ Each action sends a real `writeContract` to `SentryQueue.expireIfStale(uint256)`
 `--json` skips the TUI entirely and streams one NDJSON line per queue event to stdout, forever, until `SIGINT`/`SIGTERM`. Each line is a `StoreEvent` JSON object with bigints serialized as strings.
 
 ```bash
-pnpm sentry tui --json
+pnpm ward tui --json
 ```
 
 Behavior to rely on when piping:
@@ -2868,10 +2868,10 @@ Pipe into your own tooling:
 
 ```bash
 # Stream only Vetoed events, drop progress noise
-pnpm sentry tui --json 2>/dev/null | jq -c 'select(.type == "Vetoed")'
+pnpm ward tui --json 2>/dev/null | jq -c 'select(.type == "Vetoed")'
 
 # Alert on any record that expires
-pnpm sentry tui --json 2>/dev/null | jq -c 'select(.type == "Expired") | {execId, blockNumber}'
+pnpm ward tui --json 2>/dev/null | jq -c 'select(.type == "Expired") | {execId, blockNumber}'
 ```
 
 ### Environment (TUI)
@@ -2881,20 +2881,20 @@ Loaded from `.env` in the current working directory (KEY=VALUE lines, `#` commen
 | Variable                          | Default                                        | Purpose                                                              |
 | --------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------- |
 | `PRIVATE_KEY`                     | unset (read-only)                              | Enables `expireIfStale` writes.                                      |
-| `SENTRY_ORACLE`                   | `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`   | Oracle address.                                                     |
-| `SENTRY_QUEUE`                    | `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4`   | Queue address.                                                      |
+| `WARD_ORACLE`                   | `0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`   | Oracle address.                                                     |
+| `WARD_QUEUE`                    | `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4`   | Queue address.                                                      |
 | `SOMNIA_TESTNET_RPC`              | `https://dream-rpc.somnia.network`             | RPC endpoint (chain id `50312`, Somnia Testnet).                   |
-| `SENTRY_QUEUE_LOOKBACK_BLOCKS`    | `50000`                                        | Queue event backfill window.                                        |
-| `SENTRY_TUI_ORACLE_DEPLOY_BLOCK`  | unset                                          | Start block for a deep policy backfill.                             |
-| `SENTRY_TUI_DEEP_BACKFILL`        | unset                                          | `1`/`true`/`yes` opts into the shared `SENTRY_ORACLE_DEPLOY_BLOCK`. |
+| `WARD_QUEUE_LOOKBACK_BLOCKS`    | `50000`                                        | Queue event backfill window.                                        |
+| `WARD_TUI_ORACLE_DEPLOY_BLOCK`  | unset                                          | Start block for a deep policy backfill.                             |
+| `WARD_TUI_DEEP_BACKFILL`        | unset                                          | `1`/`true`/`yes` opts into the shared `WARD_ORACLE_DEPLOY_BLOCK`. |
 
-The `--help` text additionally references `SENTRY_RPC` as an env hint; the resolver reads `SOMNIA_TESTNET_RPC` and falls back to the chain's default RPC.
+The `--help` text additionally references `WARD_RPC` as an env hint; the resolver reads `SOMNIA_TESTNET_RPC` and falls back to the chain's default RPC.
 
 ### When to use the TUI vs the dashboard Queue tab
 
-Both read the same on-chain `SentryQueue` via the SDK event store; they differ in audience and capability.
+Both read the same on-chain `WardQueue` via the SDK event store; they differ in audience and capability.
 
-| | TUI (`sentry tui`) | Dashboard Queue tab |
+| | TUI (`ward tui`) | Dashboard Queue tab |
 | --- | --- | --- |
 | Surface | terminal / Ink | browser / wagmi |
 | Primary action | `expireIfStale` on stale records (`x`, `s`) | view pending requests, open a wallet to act per intent |
@@ -2907,39 +2907,39 @@ Use the **TUI** when you are an operator sweeping stale records, running headles
 ---
 
 
-## 24. Using Sentry with AI assistants — phased onboarding flow + `ai:init`
+## 24. Using Ward with AI assistants — phased onboarding flow + `ai:init`
 
-Sentry ships one self-contained skill (this very `SKILL.md`) and one CLI command (`sentry ai:init`) so an AI coding agent can do the work — discover your agent's call surface, draft a `POLICY.md`, publish it on Somnia, and apply the integration diff — without you reading the spec by hand.
+Ward ships one self-contained skill (this very `SKILL.md`) and one CLI command (`ward ai:init`) so an AI coding agent can do the work — discover your agent's call surface, draft a `POLICY.md`, publish it on Somnia, and apply the integration diff — without you reading the spec by hand.
 
 ### Install the skill
 
 This document is the skill. The expected install paths per assistant:
 
-- **Claude Code:** `cp SKILL.md ~/.claude/skills/sentry-integration/SKILL.md` (or symlink the repo path), or run `pnpm sentry ai:init --claude` to emit it.
-- **Cursor:** `pnpm sentry ai:init --cursor` writes `.cursor/rules/sentry.mdc`.
-- **Codex / generic AGENTS.md:** `pnpm sentry ai:init --codex` updates the marked Sentry stub in the repo's `AGENTS.md`.
-- **All three at once:** `pnpm sentry ai:init --all`.
+- **Claude Code:** `cp SKILL.md ~/.claude/skills/ward-integration/SKILL.md` (or symlink the repo path), or run `pnpm ward ai:init --claude` to emit it.
+- **Cursor:** `pnpm ward ai:init --cursor` writes `.cursor/rules/ward.mdc`.
+- **Codex / generic AGENTS.md:** `pnpm ward ai:init --codex` updates the marked Ward stub in the repo's `AGENTS.md`.
+- **All three at once:** `pnpm ward ai:init --all`.
 
-Then, in any session opened in *your agent's* repo (not necessarily Sentry's), invoke it:
+Then, in any session opened in *your agent's* repo (not necessarily Ward's), invoke it:
 
-> `/sentry-integration` &nbsp;or&nbsp; "onboard this agent to sentry"
+> `/ward-integration` &nbsp;or&nbsp; "onboard this agent to ward"
 
 The assistant reads this `SKILL.md`, discovers your agent's call surface, drafts a `POLICY.md`, compiles and publishes it on Somnia, and applies the Solidity diff.
 
 The flow expects you to have:
 
-1. The Sentry repo cloned somewhere on disk (for the CLI).
-2. `pnpm install` + `pnpm -C cli run build` run in the Sentry repo.
-3. A `.env` in the Sentry repo with `PRIVATE_KEY` set to a Somnia testnet wallet with STT ([faucet](https://testnet.somnia.network/)).
+1. The Ward repo cloned somewhere on disk (for the CLI).
+2. `pnpm install` + `pnpm -C cli run build` run in the Ward repo.
+3. A `.env` in the Ward repo with `PRIVATE_KEY` set to a Somnia testnet wallet with STT ([faucet](https://testnet.somnia.network/)).
 4. Your agent contract source open in the workspace.
 
 The skill handles everything else — including verifying the precomputed `policyId` matches the published one, surfacing label-encoding mistakes, and only running real on-chain transactions after explicit confirmation.
 
-### `sentry-integration` — the self-contained agent manual
+### `ward-integration` — the self-contained agent manual
 
-This very document (`SKILL.md` at the repo root) is the full Sentry usage manual. It is self-contained: every address, command, schema rule, selector, struct, and reason code an LLM needs to publish a policy, integrate it, and operate it is inline.
+This very document (`SKILL.md` at the repo root) is the full Ward usage manual. It is self-contained: every address, command, schema rule, selector, struct, and reason code an LLM needs to publish a policy, integrate it, and operate it is inline.
 
-Reach for `sentry-integration` for any Sentry task end-to-end. The phased onboarding flow below describes the same orchestration the skill performs when invoked on a fresh agent.
+Reach for `ward-integration` for any Ward task end-to-end. The phased onboarding flow below describes the same orchestration the skill performs when invoked on a fresh agent.
 
 ### Phased onboarding flow
 
@@ -2949,8 +2949,8 @@ The orchestrated end-to-end CLI flow: discover your agent's call surface → dra
 |---|---|---|
 | 1 | Discover the call surface | Read the agent contract; extract external targets, selectors, existing caps/rate-limits, and a risk classification per selector. |
 | 2 | Draft `POLICY.md` | Generate the file with one `targets:` entry per external contract, selectors grouped by tier, and caps drawn from observed code (or marked `# TODO: confirm`). |
-| 3 | Compile + precompute `policyId` | `pnpm sentry compile <POLICY.md>`, then `pnpm sentry policyid <label>` to record the deterministic id from `(your wallet address, label)`. |
-| 4 | Publish on-chain | `pnpm sentry preflight`, ask for explicit confirmation, then `pnpm sentry push <POLICY.md> --label <label>` — and verify the returned `policyId` matches Phase 3. |
+| 3 | Compile + precompute `policyId` | `pnpm ward compile <POLICY.md>`, then `pnpm ward policyid <label>` to record the deterministic id from `(your wallet address, label)`. |
+| 4 | Publish on-chain | `pnpm ward preflight`, ask for explicit confirmation, then `pnpm ward push <POLICY.md> --label <label>` — and verify the returned `policyId` matches Phase 3. |
 | 5 | Wire the integration | Apply the integration diff against the agent file, run the test suite, redeploy, and smoke a happy-path call. |
 
 The skill encodes hard constraints that keep it honest:
@@ -2966,21 +2966,21 @@ Each phase returns a short structured YAML update (`phase`, `status`, `artifact`
 
 Invoke this skill when the user says any of:
 
-- "onboard my agent to sentry" / "wire sentry into this contract" / "add sentry to my agent"
+- "onboard my agent to ward" / "wire ward into this contract" / "add ward to my agent"
 - "write a POLICY.md for X"
-- "publish my policy" / "register my policy on sentry"
-- pastes a Solidity agent contract and asks "what would the Sentry policy look like?"
+- "publish my policy" / "register my policy on ward"
+- pastes a Solidity agent contract and asks "what would the Ward policy look like?"
 - mentions Somnia + agent + policy in the same breath
 
-Do NOT auto-invoke if the user is asking conceptual questions about Sentry ("how does it work?") — answer those directly.
+Do NOT auto-invoke if the user is asking conceptual questions about Ward ("how does it work?") — answer those directly.
 
 ### Background — what the skill knows
 
-#### Sentry contracts (live on Shannon testnet, chainId 50312)
+#### Ward contracts (live on Shannon testnet, chainId 50312)
 
 Use the canonical table in §1. The v2 oracle is the default for new integrations because it adds `checkSelector`; v1 remains live for inline `checkIntent` callers. Neither contract holds funds, owns agents, or executes calls. The dev's agent remains the executor of `target.call(...)`.
 
-#### The Sentry CLI (`pnpm sentry` from the Sentry repo) — onboarding subset
+#### The Ward CLI (`pnpm ward` from the Ward repo) — onboarding subset
 
 | Command | Purpose |
 |---|---|
@@ -2989,9 +2989,9 @@ Use the canonical table in §1. The v2 oracle is the default for new integration
 | `policyid <label>` | Compute policyId off-chain from `(your wallet address, label)` |
 | `push <POLICY.md> --label <label>` | `publishPolicy` on-chain; returns final policyId + tx hash |
 | `inspect <intent.json>` | Pretty-print an Intent JSON with calldata decoded |
-| `queue:status <execId>` | Read a SentryQueue record header (operator-side, not needed for onboarding) |
+| `queue:status <execId>` | Read a WardQueue record header (operator-side, not needed for onboarding) |
 
-The dev needs the Sentry repo cloned + `pnpm install`'d + `pnpm -C cli run build`. Their `.env` needs `PRIVATE_KEY` (a Somnia testnet key with STT) and optionally `SENTRY_ORACLE` / `SENTRY_QUEUE` overrides (defaults match the addresses above). Use `pnpm sentry` for the guided menu or `pnpm sentry <command>` for direct commands.
+The dev needs the Ward repo cloned + `pnpm install`'d + `pnpm -C cli run build`. Their `.env` needs `PRIVATE_KEY` (a Somnia testnet key with STT) and optionally `WARD_ORACLE` / `WARD_QUEUE` overrides (defaults match the addresses above). Use `pnpm ward` for the guided menu or `pnpm ward <command>` for direct commands.
 
 #### POLICY.md format (v0.1) — short form
 
@@ -3033,23 +3033,23 @@ Schema rules (short form — full reference in [§19](#19-policymd-spec--authori
 
 #### Reference Solidity integration (verbatim from the canonical sample)
 
-The minimal integration is: **build an `Intent`, call `oracle.checkIntent`, branch on the answer.** Pattern below is the canonical entrypoint-policy shape — equivalent to `examples/sentry-counter/src/CounterAgent.sol` and verified to work on Shannon:
+The minimal integration is: **build an `Intent`, call `oracle.checkIntent`, branch on the answer.** Pattern below is the canonical entrypoint-policy shape — equivalent to `examples/ward-counter/src/CounterAgent.sol` and verified to work on Shannon:
 
 ```solidity
 // Import paths follow YOUR foundry remappings. The reference repo remaps
-// "sentry-somnia/" → sentry-somnia/contracts/src/, hence the short paths
+// "ward/" → ward/contracts/src/, hence the short paths
 // below. Use whatever path matches your `remappings.txt`.
-import "sentry-somnia/PolicyTypes.sol";
-import "sentry-somnia/SentryOracle.sol";
+import "ward/PolicyTypes.sol";
+import "ward/WardOracle.sol";
 
 contract MyAgent {
-    SentryOracle public immutable oracle;
+    WardOracle public immutable oracle;
     bytes32      public immutable POLICY_ID;          // filled in after publish
 
     bytes4 internal constant DO_THING_SELECTOR =
         bytes4(keccak256("doThing(uint256,string)"));
 
-    constructor(SentryOracle _oracle, bytes32 _policyId) {
+    constructor(WardOracle _oracle, bytes32 _policyId) {
         oracle    = _oracle;          // 0x3C7bF90f243d670a01f512221d9546e09fEaCC9c on Shannon (v2 — canonical for new integrations); 0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf for pre-v0.11.0 v1-bound agents
         POLICY_ID = _policyId;
     }
@@ -3057,7 +3057,7 @@ contract MyAgent {
     function dispatch(uint256 reqId, uint256 arg, string calldata verdict) external {
         bytes memory callData = abi.encodeWithSelector(DO_THING_SELECTOR, arg, verdict);
 
-        // ============ SENTRY INTEGRATION ============
+        // ============ WARD INTEGRATION ============
         Intent memory intent = Intent({
             agentId:    /* your Somnia agentId or 0 if non-LLM */ 0,
             requestId:  reqId,
@@ -3069,8 +3069,8 @@ contract MyAgent {
             taskClass:  0
         });
         (bool ok, bytes32 reason) = oracle.checkIntent(POLICY_ID, intent, 0);
-        if (!ok) revert(string(abi.encodePacked("sentry: ", reason)));
-        // ========== END SENTRY INTEGRATION ==========
+        if (!ok) revert(string(abi.encodePacked("ward: ", reason)));
+        // ========== END WARD INTEGRATION ==========
 
         (bool success,) = address(targetContract).call(callData);
         require(success, "call failed");
@@ -3081,7 +3081,7 @@ contract MyAgent {
 **`spentToday` patterns:**
 
 - **Stateless (matches reference agent)**: pass `0`. Use this when `dailySpendWeiCap` in your POLICY.md is `"0"` (no daily cap) or when the agent only fires one call per day. Cheapest.
-- **Stateful**: keep a `mapping(uint64 => uint256) _sentryDailySpent;` keyed by `uint64(block.timestamp / 1 days)`, pass that value to `checkIntent`, and bump it by `intent.value` after a successful dispatch. Use this when your policy has a real `dailySpendWeiCap` you need to enforce.
+- **Stateful**: keep a `mapping(uint64 => uint256) _wardDailySpent;` keyed by `uint64(block.timestamp / 1 days)`, pass that value to `checkIntent`, and bump it by `intent.value` after a successful dispatch. Use this when your policy has a real `dailySpendWeiCap` you need to enforce.
 
 Pick the pattern that matches the policy. **Do not add the stateful tracker if the policy doesn't have a daily cap** — it's dead code and dead gas.
 
@@ -3118,10 +3118,10 @@ Show the full file. Ask: **"Is this faithful to what your agent actually does? A
 
 #### Phase 3 — Compile + precompute policyId
 
-Once the draft is approved, save it to a path the dev controls (typically next to their agent contract: `<agent-repo>/POLICY.md`). Then, from the Sentry repo root:
+Once the draft is approved, save it to a path the dev controls (typically next to their agent contract: `<agent-repo>/POLICY.md`). Then, from the Ward repo root:
 
 ```bash
-pnpm sentry compile <absolute-path-to-POLICY.md>
+pnpm ward compile <absolute-path-to-POLICY.md>
 ```
 
 If it errors, fix the POLICY.md and re-run. Common errors: unknown fields (strict schema), `delaySeconds > 0` on IMMEDIATE/VETO_REQUIRED, malformed selector signatures, non-checksummed addresses.
@@ -3129,7 +3129,7 @@ If it errors, fix the POLICY.md and re-run. Common errors: unknown fields (stric
 Once clean, precompute the policyId:
 
 ```bash
-pnpm sentry policyid <label>
+pnpm ward policyid <label>
 ```
 
 `<label>` is a short kebab-case handle (≤ 32 UTF-8 bytes) — e.g. `treasury-bot-v1`, `llm-dispatcher`. Show the resulting `policyId` (66-char hex) and the canonical PolicyInput JSON. The precomputed id is deterministic from `(your wallet address, label)` — record it; you'll verify the on-chain publish returns the same value.
@@ -3139,19 +3139,19 @@ pnpm sentry policyid <label>
 Run preflight first:
 
 ```bash
-pnpm sentry preflight
+pnpm ward preflight
 ```
 
 If wallet balance is low, point the dev at the [Somnia faucet](https://testnet.somnia.network/) and STOP. Do not try to publish a no-balance wallet.
 
 If preflight is clean, ask explicitly:
 
-> "Publish this policy with label `<label>` to SentryOracle at `0x3C7b...` (v2, canonical for new integrations) using your wallet at `0x<dev-address>` on Somnia testnet? This is a real on-chain transaction (~0.001 STT)."
+> "Publish this policy with label `<label>` to WardOracle at `0x3C7b...` (v2, canonical for new integrations) using your wallet at `0x<dev-address>` on Somnia testnet? This is a real on-chain transaction (~0.001 STT)."
 
 Wait for explicit confirmation. On "yes":
 
 ```bash
-pnpm sentry push <absolute-path-to-POLICY.md> --label <label>
+pnpm ward push <absolute-path-to-POLICY.md> --label <label>
 ```
 
 Capture from the output:
@@ -3160,20 +3160,20 @@ Capture from the output:
 
 #### Phase 5 — Wire the integration into the agent contract
 
-Produce the integration diff against the dev's actual agent file, matching the canonical entrypoint-policy pattern from `examples/sentry-counter/src/CounterAgent.sol`. Use the dev's existing remapping for the Sentry imports (check their `remappings.txt` first; if Sentry isn't remapped yet, also add the remapping):
+Produce the integration diff against the dev's actual agent file, matching the canonical entrypoint-policy pattern from `examples/ward-counter/src/CounterAgent.sol`. Use the dev's existing remapping for the Ward imports (check their `remappings.txt` first; if Ward isn't remapped yet, also add the remapping):
 
 ```diff
-+ import "sentry-somnia/PolicyTypes.sol";   // adjust to your remapping
-+ import "sentry-somnia/SentryOracle.sol";
++ import "ward/PolicyTypes.sol";   // adjust to your remapping
++ import "ward/WardOracle.sol";
 +
   contract MyAgent {
-+   SentryOracle public immutable oracle;
++   WardOracle public immutable oracle;
 +   bytes32      public immutable POLICY_ID;
 +
 +   bytes4 internal constant <SEL_NAME> =
 +       bytes4(keccak256("<exact-signature>"));    // e.g. "transfer(address,uint256)"
 
-    constructor(/* existing args, */ SentryOracle _oracle, bytes32 _policyId) {
+    constructor(/* existing args, */ WardOracle _oracle, bytes32 _policyId) {
 +     oracle    = _oracle;
 +     POLICY_ID = _policyId;
       // ...existing init...
@@ -3182,7 +3182,7 @@ Produce the integration diff against the dev's actual agent file, matching the c
     function dispatch(/* ... */) external {
 +     bytes memory _callData = abi.encodeWithSelector(<SEL_NAME>, <args...>);
 +
-+     // ============ SENTRY INTEGRATION ============
++     // ============ WARD INTEGRATION ============
 +     Intent memory _intent = Intent({
 +         agentId:    <somnia agentId or 0>,
 +         requestId:  <unique-per-dispatch id>,
@@ -3194,8 +3194,8 @@ Produce the integration diff against the dev's actual agent file, matching the c
 +         taskClass:  0
 +     });
 +     (bool _ok, bytes32 _reason) = oracle.checkIntent(POLICY_ID, _intent, /*spentToday*/ 0);
-+     if (!_ok) revert(string(abi.encodePacked("sentry: ", _reason)));
-+     // ========== END SENTRY INTEGRATION ==========
++     if (!_ok) revert(string(abi.encodePacked("ward: ", _reason)));
++     // ========== END WARD INTEGRATION ==========
 +
 -     (bool success,) = <target>.call{value: <value>}(<existing-calldata>);
 +     (bool success,) = <target>.call{value: <value>}(_callData);
@@ -3206,7 +3206,7 @@ Produce the integration diff against the dev's actual agent file, matching the c
 
 Notes when generating the diff:
 
-- If the policy's `dailySpendWeiCap` is non-zero, also add `mapping(uint64 => uint256) internal _sentryDailySpent;`, pass `_sentryDailySpent[uint64(block.timestamp / 1 days)]` instead of `0` as the third arg, and bump it by `intent.value` after `require(success)`. **Don't add this if the policy has no daily cap** — dead gas.
+- If the policy's `dailySpendWeiCap` is non-zero, also add `mapping(uint64 => uint256) internal _wardDailySpent;`, pass `_wardDailySpent[uint64(block.timestamp / 1 days)]` instead of `0` as the third arg, and bump it by `intent.value` after `require(success)`. **Don't add this if the policy has no daily cap** — dead gas.
 - If the agent already wraps dispatch in something like an `Intent` of its own, reuse fields where the names line up — don't introduce parallel state.
 - The constructor change is a deployment break; flag it.
 - The oracle address constant could be hardcoded instead of constructor-injected if the dev prefers (`address(0x3C7bF90f243d670a01f512221d9546e09fEaCC9c)` for v2 — canonical for new integrations; `address(0x68d4B045B24F8d1012974b9d34684cA5aeD11DDf)` for pre-v0.11.0 v1-bound agents). Either works.
@@ -3221,10 +3221,10 @@ If the dev says "apply it", use Edit to land the diff in their actual file. Then
 - **Label encoding.** Labels are encoded as `padHex({size:32, dir:"right"}, stringToBytes(label))` — i.e. the UTF-8 bytes right-padded with zeros to 32 bytes. **Never `keccak256(label)`.** The CLI handles this; if the dev rolls their own publish path and uses keccak, their `policyId` will not match what `policyid <label>` precomputed.
 - **Deposit sizing for LLM agents.** If the agent uses Somnia's `inferString` / `inferToolsChat`, `getRequestDeposit()` returns ONLY the validator-reward budget — it does NOT include the LLM execution cost. Empirically 1 STT works for short prompts; 0.12 STT returns the validator response `"insufficient budget for execution cost"`. Document this in the agent.
 - **DELAYED vs VETO_REQUIRED dispatcher mismatch.** `DELAYED` is dispatched by the **asker**; `VETO_REQUIRED` is dispatched by `oracle.policyOwner(policyId)`. If the policy owner is a multisig that doesn't have a path to call into the agent's execution surface, `VETO_REQUIRED` calls revert at dispatch even after the delay window. Use DELAYED unless the dev confirms the policy-owner address can actually execute.
-- **`policyId` is stable for `(publisher, label)`, not content-addressed.** Editing POLICY.md and running `pnpm sentry push` with the same wallet + label updates the existing policy under the same id. Changing the label or publisher wallet creates a new id. This is convenient for iteration, but a compromised policy owner can also update rules in place; use a multisig/timelock owner for production.
+- **`policyId` is stable for `(publisher, label)`, not content-addressed.** Editing POLICY.md and running `pnpm ward push` with the same wallet + label updates the existing policy under the same id. Changing the label or publisher wallet creates a new id. This is convenient for iteration, but a compromised policy owner can also update rules in place; use a multisig/timelock owner for production.
 - **Caps in wei, not STT.** The markdown says `"1 ether"` — the compiler normalizes to `10^18` wei. Don't hand-write hex caps.
 - **CLI tier check.** `compile` accepts `delaySeconds: 0` on IMMEDIATE/VETO_REQUIRED, and rejects `delaySeconds > 0` on those tiers with a clear error. If the dev writes `delaySeconds: 60` for an IMMEDIATE selector, surface that to them — they probably meant DELAYED.
-- **Lost publisher key?** `transferPolicyOwnership(bytes32 policyId, address newOwner)` on SentryOracle. Only the current policy owner can call it; reverts on zero address. If the user's wallet is compromised or migrated, this is the recovery path — no policy re-publish needed.
+- **Lost publisher key?** `transferPolicyOwnership(bytes32 policyId, address newOwner)` on WardOracle. Only the current policy owner can call it; reverts on zero address. If the user's wallet is compromised or migrated, this is the recovery path — no policy re-publish needed.
 
 ### Output format (per phase)
 
@@ -3253,49 +3253,49 @@ agentDiffApplied: true|false
 nextSteps:
   - re-deploy the agent contract
   - run smoke test on Shannon
-  - (optional) start `pnpm sentry tui` to monitor live policy events
+  - (optional) start `pnpm ward tui` to monitor live policy events
 ```
 
 ### What the onboarding flow refuses to do
 
 - Publishing without explicit dev confirmation on the on-chain step.
 - Drafting a policy without first reading the agent's actual code (no policies from imagination).
-- Pretending to publish ("I would have run `sentry push` for you") — either run it for real with confirmation, or hand the dev the exact command and stop.
+- Pretending to publish ("I would have run `ward push` for you") — either run it for real with confirmation, or hand the dev the exact command and stop.
 - Setting caps from memory or templates — always justify each cap from observed code or a direct dev answer.
 - Editing the agent beyond the integration diff. Bug fixes, refactors, gas optimizations — all out of scope.
 
-### Generate assistant context with `sentry ai:init`
+### Generate assistant context with `ward ai:init`
 
-`sentry ai:init` regenerates AI-assistant context files from the canonical `SKILL.md`, so a coding agent working in your repo always has the Sentry manual in scope. It writes three flavors:
+`ward ai:init` regenerates AI-assistant context files from the canonical `SKILL.md`, so a coding agent working in your repo always has the Ward manual in scope. It writes three flavors:
 
 | Flag | Output file | Format |
 |---|---|---|
-| `--cursor` | `.cursor/rules/sentry.mdc` | Cursor rule, with the skill `description` as frontmatter |
-| `--claude` | `.claude/skills/sentry-integration/SKILL.md` | Claude Code skill |
+| `--cursor` | `.cursor/rules/ward.mdc` | Cursor rule, with the skill `description` as frontmatter |
+| `--claude` | `.claude/skills/ward-integration/SKILL.md` | Claude Code skill |
 | `--codex` | `AGENTS.md` | Codex `AGENTS.md` section |
 
 ```bash
 # Generate every flavor:
-sentry ai:init --all --force
+ward ai:init --all --force
 
 # Or just the AGENTS.md section for Codex:
-sentry ai:init --codex --force
+ward ai:init --codex --force
 ```
 
 With no flag (and without `--all`), all three targets are written. `--all` also writes all three.
 
 Behavior worth knowing before you run it:
 
-- Every generated file carries the header `<!-- GENERATED — edit /SKILL.md and rerun `sentry ai:init` to update -->`. The source of truth is `/SKILL.md`; edit it and rerun, not the generated file.
-- `AGENTS.md` is updated in place: the Sentry block is delimited by `<!-- sentry-ai-init:begin -->` / `<!-- sentry-ai-init:end -->` markers, so a rerun replaces only that section and leaves the rest of your `AGENTS.md` untouched. If no marker block exists, the section is appended.
-- The command refuses to clobber a file that exists but does not look generated (no `GENERATED` header), or an `AGENTS.md` whose Sentry section was hand-edited. Pass `--force` to overwrite in those cases.
+- Every generated file carries the header `<!-- GENERATED — edit /SKILL.md and rerun `ward ai:init` to update -->`. The source of truth is `/SKILL.md`; edit it and rerun, not the generated file.
+- `AGENTS.md` is updated in place: the Ward block is delimited by `<!-- ward-ai-init:begin -->` / `<!-- ward-ai-init:end -->` markers, so a rerun replaces only that section and leaves the rest of your `AGENTS.md` untouched. If no marker block exists, the section is appended.
+- The command refuses to clobber a file that exists but does not look generated (no `GENERATED` header), or an `AGENTS.md` whose Ward section was hand-edited. Pass `--force` to overwrite in those cases.
 
 ---
 
 
 ## 25. Gotchas appendix — failure modes lookup
 
-Lookup table of the non-obvious failure modes that bite Sentry integrators, with the exact symptom, cause, and the rule that avoids each. Every entry below is grounded in source: the onboarding skill and the canonical sample `examples/sentry-counter/`. When in doubt, the contract is the source of truth — read `contracts/src/PolicyTypes.sol`, `contracts/src/PolicyNormalizer.sol`, and `contracts/src/SentryOracle.sol`.
+Lookup table of the non-obvious failure modes that bite Ward integrators, with the exact symptom, cause, and the rule that avoids each. Every entry below is grounded in source: the onboarding skill and the canonical sample `examples/ward-counter/`. When in doubt, the contract is the source of truth — read `contracts/src/PolicyTypes.sol`, `contracts/src/PolicyNormalizer.sol`, and `contracts/src/WardOracle.sol`.
 
 ### Label encoding: never `keccak256` the label
 
@@ -3307,26 +3307,26 @@ Lookup table of the non-obvious failure modes that bite Sentry integrators, with
 padHex({ size: 32, dir: "right" }, stringToBytes(label))
 ```
 
-If a hand-rolled publish path runs `keccak256(label)` instead, the resulting `policyId` will never match what `pnpm sentry policyid <label>` precomputed. The CLI and dashboard handle the encoding correctly; the trap is only for code that bypasses them.
+If a hand-rolled publish path runs `keccak256(label)` instead, the resulting `policyId` will never match what `pnpm ward policyid <label>` precomputed. The CLI and dashboard handle the encoding correctly; the trap is only for code that bypasses them.
 
 **Rules.**
 
-- Let the CLI compute the id. Precompute with `pnpm sentry policyid <label>`, publish with `pnpm sentry push <POLICY.md> --label <label>`, and **verify the published `policyId` equals the precomputed one**. If they differ, stop — the label encoding is wrong.
+- Let the CLI compute the id. Precompute with `pnpm ward policyid <label>`, publish with `pnpm ward push <POLICY.md> --label <label>`, and **verify the published `policyId` equals the precomputed one**. If they differ, stop — the label encoding is wrong.
 - Keep `label` ≤ 32 UTF-8 bytes (e.g. `treasury-bot-v1`, `counter-demo`). Longer labels truncate during padding.
 - **Reject control bytes in labels.** Because the label is right-padded with `\0`, a trailing null byte collides with the unpadded label: `"abc\0"` encodes identically to `"abc"`. Restrict labels to a printable ASCII slug (`^[a-z0-9._-]+$`) unless you genuinely need internationalization; reject any `\0`, any byte `< 0x20`, and `0x7f`.
 
-### `sentryGuarded` is v2-only: bind the v2 oracle
+### `wardGuarded` is v2-only: bind the v2 oracle
 
-**Symptom.** A contract using the `sentryGuarded(selector, value)` modifier reverts on every call, or fails to deploy/link against the configured oracle.
+**Symptom.** A contract using the `wardGuarded(selector, value)` modifier reverts on every call, or fails to deploy/link against the configured oracle.
 
-**Cause.** `SentryAgentBase.sentryGuarded` (v0.10.5+) calls `checkSelector` on the oracle. `checkSelector` exists **only on the v2 oracle**. The v1 oracle has no `checkSelector` — it supports inline `checkIntent` callers only.
+**Cause.** `WardAgentBase.wardGuarded` (v0.10.5+) calls `checkSelector` on the oracle. `checkSelector` exists **only on the v2 oracle**. The v1 oracle has no `checkSelector` — it supports inline `checkIntent` callers only.
 
-Use the v2 oracle in §1 for `sentryGuarded`; use v1 only for legacy inline `checkIntent` callers. RPC, explorer, queue, and registry addresses are also listed in §1.
+Use the v2 oracle in §1 for `wardGuarded`; use v1 only for legacy inline `checkIntent` callers. RPC, explorer, queue, and registry addresses are also listed in §1.
 
 **Rules.**
 
-- If you use the `sentryGuarded` modifier, bind the **v2 oracle** (`0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`). This is the default for new integrations.
-- If you must run against the v1 oracle (a pre-v0.11.0 v1-bound agent), do **not** use `sentryGuarded` — call `oracle.checkIntent(...)` inline instead. The inline path works on both v1 and v2.
+- If you use the `wardGuarded` modifier, bind the **v2 oracle** (`0x3C7bF90f243d670a01f512221d9546e09fEaCC9c`). This is the default for new integrations.
+- If you must run against the v1 oracle (a pre-v0.11.0 v1-bound agent), do **not** use `wardGuarded` — call `oracle.checkIntent(...)` inline instead. The inline path works on both v1 and v2.
 - The registry is oracle-agnostic, so registering an agent says nothing about which oracle gates it. Don't infer the oracle version from the registry.
 
 ### DELAYED vs VETO_REQUIRED: different dispatchers
@@ -3352,9 +3352,9 @@ Note that `checkIntent` itself never silently passes a non-IMMEDIATE intent. `DE
 
 **Symptom.** Users interacted with an agent under one set of rules; the rules silently changed without the `policyId` (or the agent's binding) changing.
 
-**Cause.** A `policyId` is stable for the pair `(publisher wallet, label)` — it is **not** content-addressed. Re-running `pnpm sentry push` with the **same wallet and same label** calls `updatePolicy` and overwrites the existing policy **under the same id**. Changing the label or the publisher wallet mints a new id. This is convenient for iteration, but it means whoever holds the policy-owner key can rewrite the rules in place at any time.
+**Cause.** A `policyId` is stable for the pair `(publisher wallet, label)` — it is **not** content-addressed. Re-running `pnpm ward push` with the **same wallet and same label** calls `updatePolicy` and overwrites the existing policy **under the same id**. Changing the label or the publisher wallet mints a new id. This is convenient for iteration, but it means whoever holds the policy-owner key can rewrite the rules in place at any time.
 
-The agent side compounds this when it uses the late-binding pattern. In `examples/sentry-counter`, `CounterAgent` holds `POLICY_ID` in a **mutable** storage slot (default `bytes32(0)` = ungated) that the owner can change with one transaction:
+The agent side compounds this when it uses the late-binding pattern. In `examples/ward-counter`, `CounterAgent` holds `POLICY_ID` in a **mutable** storage slot (default `bytes32(0)` = ungated) that the owner can change with one transaction:
 
 | Action | Call | Who |
 |---|---|---|
@@ -3374,7 +3374,7 @@ Every binding change emits `PolicyBound(newPolicyId, oldPolicyId, by)`.
 
 **Symptom.** The publisher wallet is lost, migrated, or compromised, and you need the policy under a controllable owner without re-publishing.
 
-**Cause / fix.** v0.9.0 adds `transferPolicyOwnership(bytes32 policyId, address newOwner)` on `SentryOracle`. It is the recovery path — no re-publish, and the `policyId` is preserved.
+**Cause / fix.** v0.9.0 adds `transferPolicyOwnership(bytes32 policyId, address newOwner)` on `WardOracle`. It is the recovery path — no re-publish, and the `policyId` is preserved.
 
 ```solidity
 transferPolicyOwnership(bytes32 policyId, address newOwner)
@@ -3402,7 +3402,7 @@ This is the highest-trust trap. A cap of `0` is **not** "no limit". On chain, `P
 
 The dashboard simulator historically displayed `0` as "no cap", which is the opposite of the contract's behavior — do not rely on a UI label here. If a selector moves native value, it needs a **positive** `valueCapPerCall`, and the day needs a **positive** `dailySpendWeiCap`. A `0` cap is correct only for selectors that move no value at all.
 
-The canonical sample relies on exactly this: in `examples/sentry-counter/policy.md`, `bump` moves no value, so `dailySpendWeiCap` is `"0"` and `valueCapPerCall` is `"0"` by design:
+The canonical sample relies on exactly this: in `examples/ward-counter/policy.md`, `bump` moves no value, so `dailySpendWeiCap` is `"0"` and `valueCapPerCall` is `"0"` by design:
 
 ```policy
 version: "0.1"
@@ -3419,33 +3419,33 @@ targets:
 
 #### Metering is native-STT-only
 
-Both `dailySpendWeiCap` and `valueCapPerCall` meter the **native token forwarded** (`intent.value`), denominated in **wei** — not STT, and not any ERC-20 the agent moves through calldata. The markdown shorthand `"1 ether"` normalizes to `10^18` wei; do not hand-write hex caps. An ERC-20 `transfer` carries `value = 0`, so it consumes **none** of the daily cap regardless of token amount. If you need to cap ERC-20 spend, the cap must live in your agent's logic, not in Sentry's native metering.
+Both `dailySpendWeiCap` and `valueCapPerCall` meter the **native token forwarded** (`intent.value`), denominated in **wei** — not STT, and not any ERC-20 the agent moves through calldata. The markdown shorthand `"1 ether"` normalizes to `10^18` wei; do not hand-write hex caps. An ERC-20 `transfer` carries `value = 0`, so it consumes **none** of the daily cap regardless of token amount. If you need to cap ERC-20 spend, the cap must live in your agent's logic, not in Ward's native metering.
 
 **Rules.**
 
 - Use a positive `valueCapPerCall` for any selector that forwards native value; reserve `0` for value-free selectors.
 - Match `dailySpendWeiCap` to real native spend; only set it to `"0"` when the agent moves no native value (then pass `spentToday = 0` statelessly — adding a daily-spend tracker is dead gas, per the onboarding skill).
-- Never assume Sentry caps an ERC-20 transfer; native metering does not see token amounts in calldata.
+- Never assume Ward caps an ERC-20 transfer; native metering does not see token amounts in calldata.
 - Treat `maxSlippageBps` as a value your agent reads, never as oracle-enforced.
 
 ### Entrypoint-policy: target the agent address with the agent's own selectors
 
 **Symptom.** `checkIntent` / `checkSelector` returns `SELECTOR_NOT_ALLOWED` for a call you expected to pass, because the policy enumerates the wrong target/selectors.
 
-**Cause.** In the entrypoint-policy model (the canonical shape), the policy's `target` is the **agent** address — the contract that inherits `SentryAgentBase` — and `selectors` enumerates the **agent's own entrypoints**, *not* the downstream contract's selectors. From `examples/sentry-counter/policy.md`:
+**Cause.** In the entrypoint-policy model (the canonical shape), the policy's `target` is the **agent** address — the contract that inherits `WardAgentBase` — and `selectors` enumerates the **agent's own entrypoints**, *not* the downstream contract's selectors. From `examples/ward-counter/policy.md`:
 
-> `target` is the **agent** address (the contract that inherits `SentryAgentBase`), and `selectors` enumerates the agent's own entrypoints — NOT the downstream `Counter` selectors.
+> `target` is the **agent** address (the contract that inherits `WardAgentBase`), and `selectors` enumerates the agent's own entrypoints — NOT the downstream `Counter` selectors.
 
 So the counter policy authorizes `bump(uint256)` — the agent's entrypoint — and points `target` at the agent, not at `Counter.bump`. The placeholder `0xdeadbeef...` in `policy.md` must be replaced with the `agent` field from `deployments/agent.json` after deploy, not with the counter address.
 
-`reset()` is deliberately omitted from the policy so the e2e test exercises the deny path: a gated call to `reset()` reverts with `SentryRejected("SELECTOR_NOT_ALLOWED")` — the typed revert is the deny-path proof.
+`reset()` is deliberately omitted from the policy so the e2e test exercises the deny path: a gated call to `reset()` reverts with `WardRejected("SELECTOR_NOT_ALLOWED")` — the typed revert is the deny-path proof.
 
 **Rules.**
 
-- Set the policy `target` to the **agent contract address** (the `SentryAgentBase` subclass), and list the **agent's own function signatures** as `selectors` — get the canonical `name(type1,type2)` form (e.g. `bump(uint256)`).
+- Set the policy `target` to the **agent contract address** (the `WardAgentBase` subclass), and list the **agent's own function signatures** as `selectors` — get the canonical `name(type1,type2)` form (e.g. `bump(uint256)`).
 - Do **not** list the downstream contract's selectors (e.g. `Counter.bump`) in an entrypoint policy; the gate runs at the agent's entrypoint, before the agent forwards the inner call.
 - After deploying, replace any placeholder `target` in your POLICY.md with the real agent address before publishing, then re-verify the `policyId`.
-- Omitting a selector from the policy is how you deny it. A denied selector reverts the agent's modifier-guarded entrypoint with `SentryRejected("SELECTOR_NOT_ALLOWED")` — that revert is the expected deny-path proof, not a bug.
+- Omitting a selector from the policy is how you deny it. A denied selector reverts the agent's modifier-guarded entrypoint with `WardRejected("SELECTOR_NOT_ALLOWED")` — that revert is the expected deny-path proof, not a bug.
 
 ---
 
@@ -3453,15 +3453,15 @@ So the counter policy authorizes `bump(uint256)` — the agent's entrypoint — 
 
 If this skill doesn't cover your case:
 
-- **Source of truth:** `contracts/src/SentryOracle.sol`, `SentryQueue.sol`, `PolicyTypes.sol`, `PolicyLib.sol`
-- **Worked reference:** `examples/sentry-counter/src/CounterAgent.sol` (modifier-gated allow path + manual `oracle.checkSelector` deny path).
+- **Source of truth:** `contracts/src/WardOracle.sol`, `WardQueue.sol`, `PolicyTypes.sol`, `PolicyLib.sol`
+- **Worked reference:** `examples/ward-counter/src/CounterAgent.sol` (modifier-gated allow path + manual `oracle.checkSelector` deny path).
 - **Security model:** full threat model + invariants in `SECURITY.md`.
 
 ---
 
 ## Provenance
 
-- Sentry contracts deployed on Somnia Shannon (chainId 50312), addresses verified on-chain — canonical addresses are listed in §1.
-- Canonical sample: `examples/sentry-counter/` (CounterAgent on SentryAgentBase + the `sentryGuarded` modifier).
-- The `Intent` struct shape, integration template, CLI commands, and POLICY.md schema in this skill were validated against the canonical `examples/sentry-counter` sample. If you suspect drift — e.g. `sentry compile` errors that contradict this doc — read `contracts/src/PolicyTypes.sol` and `sdk/src/policy-compiler.ts` directly; those are the source of truth.
-- Sentry contracts are unaudited; integration patterns here mirror what runs on testnet.
+- Ward contracts deployed on Somnia Shannon (chainId 50312), addresses verified on-chain — canonical addresses are listed in §1.
+- Canonical sample: `examples/ward-counter/` (CounterAgent on WardAgentBase + the `wardGuarded` modifier).
+- The `Intent` struct shape, integration template, CLI commands, and POLICY.md schema in this skill were validated against the canonical `examples/ward-counter` sample. If you suspect drift — e.g. `ward compile` errors that contradict this doc — read `contracts/src/PolicyTypes.sol` and `sdk/src/policy-compiler.ts` directly; those are the source of truth.
+- Ward contracts are unaudited; integration patterns here mirror what runs on testnet.

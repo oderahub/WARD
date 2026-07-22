@@ -13,7 +13,7 @@
 //     or these assertions will fail. That friction is intentional.
 //
 //   - `abiTupleSpec` is sliced directly out of the auto-generated
-//     SENTRY_ORACLE_ABI (extracted from PolicyTypes.sol via
+//     WARD_ORACLE_ABI (extracted from PolicyTypes.sol via
 //     sdk/scripts/extract-abis.ts). If anyone edits PolicyTypes.sol and
 //     re-runs extract-abis, the resulting drift will fail these assertions
 //     unless `tsTupleSpec` is updated to match.
@@ -33,7 +33,7 @@ import {
   decodeAbiParameters,
   type AbiParameter,
 } from "viem";
-import { SENTRY_ORACLE_ABI } from "../src/abi.js";
+import { WARD_ORACLE_ABI } from "../src/abi.js";
 import type { Intent } from "../src/types.js";
 
 // (1) Literal mirror of the TS Intent interface, in declared field order.
@@ -51,11 +51,11 @@ const tsTupleSpec = [
 
 // (2) ABI tuple spec sliced out of the auto-generated Solidity ABI.
 function getAbiIntentComponents(): readonly AbiParameter[] {
-  const checkIntent = SENTRY_ORACLE_ABI.find(
+  const checkIntent = WARD_ORACLE_ABI.find(
     (item) => item.type === "function" && item.name === "checkIntent",
   );
   if (!checkIntent || checkIntent.type !== "function") {
-    throw new Error("checkIntent not found in SENTRY_ORACLE_ABI");
+    throw new Error("checkIntent not found in WARD_ORACLE_ABI");
   }
   const intentParam = checkIntent.inputs[1];
   if (

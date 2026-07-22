@@ -10,7 +10,7 @@
 //   headers (Authorization, X-*, etc.) — they would force a preflight.
 // - No retries, queueing, or debouncing here. The wizard button is
 //   responsible for click-debounce (Slack's ~1 msg/sec/channel limit).
-// - Test alerts MUST be visibly marked with the "[Sentry watch wizard · test]"
+// - Test alerts MUST be visibly marked with the "[Ward watch wizard · test]"
 //   prefix so they cannot be mistaken for a real alert.
 
 export type Tier = 'conservative' | 'balanced' | 'aggressive';
@@ -77,11 +77,11 @@ function buildPayload(opts: SendTestAlertOpts, isoTimestamp: string): object {
   const chainId = opts.chainId ?? 50312;
 
   return {
-    text: `[Sentry watch wizard · test] Test alert from Sentry watch wizard. agent ${opts.agent} · policy ${opts.policyId} · recommendation ${tierUpper}`,
+    text: `[Ward watch wizard · test] Test alert from Ward watch wizard. agent ${opts.agent} · policy ${opts.policyId} · recommendation ${tierUpper}`,
     blocks: [
       {
         type: 'header',
-        text: { type: 'plain_text', text: '[Sentry watch wizard · test]' },
+        text: { type: 'plain_text', text: '[Ward watch wizard · test]' },
       },
       {
         type: 'section',
@@ -140,7 +140,7 @@ async function mapErrorByStatus(response: Response): Promise<string> {
     }
     // Likely a payload bug on our side — log the raw body for diagnosis
     // (never the URL) and surface a generic message to the operator.
-    console.warn('[sentry-slack] Slack 400 response body:', body);
+    console.warn('[ward-slack] Slack 400 response body:', body);
     return GENERIC_PAYLOAD_BUG;
   }
   if (status === 413) {

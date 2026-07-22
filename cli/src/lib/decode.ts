@@ -1,5 +1,5 @@
 import { decodeFunctionData, type Hex } from "viem";
-import { SENTRY_ORACLE_ABI, ERC20_ABI } from "@sentry-somnia/sdk/abi";
+import { WARD_ORACLE_ABI, ERC20_ABI } from "@ward/sdk/abi";
 
 // Decode against the CLI's bundled ABIs only; project-specific targets should
 // be decoded by caller tooling.
@@ -12,7 +12,7 @@ export interface DecodedCall {
 }
 
 const SOURCES: Array<{ name: string; abi: readonly unknown[] }> = [
-  { name: "SentryOracle", abi: SENTRY_ORACLE_ABI },
+  { name: "WardOracle", abi: WARD_ORACLE_ABI },
   { name: "ERC20", abi: ERC20_ABI },
 ];
 

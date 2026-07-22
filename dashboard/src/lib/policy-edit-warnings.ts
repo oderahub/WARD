@@ -1,5 +1,5 @@
 import { formatEther } from "viem";
-import type { PolicyInput } from "@sentry-somnia/sdk";
+import type { PolicyInput } from "@ward/sdk";
 
 /**
  * Pure helpers extracted from the policy edit modals for UX warnings.
@@ -71,7 +71,7 @@ export function computeAggregateCapNote(
 /**
  * Whether a PolicyInput is currently paused or expired at the given epoch
  * second. Matches PolicyDrawer's legacy-0 treatment: `expiresAt === 0n`
- * counts as expired regardless of `nowSec` (the Sentry contract treats the
+ * counts as expired regardless of `nowSec` (the Ward contract treats the
  * sentinel as already-elapsed post-Wave-1).
  *
  * Returned shape lets the caller pick the right wording — "paused", "expired",
@@ -95,7 +95,7 @@ export function policyLifetimeState(
  *
  * Adding targets/selectors, raising caps, or extending the expiry are NOT
  * destructive from the policy-capability perspective. Separately, any saved
- * policy body update invalidates pending SentryQueue entries through the
+ * policy body update invalidates pending WardQueue entries through the
  * on-chain policy version check.
  *
  * Targets/selectors are compared lower-cased to mirror `policyInputsEqual`

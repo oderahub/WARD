@@ -1,20 +1,20 @@
 import { readFileSync } from "node:fs";
 import {
-  LEGACY_SENTRY_QUEUE_ABI_V0,
-  SENTRY_ORACLE_ABI,
-  SENTRY_QUEUE_ABI,
+  LEGACY_WARD_QUEUE_ABI_V0,
+  WARD_ORACLE_ABI,
+  WARD_QUEUE_ABI,
   abiExposesDispatchQueued,
   buildQueueHandoffRecommendation,
   extractAbi,
-} from "@sentry-somnia/sdk";
+} from "@ward/sdk";
 import kleur from "kleur";
 import { decodeFunctionResult, padHex, type Address, type Hex } from "viem";
 import {
   loadEnv,
   publicClient,
   walletClient,
-  requireSentryOracle,
-  requireSentryQueue,
+  requireWardOracle,
+  requireWardQueue,
   requirePrivateKey,
 } from "../lib/env.js";
 
@@ -61,7 +61,7 @@ function normalizeLegacyQueueHeader(raw: unknown): QueueHeaderRaw {
   const decoded =
     typeof raw === "string"
       ? decodeFunctionResult({
-          abi: LEGACY_SENTRY_QUEUE_ABI_V0,
+          abi: LEGACY_WARD_QUEUE_ABI_V0,
           functionName: "getRecordHeader",
           data: raw as Hex,
         } as unknown as Parameters<typeof decodeFunctionResult>[0])
@@ -72,7 +72,7 @@ function normalizeLegacyQueueHeader(raw: unknown): QueueHeaderRaw {
 function queueHeaderShapeError(queue: Address, canonicalErr: unknown, legacyErr: unknown): Error {
   const bytes = queueHeaderPayloadBytes(legacyErr) ?? queueHeaderPayloadBytes(canonicalErr) ?? "unknown";
   return new Error(
-    `SentryQueue at ${queue} returned an unexpected payload shape (${bytes} bytes); expected 384 or 352 bytes. The deployed contract may be on a newer or older RecordHeader version than the SDK supports.`,
+    `WardQueue at ${queue} returned an unexpected payload shape (${bytes} bytes); expected 384 or 352 bytes. The deployed contract may be on a newer or older RecordHeader version than the SDK supports.`,
   );
 }
 
@@ -81,7 +81,7 @@ export async function readQueueHeader(client: ReturnType<typeof publicClient>, q
   try {
     return (await client.readContract({
       address: queue,
-      abi: SENTRY_QUEUE_ABI as never,
+      abi: WARD_QUEUE_ABI as never,
       functionName: "getRecordHeader",
       args: [execId],
     })) as QueueHeaderRaw;
@@ -93,7 +93,7 @@ export async function readQueueHeader(client: ReturnType<typeof publicClient>, q
   try {
     const legacy = await client.readContract({
       address: queue,
-      abi: LEGACY_SENTRY_QUEUE_ABI_V0 as never,
+      abi: LEGACY_WARD_QUEUE_ABI_V0 as never,
       functionName: "getRecordHeader",
       args: [execId],
     });
@@ -111,7 +111,7 @@ function loadAgentHasDispatchQueued(path?: string): boolean {
 
 export async function queueStatusCmd(execIdStr: string): Promise<void> {
   const env = loadEnv();
-  const queue = requireSentryQueue(env);
+  const queue = requireWardQueue(env);
   const client = publicClient(env.rpc);
   const execId = BigInt(execIdStr);
 
@@ -143,7 +143,7 @@ export interface HandoffOptions {
 
 export async function queueHandoffCmd(execIdStr: string, opts: HandoffOptions = {}): Promise<void> {
   const env = loadEnv();
-  const queue = requireSentryQueue(env);
+  const queue = requireWardQueue(env);
   const client = publicClient(env.rpc);
   const execId = BigInt(execIdStr);
   const h = await readQueueHeader(client, queue, execId);
@@ -151,10 +151,10 @@ export async function queueHandoffCmd(execIdStr: string, opts: HandoffOptions = 
 
   let policyOwner: Address | undefined;
   if (h.tier === 2) {
-    const oracle = requireSentryOracle(env);
+    const oracle = requireWardOracle(env);
     policyOwner = (await client.readContract({
       address: oracle,
-      abi: SENTRY_ORACLE_ABI as never,
+      abi: WARD_ORACLE_ABI as never,
       functionName: "policyOwner",
       args: [h.policyId],
     })) as Address;
@@ -202,7 +202,7 @@ export async function queueDispatchCmd(
 ): Promise<void> {
   const env = loadEnv();
   const pk = requirePrivateKey(env);
-  const queue = requireSentryQueue(env);
+  const queue = requireWardQueue(env);
   const wallet = walletClient(pk, env.rpc);
   const client = publicClient(env.rpc);
   const execId = BigInt(execIdStr);
@@ -216,7 +216,7 @@ export async function queueDispatchCmd(
   try {
     const sim = await client.simulateContract({
       address: queue,
-      abi: SENTRY_QUEUE_ABI as never,
+      abi: WARD_QUEUE_ABI as never,
       functionName: "dispatch",
       args: [execId],
       account: wallet.account,
@@ -230,7 +230,7 @@ export async function queueDispatchCmd(
 
   const hash = await wallet.writeContract({
     address: queue,
-    abi: SENTRY_QUEUE_ABI as never,
+    abi: WARD_QUEUE_ABI as never,
     functionName: "dispatch",
     args: [execId],
   });
@@ -293,7 +293,7 @@ export async function queueEnqueueCmd(
 ): Promise<void> {
   const env = loadEnv();
   const pk = requirePrivateKey(env);
-  const queue = requireSentryQueue(env);
+  const queue = requireWardQueue(env);
   const wallet = walletClient(pk, env.rpc);
   const client = publicClient(env.rpc);
 
@@ -319,7 +319,7 @@ export async function queueEnqueueCmd(
   try {
     await client.simulateContract({
       address: queue,
-      abi: SENTRY_QUEUE_ABI as never,
+      abi: WARD_QUEUE_ABI as never,
       functionName: "enqueue",
       args: [policyId, intent as never, spentToday],
       account: wallet.account,
@@ -331,7 +331,7 @@ export async function queueEnqueueCmd(
 
   const hash = await wallet.writeContract({
     address: queue,
-    abi: SENTRY_QUEUE_ABI as never,
+    abi: WARD_QUEUE_ABI as never,
     functionName: "enqueue",
     args: [policyId, intent as never, spentToday],
   });
@@ -344,7 +344,7 @@ export async function queueEnqueueCmd(
   console.log(kleur.green("enqueued OK"));
   console.log(
     kleur.gray(
-      "(run `sentry queue:status <execId>` once the Enqueued event is indexed; the execId is the indexed `nextExecId` at enqueue-time)",
+      "(run `ward queue:status <execId>` once the Enqueued event is indexed; the execId is the indexed `nextExecId` at enqueue-time)",
     ),
   );
 }
@@ -352,7 +352,7 @@ export async function queueEnqueueCmd(
 export async function queueVetoCmd(execIdStr: string, reasonText: string): Promise<void> {
   const env = loadEnv();
   const pk = requirePrivateKey(env);
-  const queue = requireSentryQueue(env);
+  const queue = requireWardQueue(env);
   const wallet = walletClient(pk, env.rpc);
   const client = publicClient(env.rpc);
 
@@ -362,7 +362,7 @@ export async function queueVetoCmd(execIdStr: string, reasonText: string): Promi
 
   const hash = await wallet.writeContract({
     address: queue,
-    abi: SENTRY_QUEUE_ABI as never,
+    abi: WARD_QUEUE_ABI as never,
     functionName: "veto",
     args: [BigInt(execIdStr), reasonHex],
   });
@@ -378,13 +378,13 @@ export async function queueVetoCmd(execIdStr: string, reasonText: string): Promi
 export async function queueExpireCmd(execIdStr: string): Promise<void> {
   const env = loadEnv();
   const pk = requirePrivateKey(env);
-  const queue = requireSentryQueue(env);
+  const queue = requireWardQueue(env);
   const wallet = walletClient(pk, env.rpc);
   const client = publicClient(env.rpc);
 
   const hash = await wallet.writeContract({
     address: queue,
-    abi: SENTRY_QUEUE_ABI as never,
+    abi: WARD_QUEUE_ABI as never,
     functionName: "expireIfStale",
     args: [BigInt(execIdStr)],
   });

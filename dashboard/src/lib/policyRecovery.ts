@@ -5,7 +5,7 @@ import {
   type Hex,
   type PublicClient,
 } from "viem";
-import { SENTRY_ORACLE_ABI, type PolicyInput } from "@sentry-somnia/sdk";
+import { WARD_ORACLE_ABI, type PolicyInput } from "@ward/sdk";
 
 /**
  * Universal recovery of the most recent `PolicyInput` for a policy by decoding
@@ -147,7 +147,7 @@ async function decodeHit(
   const txHash = hit.transactionHash;
   const tx = await publicClient.getTransaction({ hash: txHash });
   const decoded = decodeFunctionData({
-    abi: SENTRY_ORACLE_ABI,
+    abi: WARD_ORACLE_ABI,
     data: tx.input,
   });
   if (

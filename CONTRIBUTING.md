@@ -1,8 +1,8 @@
-# Contributing to Sentry
+# Contributing to Ward
 
 How to set up the monorepo, build and test each workspace, and follow the docs conventions.
 
-This is a how-to for contributors who are already oriented on what Sentry is. For the product overview, start at the [README](README.md); for a first run, see the [CLI + TUI quickstart in the README](README.md#quickstart--cli--tui).
+This is a how-to for contributors who are already oriented on what Ward is. For the product overview, start at the [README](README.md); for a first run, see the [CLI + TUI quickstart in the README](README.md#quickstart--cli--tui).
 
 ## Prerequisites
 
@@ -17,18 +17,18 @@ This is a pnpm workspace. The members are declared in `pnpm-workspace.yaml`:
 
 | Path | Package name | What it is |
 |---|---|---|
-| `contracts/` | `@sentry-somnia/contracts` | Foundry — `SentryOracle`, `SentryQueue`, `SentryAgentRegistry`, `PolicyLib`, `PolicyNormalizer`, `PolicyTypes`, and the `SentryAgentBase` / `SentryCall` integration helpers |
-| `sdk/` | `@sentry-somnia/sdk` | TypeScript — POLICY.md compiler, `PolicyBuilder`, ABIs, oracle-client, queue-client, event-store |
-| `cli/` | `@sentry-somnia/cli` | TypeScript — the single `sentry` binary (guided menu + direct commands) |
-| `policy-spec/` | `@sentry-somnia/policy-spec` | POLICY.md format spec + worked example (no build/test scripts) |
-| `dashboard/` | `@sentry-somnia/dashboard` | React + viem — browser queue console |
-| `tui/` | `@sentry-somnia/tui` | ink — operator terminal monitor; `--json` NDJSON pipe mode |
-| `packages/create-sentry-agent/` | `create-sentry-agent` | `pnpm create` scaffolder for new `SentryAgentBase`-derived Foundry projects |
-| `packages/sentry-react/` | `@sentry-somnia/react` | React hooks for front-end policy gating |
-| `packages/sentry-vite/` | `@sentry-somnia/vite-plugin` | Vite plugin for front-end policy gating |
-| `examples/sentry-react-app/` | `sentry-react-app-example` | React + wagmi demo gating a `CounterAgent` write |
+| `contracts/` | `@ward/contracts` | Foundry — `WardOracle`, `WardQueue`, `WardAgentRegistry`, `PolicyLib`, `PolicyNormalizer`, `PolicyTypes`, and the `WardAgentBase` / `WardCall` integration helpers |
+| `sdk/` | `@ward/sdk` | TypeScript — POLICY.md compiler, `PolicyBuilder`, ABIs, oracle-client, queue-client, event-store |
+| `cli/` | `@ward/cli` | TypeScript — the single `ward` binary (guided menu + direct commands) |
+| `policy-spec/` | `@ward/policy-spec` | POLICY.md format spec + worked example (no build/test scripts) |
+| `dashboard/` | `@ward/dashboard` | React + viem — browser queue console |
+| `tui/` | `@ward/tui` | ink — operator terminal monitor; `--json` NDJSON pipe mode |
+| `packages/create-ward-agent/` | `create-ward-agent` | `pnpm create` scaffolder for new `WardAgentBase`-derived Foundry projects |
+| `packages/ward-react/` | `@ward/react` | React hooks for front-end policy gating |
+| `packages/ward-vite/` | `@ward/vite-plugin` | Vite plugin for front-end policy gating |
+| `examples/ward-react-app/` | `ward-react-app-example` | React + wagmi demo gating a `CounterAgent` write |
 
-Not pnpm workspaces but part of the repo: `verification/lean/` (Lean 4 model, built with `lake`), `design/` (brand assets), `scripts/` (root tooling), and `examples/sentry-counter/` (the canonical Solidity sample). Standalone documentation now lives at the repo root (`README.md`, `SKILL.md`, `SECURITY.md`, `sdk/README.md`, `verification/lean/README.md`) rather than under a `docs/` tree.
+Not pnpm workspaces but part of the repo: `verification/lean/` (Lean 4 model, built with `lake`), `design/` (brand assets), `scripts/` (root tooling), and `examples/ward-counter/` (the canonical Solidity sample). Standalone documentation now lives at the repo root (`README.md`, `SKILL.md`, `SECURITY.md`, `sdk/README.md`, `verification/lean/README.md`) rather than under a `docs/` tree.
 
 ## Dev setup
 
@@ -54,7 +54,7 @@ cp .env.example .env   # then edit PRIVATE_KEY / DEPLOYER_PK
 
 ### Build order
 
-`sdk` is the dependency root: the `cli`, `dashboard`, `tui`, `sentry-react`, `sentry-vite`, and the example app all consume `@sentry-somnia/sdk`. Build it first, then `cli`, then anything else. The example app encodes this dependency explicitly — its `predev` / `prebuild` / `pretest` hooks run `pnpm -F @sentry-somnia/sdk build && pnpm -F @sentry-somnia/react build` before its own commands.
+`sdk` is the dependency root: the `cli`, `dashboard`, `tui`, `ward-react`, `ward-vite`, and the example app all consume `@ward/sdk`. Build it first, then `cli`, then anything else. The example app encodes this dependency explicitly — its `predev` / `prebuild` / `pretest` hooks run `pnpm -F @ward/sdk build && pnpm -F @ward/react build` before its own commands.
 
 To build every workspace at once (each runs its own `build` script if present):
 
@@ -69,7 +69,7 @@ pnpm build   # → pnpm -r --if-present run build
 - `PRIVATE_KEY` — funded Somnia Shannon testnet key, used by the CLI write paths.
 - `DEPLOYER_PK` — same key, named for `forge script ... --private-key $DEPLOYER_PK`. May equal `PRIVATE_KEY`; if you set only one, copy it to the other before running deploy scripts.
 - `SOMNIA_TESTNET_RPC` — defaults to `https://dream-rpc.somnia.network`.
-- `SENTRY_ORACLE` / `SENTRY_QUEUE` — the canonical live deployments (`0x3C7bF90f243d670a01f512221d9546e09fEaCC9c` / `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4`); leave as-is unless you re-deploy a fork.
+- `WARD_ORACLE` / `WARD_QUEUE` — the canonical live deployments (`0x3C7bF90f243d670a01f512221d9546e09fEaCC9c` / `0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4`); leave as-is unless you re-deploy a fork.
 - `SOMNIA_EXPLORER_KEY` — optional, only for contract verification against the Shannon explorer.
 
 Forge scripts pick up `DEPLOYER_PK` from the shell, so `set -a; source .env; set +a` before bare `forge` invocations.
@@ -87,10 +87,10 @@ Run a single workspace's script with `pnpm -C <dir> run <script>` (or `pnpm -F <
 | `cli/` | `pnpm -C cli run build` | `pnpm -C cli run test` (`vitest run`) | — |
 | `dashboard/` | `pnpm -C dashboard run build` | `pnpm -C dashboard run test` (`vitest --run`) | `pnpm -C dashboard run typecheck` |
 | `tui/` | `pnpm -C tui run build` | `pnpm -C tui run test` (no tests yet) | `pnpm -C tui run typecheck` |
-| `packages/create-sentry-agent/` | `pnpm -C packages/create-sentry-agent run build` | `pnpm -C packages/create-sentry-agent run test` (`vitest run`) | — |
-| `packages/sentry-react/` | `pnpm -C packages/sentry-react run build` | `pnpm -C packages/sentry-react run test` (`vitest run`) | `pnpm -C packages/sentry-react run typecheck` |
-| `packages/sentry-vite/` | `pnpm -C packages/sentry-vite run build` | `pnpm -C packages/sentry-vite run test` (`vitest run`) | `pnpm -C packages/sentry-vite run typecheck` |
-| `examples/sentry-react-app/` | `pnpm -C examples/sentry-react-app run build` | `pnpm -C examples/sentry-react-app run test` (`vitest run`) | `pnpm -C examples/sentry-react-app run typecheck` |
+| `packages/create-ward-agent/` | `pnpm -C packages/create-ward-agent run build` | `pnpm -C packages/create-ward-agent run test` (`vitest run`) | — |
+| `packages/ward-react/` | `pnpm -C packages/ward-react run build` | `pnpm -C packages/ward-react run test` (`vitest run`) | `pnpm -C packages/ward-react run typecheck` |
+| `packages/ward-vite/` | `pnpm -C packages/ward-vite run build` | `pnpm -C packages/ward-vite run test` (`vitest run`) | `pnpm -C packages/ward-vite run typecheck` |
+| `examples/ward-react-app/` | `pnpm -C examples/ward-react-app run build` | `pnpm -C examples/ward-react-app run test` (`vitest run`) | `pnpm -C examples/ward-react-app run typecheck` |
 
 ### Root commands
 
@@ -110,14 +110,14 @@ Run a single workspace's script with `pnpm -C <dir> run <script>` (or `pnpm -F <
 
 Changes must not drop test counts below these floors. The current surface (from the [`CHANGELOG.md`](CHANGELOG.md) v0.12.0 "Test surface" section):
 
-- **Foundry:** 133+ tests across `PolicyLib` / `PolicyNormalizer` / `SentryOracle` / `SentryQueue` / `SentryAgentBase` / `QueueAgentBase` / `PublishAndBind` + property suites.
+- **Foundry:** 133+ tests across `PolicyLib` / `PolicyNormalizer` / `WardOracle` / `WardQueue` / `WardAgentBase` / `QueueAgentBase` / `PublishAndBind` + property suites.
 - **SDK:** 196 vitest cases.
 - **dashboard:** 485 vitest cases.
 - **CLI:** 72 vitest cases.
-- **sentry-react:** 31 vitest cases.
-- **sentry-vite:** 7 vitest cases.
-- **create-sentry-agent:** 26 vitest cases.
-- **examples/sentry-react-app:** 1 vitest case.
+- **ward-react:** 31 vitest cases.
+- **ward-vite:** 7 vitest cases.
+- **create-ward-agent:** 26 vitest cases.
+- **examples/ward-react-app:** 1 vitest case.
 - **Lean 4:** 10 theorems machine-checked at `lake build`, zero `sorry`/`admit`.
 
 If you add a feature, add tests in the corresponding workspace and keep its count at or above the floor.
@@ -140,13 +140,13 @@ Style: start each doc with an H1 and a one-line purpose sentence. Concise and te
 
 ### `AGENTS.md` is a generated pointer — do not hand-edit
 
-The canonical full integration manual is [`SKILL.md`](SKILL.md). `AGENTS.md` at the repo root is a generated 7-line stub that points AI agents at `SKILL.md` — it is NOT a duplicate of the SKILL body. The stub is wrapped in `<!-- sentry-ai-init:begin -->` / `<!-- sentry-ai-init:end -->` markers and carries the `GENERATED` header. To regenerate (after editing `SKILL.md`):
+The canonical full integration manual is [`SKILL.md`](SKILL.md). `AGENTS.md` at the repo root is a generated 7-line stub that points AI agents at `SKILL.md` — it is NOT a duplicate of the SKILL body. The stub is wrapped in `<!-- ward-ai-init:begin -->` / `<!-- ward-ai-init:end -->` markers and carries the `GENERATED` header. To regenerate (after editing `SKILL.md`):
 
 ```bash
-pnpm sentry ai:init --codex   # rewrites the marked Sentry section in AGENTS.md
+pnpm ward ai:init --codex   # rewrites the marked Ward section in AGENTS.md
 ```
 
-`ai:init` also emits Cursor (`--cursor` → `.cursor/rules/sentry.mdc`, gets the full body) and Claude (`--claude` → `.claude/skills/sentry-integration/SKILL.md`, gets the full body) targets, or all three with `--all`. Cursor and Claude get the full SKILL body inline because their conventions consume the file as the entire context; the Codex AGENTS.md convention auto-discovers + follows links, so the pointer is sufficient and avoids 700+ lines of duplication at the root. Hand-edits to generated destinations are refused unless you pass `--force`.
+`ai:init` also emits Cursor (`--cursor` → `.cursor/rules/ward.mdc`, gets the full body) and Claude (`--claude` → `.claude/skills/ward-integration/SKILL.md`, gets the full body) targets, or all three with `--all`. Cursor and Claude get the full SKILL body inline because their conventions consume the file as the entire context; the Codex AGENTS.md convention auto-discovers + follows links, so the pointer is sufficient and avoids 700+ lines of duplication at the root. Hand-edits to generated destinations are refused unless you pass `--force`.
 
 ### Internal docs
 
@@ -158,17 +158,17 @@ Every contributor should also read:
 
 ## Design system
 
-Single source of truth for visual identity across the dashboard, TUI color palette, README badges, and future surfaces. Kept deliberately tight — Sentry is a developer tool, not a consumer brand. Component code (dashboard, TUI) must conform to these tokens; raw hex is not permitted in component code.
+Single source of truth for visual identity across the dashboard, TUI color palette, README badges, and future surfaces. Kept deliberately tight — Ward is a developer tool, not a consumer brand. Component code (dashboard, TUI) must conform to these tokens; raw hex is not permitted in component code.
 
 ### Brand mark
 
-The Sentry mark is a hexagonal gate pierced by a blue arrow that transitions from **dashed** (intent in motion) to **solid** (verified dispatch) as it passes through the gate. This is a literal rendering of the `checkIntent` flow:
+The Ward mark is a hexagonal gate pierced by a blue arrow that transitions from **dashed** (intent in motion) to **solid** (verified dispatch) as it passes through the gate. This is a literal rendering of the `checkIntent` flow:
 
 ```
   intent  ┊┊┊→  [ POLICY GATE ]  ───→  dispatch
 ```
 
-**Master assets:** `design/logo/sentry.png` (mark) and `design/logo/sentry-wordmark.png` (lockup).
+**Master assets:** `design/logo/ward.png` (mark) and `design/logo/ward-wordmark.png` (lockup).
 
 **Clearspace:** at minimum, half the hexagon's height on every side. Never compress the arrow or recolor the gate.
 
@@ -290,17 +290,17 @@ Full fidelity to `--accent` (#4B7FD1) requires a terminal with truecolor (24-bit
 
 | Asset | Path | Status |
 |---|---|---|
-| Master mark (raster) | `design/logo/sentry.png` | shipped |
-| Wordmark lockup (raster) | `design/logo/sentry-wordmark.png` | shipped |
+| Master mark (raster) | `design/logo/ward.png` | shipped |
+| Wordmark lockup (raster) | `design/logo/ward-wordmark.png` | shipped |
 | Favicon | `dashboard/public/favicon.svg` | shipped (SVG, not PNG) |
-| Dashboard logo asset | `dashboard/public/sentry.png` | shipped |
-| Inline UI mark | `dashboard/src/components/Logo.tsx` | shipped — renders the raster master via `<img src="/sentry.png">`. |
+| Dashboard logo asset | `dashboard/public/ward.png` | shipped |
+| Inline UI mark | `dashboard/src/components/Logo.tsx` | shipped — renders the raster master via `<img src="/ward.png">`. |
 
 ### Application
 
 - **Dashboard**: Tailwind config + `index.css` reflect these tokens; component palettes (`bg-zinc-*`, `bg-neutral-*`) are migrated to semantic classes via Tailwind theme extension.
 - **TUI**: ink color mapping above; no other change needed.
-- **README**: keep markdown; embed the logo via `![Sentry](design/logo/sentry.png)` or the wordmark via `![Sentry](design/logo/sentry-wordmark.png)`.
+- **README**: keep markdown; embed the logo via `![Ward](design/logo/ward.png)` or the wordmark via `![Ward](design/logo/ward-wordmark.png)`.
 - **Skill**: text-only surface — no design surface to update.
 
 ### Motion
@@ -327,6 +327,6 @@ State-change motion only. **Never decorative, never orchestrated page loads.** M
 
 ### Non-goals
 
-- No multi-theme support (dark only — Sentry's audience runs dark IDEs and dark explorers).
+- No multi-theme support (dark only — Ward's audience runs dark IDEs and dark explorers).
 - No icon library beyond Phosphor (existing primary), Lucide (only when an installed shadcn / efferd registry block specifically depends on it), and the brand mark.
 - No print/email tokens.

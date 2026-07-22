@@ -6,7 +6,7 @@ import {
   PencilSimple as PencilIcon,
   WarningCircle as WarningIcon,
 } from "@phosphor-icons/react";
-import type { PolicyInput, SelectorRule, TargetRule } from "@sentry-somnia/sdk";
+import type { PolicyInput, SelectorRule, TargetRule } from "@ward/sdk";
 import { computeAggregateCapNote } from "../../lib/policy-edit-warnings";
 import type { HumanizedFieldError } from "../../lib/policy-edit-errors";
 import {
@@ -85,7 +85,7 @@ const ROW_BORDER_BY_KIND: Record<ChangeKind, string> = {
   added: "border-success/40 bg-success/5",
   removed: "border-danger/40 bg-danger/5",
   modified: "border-warn/40 bg-warn/5",
-  same: "border-sentry-border",
+  same: "border-ward-border",
 };
 
 interface ChangeBadgeProps {
@@ -224,7 +224,7 @@ export default function PolicyDiff({ before, after, errors, partial }: Props) {
         target list inside the modal.
       */}
       <div
-        className={`${GRID_TEMPLATE} sticky top-0 z-10 rounded-md border border-sentry-border bg-surface px-2 py-1.5 text-[10px] uppercase tracking-wider text-text-subtle`}
+        className={`${GRID_TEMPLATE} sticky top-0 z-10 rounded-md border border-ward-border bg-surface px-2 py-1.5 text-[10px] uppercase tracking-wider text-text-subtle`}
       >
         <span>Field</span>
         <span>
@@ -242,7 +242,7 @@ export default function PolicyDiff({ before, after, errors, partial }: Props) {
       </div>
 
       {nothingChanged && !hasErrors && (
-        <div className="rounded-md border border-sentry-border bg-surface p-3 text-text-subtle">
+        <div className="rounded-md border border-ward-border bg-surface p-3 text-text-subtle">
           No differences. The proposed body matches the on-chain policy exactly.
         </div>
       )}
@@ -356,7 +356,7 @@ function ScalarRow({
   return (
     <div
       className={`${GRID_TEMPLATE} rounded-md border px-2 py-1.5 ${
-        changed ? "border-warn/40 bg-warn/5" : "border-sentry-border"
+        changed ? "border-warn/40 bg-warn/5" : "border-ward-border"
       }`}
     >
       <div className="flex items-center gap-1.5">

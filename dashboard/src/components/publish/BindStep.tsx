@@ -1,5 +1,5 @@
 /**
- * Post-publish binding surface for late-bindable SentryAgentBase agents.
+ * Post-publish binding surface for late-bindable WardAgentBase agents.
  * Probes a deployed agent, then signs `setPolicyId(newPolicyId)` when valid.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -13,7 +13,7 @@ import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import { CheckCircle, ShieldCheck } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
-import { SENTRY_AGENT_BASE_ABI } from "../../lib/agent-base-abi";
+import { WARD_AGENT_BASE_ABI } from "../../lib/agent-base-abi";
 import { humanizeWeb3Error } from "../../lib/humanizeError";
 import { SOMNIA_CHAIN_ID } from "../../lib/networks";
 import { shannonSafeGas } from "../../lib/shannonGas";
@@ -46,7 +46,7 @@ export interface BindStepProps {
    * advance to Step 2 (Register) when Step 1 resolves. All default to no-op
    * so embedding BindStep without an orchestrator remains valid.
    *
-   * onAgentResolved fires after the probe completes (sentry-agent or
+   * onAgentResolved fires after the probe completes (ward-agent or
    * no-set-policy-id) so Step 2 can prefill its `agent` prop the moment we
    * know the address — without waiting for the bind tx. onAgentCleared is
    * the inverse (input wiped / invalidated).
@@ -97,7 +97,7 @@ type BindResult =
  * Should the "Skip — register instead" affordance render given the current
  * probe + idempotency state?
  *
- * The original gate ONLY allowed `probe.kind === "sentry-agent"` which left a
+ * The original gate ONLY allowed `probe.kind === "ward-agent"` which left a
  * dead-end for `no-set-policy-id`: BindStep already calls onAgentResolved for
  * that branch (the orchestrator can prefill Step 2), but the operator had no
  * way to advance Step 1. Same dead-end for an `eoa` / `probe-error` / owner
@@ -111,13 +111,13 @@ export function canShowSkip(
   alreadyBoundToThisPolicy: boolean,
   ownerMismatch: boolean,
 ): boolean {
-  if (probe.kind === "sentry-agent") {
+  if (probe.kind === "ward-agent") {
     // Original case — operator can always choose to skip even when bind would
     // be valid; or owner mismatch makes binding impossible from this wallet.
     return !alreadyBoundToThisPolicy || ownerMismatch;
   }
   // Terminal probe branches where bind can't proceed but agent address is
-  // known: no-set-policy-id (has code, not a SentryAgentBase) and probe-error
+  // known: no-set-policy-id (has code, not a WardAgentBase) and probe-error
   // (RPC failure but the address itself validated). For "eoa" the agent
   // address is technically known but Step 2 of registering an EOA is
   // nonsensical — keep Skip hidden so the user wipes the input instead.
@@ -321,13 +321,13 @@ export function BindStep({
       // orchestrator can still let the user proceed past a flaky probe.
       return;
     }
-    // sentry-agent OR no-set-policy-id: address has code; surface it.
+    // ward-agent OR no-set-policy-id: address has code; surface it.
     onAgentResolved?.(validation.address);
   }, [validation, probe, onAgentResolved, onAgentCleared]);
 
   // Idempotency shortcut: never submit a no-op bind transaction.
   const alreadyBoundToThisPolicy = useMemo(() => {
-    if (probe.kind !== "sentry-agent") return false;
+    if (probe.kind !== "ward-agent") return false;
     if (!probe.currentPolicyId) return false;
     return (
       probe.currentPolicyId.toLowerCase() === publishedPolicyId.toLowerCase()
@@ -345,7 +345,7 @@ export function BindStep({
   }, [validation, alreadyBoundToThisPolicy, onAlreadyBound]);
 
   const willRebindFromDifferentPolicy = useMemo(() => {
-    if (probe.kind !== "sentry-agent") return null;
+    if (probe.kind !== "ward-agent") return null;
     if (!probe.currentPolicyId) return null;
     if (probe.currentPolicyId === ZERO_BYTES32) return null; // no policy bound -> first bind
     if (probe.currentPolicyId.toLowerCase() === publishedPolicyId.toLowerCase()) return null;
@@ -353,7 +353,7 @@ export function BindStep({
   }, [probe, publishedPolicyId]);
 
   const ownerMismatch = useMemo(() => {
-    if (probe.kind !== "sentry-agent") return false;
+    if (probe.kind !== "ward-agent") return false;
     if (!probe.owner) return false; // owner read failed — let simulate decide
     if (!connectedAddress) return false; // wallet not connected — gate elsewhere
     return probe.owner.toLowerCase() !== connectedAddress.toLowerCase();
@@ -401,7 +401,7 @@ export function BindStep({
     if (!validation?.ok) return;
     // Re-read probe defensively — the dialog is on top of the underlying
     // state, but the user could have re-typed or switched chains in the gap.
-    if (probe.kind !== "sentry-agent") return;
+    if (probe.kind !== "ward-agent") return;
     if (alreadyBoundToThisPolicy) {
       setBindResult({ kind: "already-bound" });
       toast.success("Already bound. No tx needed.", {
@@ -428,7 +428,7 @@ export function BindStep({
       // NotOwner / setPolicyId-missing reverts before the wallet popup opens.
       await publicClient.simulateContract({
         address: agent,
-        abi: SENTRY_AGENT_BASE_ABI,
+        abi: WARD_AGENT_BASE_ABI,
         functionName: "setPolicyId",
         args: [publishedPolicyId],
         account: connectedAddress,
@@ -436,7 +436,7 @@ export function BindStep({
 
       const gas = await shannonSafeGas(publicClient, {
         address: agent,
-        abi: SENTRY_AGENT_BASE_ABI,
+        abi: WARD_AGENT_BASE_ABI,
         functionName: "setPolicyId",
         args: [publishedPolicyId],
         account: connectedAddress,
@@ -444,7 +444,7 @@ export function BindStep({
 
       const txHash = await writeContractAsync({
         address: agent,
-        abi: SENTRY_AGENT_BASE_ABI,
+        abi: WARD_AGENT_BASE_ABI,
         functionName: "setPolicyId",
         args: [publishedPolicyId],
         gas,
@@ -463,7 +463,7 @@ export function BindStep({
         if (log.address.toLowerCase() !== agent.toLowerCase()) continue;
         try {
           const parsed = decodeEventLog({
-            abi: SENTRY_AGENT_BASE_ABI,
+            abi: WARD_AGENT_BASE_ABI,
             data: log.data,
             topics: log.topics,
           });
@@ -500,7 +500,7 @@ export function BindStep({
         // mid-walkthrough. Owner is unchanged by setPolicyId, so we reuse
         // whatever the prior probe had for it.
         setProbe((prev) =>
-          prev.kind === "sentry-agent"
+          prev.kind === "ward-agent"
             ? { ...prev, currentPolicyId: publishedPolicyId }
             : prev,
         );
@@ -610,13 +610,13 @@ export function BindStep({
       </div>
       <p className="mt-1 text-sm text-text">
         Paste the address of your deployed agent contract. If it extends{" "}
-        <code className="font-mono text-xs">SentryAgentBase</code> (Sentry's
+        <code className="font-mono text-xs">WardAgentBase</code> (Ward's
         base contract for late-binding), this updates its policy binding
         (the <code className="font-mono text-xs">POLICY_ID</code> slot) to
         the policy you just published. No redeploy needed.
       </p>
 
-      <div className="mt-3 space-y-3 rounded-md border border-sentry-border bg-surface p-3">
+      <div className="mt-3 space-y-3 rounded-md border border-ward-border bg-surface p-3">
         <div>
           <label
             htmlFor="bind-agent-address"
@@ -629,7 +629,7 @@ export function BindStep({
             value={addressInput}
             onChange={(e) => onChangeAddress(e.target.value)}
             onBlur={onBlurAddress}
-            placeholder="0x… (deployed SentryAgentBase address)"
+            placeholder="0x… (deployed WardAgentBase address)"
             spellCheck={false}
             autoComplete="off"
             aria-invalid={showError ? true : undefined}
@@ -816,7 +816,7 @@ function ProbeReport({
         <code className="font-mono text-[11px]">setPolicyId(bytes32, address)</code>,
         the dashboard can't call it for you. Either bind it manually with{" "}
         <code className="font-mono text-[11px]">cast send</code>, or extend{" "}
-        <code className="font-mono text-[11px]">SentryAgentBase</code> so the
+        <code className="font-mono text-[11px]">WardAgentBase</code> so the
         standard signature is available.
       </Alert>
     );
@@ -830,7 +830,7 @@ function ProbeReport({
     );
   }
 
-  // probe.kind === "sentry-agent"
+  // probe.kind === "ward-agent"
   return (
     <div className="space-y-2 text-[12px] text-text-muted">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">

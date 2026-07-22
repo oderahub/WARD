@@ -19,7 +19,7 @@ export function Card({ className, children, padding = 'md' }: CardProps) {
   const paddingClass = PADDING_MAP[padding];
   return (
     <div
-      className={`rounded-md border border-sentry-border bg-surface ${paddingClass} ${className ?? ''}`}
+      className={`rounded-md border border-ward-border bg-surface ${paddingClass} ${className ?? ''}`}
     >
       {children}
     </div>

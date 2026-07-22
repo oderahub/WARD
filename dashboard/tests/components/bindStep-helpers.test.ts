@@ -43,7 +43,7 @@ describe("canShowSkip — orphan-path fix for the Skip button gate", () => {
   });
 
   it("hides Skip for EOA — registering an address with no code makes no sense", () => {
-    // Registering an EOA against SentryAgentRegistry would write a row that
+    // Registering an EOA against WardAgentRegistry would write a row that
     // discovers nothing — the user should fix the input, not skip.
     expect(canShowSkip({ kind: "eoa" }, false, false)).toBe(false);
   });
@@ -53,10 +53,10 @@ describe("canShowSkip — orphan-path fix for the Skip button gate", () => {
     expect(canShowSkip({ kind: "probing" }, false, false)).toBe(false);
   });
 
-  it("keeps the original sentry-agent branch: Skip shown except when already-bound and owner matches", () => {
+  it("keeps the original ward-agent branch: Skip shown except when already-bound and owner matches", () => {
     expect(
       canShowSkip(
-        { kind: "sentry-agent", currentPolicyId: null, owner: OWNER_A },
+        { kind: "ward-agent", currentPolicyId: null, owner: OWNER_A },
         false,
         false,
       ),
@@ -64,7 +64,7 @@ describe("canShowSkip — orphan-path fix for the Skip button gate", () => {
     // Already bound + owner matches: nothing useful to skip TO, so hide.
     expect(
       canShowSkip(
-        { kind: "sentry-agent", currentPolicyId: POLICY_NEW, owner: OWNER_A },
+        { kind: "ward-agent", currentPolicyId: POLICY_NEW, owner: OWNER_A },
         true,
         false,
       ),
@@ -73,7 +73,7 @@ describe("canShowSkip — orphan-path fix for the Skip button gate", () => {
     // re-bind anyway — Skip is the only forward, so show it.
     expect(
       canShowSkip(
-        { kind: "sentry-agent", currentPolicyId: POLICY_NEW, owner: OWNER_A },
+        { kind: "ward-agent", currentPolicyId: POLICY_NEW, owner: OWNER_A },
         true,
         true,
       ),

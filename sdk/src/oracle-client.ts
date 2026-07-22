@@ -6,7 +6,7 @@ import {
   type PublicClient,
   type WalletClient,
 } from "viem";
-import { SENTRY_ORACLE_ABI } from "./abi.js";
+import { WARD_ORACLE_ABI } from "./abi.js";
 import type { PolicyInput, Intent } from "./types.js";
 
 export interface OracleClient {
@@ -29,7 +29,7 @@ export interface CreateOracleClientArgs {
   chainId?: number;
 }
 
-/** Thin viem wrapper around `SentryOracle`; reads are walletless, writes simulate before submitting. */
+/** Thin viem wrapper around `WardOracle`; reads are walletless, writes simulate before submitting. */
 export function createOracleClient(args: CreateOracleClientArgs): OracleClient {
   const { publicClient, walletClient, oracleAddress, chainId } = args;
 
@@ -46,14 +46,14 @@ export function createOracleClient(args: CreateOracleClientArgs): OracleClient {
     const wallet = requireWallet();
     await publicClient.simulateContract({
       address: oracleAddress,
-      abi: SENTRY_ORACLE_ABI as never,
+      abi: WARD_ORACLE_ABI as never,
       functionName: opts.functionName,
       args: opts.args as never,
       account: wallet.account!,
     });
     return wallet.writeContract({
       address: oracleAddress,
-      abi: SENTRY_ORACLE_ABI as never,
+      abi: WARD_ORACLE_ABI as never,
       functionName: opts.functionName,
       args: opts.args as never,
       account: wallet.account!,
@@ -86,7 +86,7 @@ export function createOracleClient(args: CreateOracleClientArgs): OracleClient {
     async checkIntent(policyId, intent, spentToday) {
       const [ok, reason] = (await publicClient.readContract({
         address: oracleAddress,
-        abi: SENTRY_ORACLE_ABI as never,
+        abi: WARD_ORACLE_ABI as never,
         functionName: "checkIntent",
         args: [policyId, intent as never, spentToday],
       })) as readonly [boolean, Hex];
@@ -96,7 +96,7 @@ export function createOracleClient(args: CreateOracleClientArgs): OracleClient {
     async tierAndDelay(policyId, target, selector) {
       const [tier, delaySeconds] = (await publicClient.readContract({
         address: oracleAddress,
-        abi: SENTRY_ORACLE_ABI as never,
+        abi: WARD_ORACLE_ABI as never,
         functionName: "tierAndDelay",
         args: [policyId, target, selector],
       })) as readonly [number, number];

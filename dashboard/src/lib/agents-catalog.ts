@@ -1,9 +1,9 @@
 /**
  * Agents catalog loader — 2-tier fallback (on-chain → IDB).
  *
- * Tier 1 (on-chain via SDK `findSentryAgents`):
+ * Tier 1 (on-chain via SDK `findWardAgents`):
  *   The authoritative source. Calls the SDK helper which walks
- *   `SentryAgentRegistry.agentsPaginated`. Empty result here is still
+ *   `WardAgentRegistry.agentsPaginated`. Empty result here is still
  *   written through to the cache (an empty snapshot is a fact, not a
  *   failure).
  *
@@ -20,7 +20,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isAddress } from "viem";
 import type { Address, Hex, PublicClient } from "viem";
 
-import { findSentryAgents } from "@sentry-somnia/sdk";
+import { findWardAgents } from "@ward/sdk";
 import { NETWORKS } from "./networks";
 import { loadCachedAgents, saveCachedAgents } from "./persistence";
 
@@ -59,9 +59,9 @@ export interface LoadAgentsCatalogOpts {
 }
 
 /**
- * Resolve the SentryAgentRegistry address for a given chain.
+ * Resolve the WardAgentRegistry address for a given chain.
  *
- * Precedence: `VITE_SENTRY_AGENT_REGISTRY` (build-time override) → the
+ * Precedence: `VITE_WARD_AGENT_REGISTRY` (build-time override) → the
  * canonical `NETWORKS[chainId].registryAddress`. On a fresh clone with no
  * env file, this still resolves to the deployed registry so Tier 2 has
  * something to call.
@@ -72,14 +72,14 @@ export interface LoadAgentsCatalogOpts {
 let registryWarnedFor: number | undefined;
 let registryInvalidWarnedFor: string | undefined;
 export function resolveRegistryAddress(chainId: number): Address | undefined {
-  const fromEnv = import.meta.env.VITE_SENTRY_AGENT_REGISTRY?.trim();
+  const fromEnv = import.meta.env.VITE_WARD_AGENT_REGISTRY?.trim();
   if (fromEnv && fromEnv.length > 0) {
     if (isAddress(fromEnv)) return fromEnv as Address;
     if (registryInvalidWarnedFor !== fromEnv) {
       registryInvalidWarnedFor = fromEnv;
       // eslint-disable-next-line no-console
       console.warn(
-        `[agents-catalog] VITE_SENTRY_AGENT_REGISTRY="${fromEnv}" is not a valid ` +
+        `[agents-catalog] VITE_WARD_AGENT_REGISTRY="${fromEnv}" is not a valid ` +
           `0x-prefixed 20-byte address; falling back to NETWORKS[chainId].`,
       );
     }
@@ -92,7 +92,7 @@ export function resolveRegistryAddress(chainId: number): Address | undefined {
     // eslint-disable-next-line no-console
     console.warn(
       `[agents-catalog] No registry address resolved for chainId=${chainId}. ` +
-        `Set VITE_SENTRY_AGENT_REGISTRY or add registryAddress to NETWORKS.`,
+        `Set VITE_WARD_AGENT_REGISTRY or add registryAddress to NETWORKS.`,
     );
   }
   return undefined;
@@ -114,7 +114,7 @@ async function fetchFromChain(
   // catalog promises to never throw, so wrap defensively even though we
   // pass both args.
   //
-  // viem's http() per-request timeout is per RPC call. findSentryAgents does
+  // viem's http() per-request timeout is per RPC call. findWardAgents does
   // agentCount() plus one read per page, so a slow RPC could cost roughly
   // 8 * calls before Tier 3 cache is tried. We enforce a single tier-level
   // budget (CHAIN_TIMEOUT_MS) via Promise.race so the catalog returns
@@ -137,7 +137,7 @@ async function fetchFromChain(
 
   try {
     const result = await Promise.race([
-      findSentryAgents({
+      findWardAgents({
         publicClient,
         registryAddress,
         onlyActive,

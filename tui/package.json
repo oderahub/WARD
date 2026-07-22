@@ -1,11 +1,11 @@
 {
-  "name": "@sentry-somnia/tui",
+  "name": "@ward/tui",
   "version": "0.9.0",
   "private": true,
-  "description": "Sentry operator TUI — raster-style Ink queue monitor with health scope, expirable actions, aging bars, live filters, and NDJSON mode.",
+  "description": "Ward operator TUI — raster-style Ink queue monitor with health scope, expirable actions, aging bars, live filters, and NDJSON mode.",
   "type": "module",
   "bin": {
-    "sentry-tui": "./dist/index.js"
+    "ward-tui": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json && chmod +x dist/index.js",
@@ -14,7 +14,7 @@
     "test": "echo no tests yet"
   },
   "dependencies": {
-    "@sentry-somnia/sdk": "workspace:*",
+    "@ward/sdk": "workspace:*",
     "ink": "^5.0.1",
     "kleur": "^4.1.5",
     "react": "^18.3.1",

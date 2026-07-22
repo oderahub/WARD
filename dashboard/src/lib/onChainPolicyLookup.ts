@@ -6,7 +6,7 @@ import {
   type Hex,
   type PublicClient,
 } from "viem";
-import { SENTRY_ORACLE_ABI } from "@sentry-somnia/sdk";
+import { WARD_ORACLE_ABI } from "@ward/sdk";
 
 const POLICY_PUBLISHED_EVENT = parseAbiItem(
   "event PolicyPublished(bytes32 indexed policyId, address indexed owner, bytes32 label)",
@@ -234,7 +234,7 @@ export async function lookupPoliciesByOwner(
     try {
       const logs = await publicClient.getContractEvents({
         address: oracleAddress,
-        abi: SENTRY_ORACLE_ABI as never,
+        abi: WARD_ORACLE_ABI as never,
         eventName: "PolicyPublished",
         args: { owner } as never,
         fromBlock: from,
@@ -380,7 +380,7 @@ async function decodeUpdatePolicyTx(
   try {
     const tx = await client.getTransaction({ hash: txHash });
     const decoded = decodeFunctionData({
-      abi: SENTRY_ORACLE_ABI,
+      abi: WARD_ORACLE_ABI,
       data: tx.input,
     });
     if (decoded.functionName !== "updatePolicy") return null;
@@ -429,7 +429,7 @@ export async function lookupPolicyOnChain(
   try {
     publisher = (await client.readContract({
       address: oracleAddress,
-      abi: SENTRY_ORACLE_ABI,
+      abi: WARD_ORACLE_ABI,
       functionName: "policyOwner",
       args: [policyId],
     })) as Address;
@@ -447,7 +447,7 @@ export async function lookupPolicyOnChain(
   try {
     const [pausedRes, expiresAtRes] = (await client.readContract({
       address: oracleAddress,
-      abi: SENTRY_ORACLE_ABI,
+      abi: WARD_ORACLE_ABI,
       functionName: "policyHealth",
       args: [policyId],
     })) as readonly [boolean, bigint];

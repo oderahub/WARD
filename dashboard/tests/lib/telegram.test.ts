@@ -187,7 +187,7 @@ describe("sendTestAlertTelegram", () => {
     const parsed = new URLSearchParams(init.body as URLSearchParams);
     expect(parsed.get("chat_id")).toBe(CHAT_ID);
     const text = parsed.get("text") ?? "";
-    expect(text).toContain("[Sentry watch wizard · test]");
+    expect(text).toContain("[Ward watch wizard · test]");
     expect(text).toContain(AGENT);
   });
 

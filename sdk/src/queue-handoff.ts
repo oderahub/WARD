@@ -43,7 +43,7 @@ export function buildQueueHandoffRecommendation(input: QueueHandoffInput): Queue
   if (tier === "IMMEDIATE") {
     return {
       tier,
-      summary: "IMMEDIATE requests should not be sitting in SentryQueue.",
+      summary: "IMMEDIATE requests should not be sitting in WardQueue.",
       detail: `The queued record points at target ${input.target} from requester ${input.asker}. Dispatch the queue record to clean it up, then route future IMMEDIATE calls directly through the agent.`,
       warning: "IMMEDIATE_NO_QUEUE_NEEDED: this record is unusual and may come from an old integration path.",
       command: queueDispatch,
@@ -62,7 +62,7 @@ export function buildQueueHandoffRecommendation(input: QueueHandoffInput): Queue
 
     return {
       tier,
-      summary: "Dispatch directly through SentryQueue.",
+      summary: "Dispatch directly through WardQueue.",
       detail: "No agent ABI exposing dispatchQueued(uint256) was supplied. Raw queue dispatch is valid for DELAYED records, but the integrator's agent may have its own dispatch flow.",
       warning: "Check the agent docs before using raw queue dispatch in production.",
       command: queueDispatch,

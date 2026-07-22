@@ -17,7 +17,7 @@ const VARIANT_MAP: Record<ButtonVariant, string> = {
   success: 'bg-success/20 border-success text-white hover:bg-success/30',
   warn: 'bg-warn/20 border-warn text-white hover:bg-warn/30',
   ghost:
-    'bg-transparent border-sentry-border text-text-muted hover:text-text hover:border-text-muted',
+    'bg-transparent border-ward-border text-text-muted hover:text-text hover:border-text-muted',
 };
 
 const SIZE_MAP: Record<ButtonSize, string> = {

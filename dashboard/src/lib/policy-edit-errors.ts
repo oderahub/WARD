@@ -12,7 +12,7 @@
  * Both helpers are pure — no React, no DOM — so they're trivially testable
  * and the modal can run them inside a `useMemo` without leaks.
  */
-import type { PolicyInput } from "@sentry-somnia/sdk";
+import type { PolicyInput } from "@ward/sdk";
 import { formatSelector, FIELD_HUMAN_LABELS } from "./selector-display";
 import type { PolicyDraft } from "./policy-draft";
 

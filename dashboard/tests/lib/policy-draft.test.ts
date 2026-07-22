@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { compilePolicy } from "@sentry-somnia/sdk";
+import { compilePolicy } from "@ward/sdk";
 import {
   PolicyDraftSchema,
   SelectorDraftSchema,
@@ -15,9 +15,9 @@ import {
 const VALID_TARGET = "0xA1601891Da4b60c9311B3A024e3E03C5136460e4";
 
 const valid = {
-  name: "Sentry Counter e2e policy",
+  name: "Ward Counter e2e policy",
   description: "Test policy for the dashboard publish flow.",
-  label: "sentry-counter-e2e",
+  label: "ward-counter-e2e",
   dailySpendWeiCap: "0",
   expiresAtISO: "2026-11-29T00:00:00.000Z",
   paused: false,
@@ -166,7 +166,7 @@ describe("renderPolicyMarkdown", () => {
     expect(md.match(/```\s*$/m)).not.toBeNull();
   });
 
-  it("round-trips through the SDK compiler (parity with `sentry compile`)", () => {
+  it("round-trips through the SDK compiler (parity with `ward compile`)", () => {
     const md = renderPolicyMarkdown(valid);
     const compiled = compilePolicy(md);
     // Same shape the CLI produces; selector hashed to its 4-byte id.

@@ -17,13 +17,13 @@ const ABI = [
   { type: "function", name: "withdraw", inputs: [{ name: "to", type: "address" }], stateMutability: "nonpayable" },
 ];
 
-describe("sentry lint", () => {
+describe("ward lint", () => {
   let dir: string;
   let policyPath: string;
   let abiPath: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "sentry-lint-"));
+    dir = mkdtempSync(join(tmpdir(), "ward-lint-"));
     policyPath = join(dir, "POLICY.md");
     abiPath = join(dir, "abi.json");
     writeFileSync(abiPath, JSON.stringify(ABI));

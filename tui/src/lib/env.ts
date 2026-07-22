@@ -44,8 +44,8 @@ const DEFAULT_QUEUE: Address = "0xFB715A37951Fc8dcc920120768e91f7C8bbA54c4";
 export function resolveEnv(overrides: Partial<ResolvedEnv> = {}): ResolvedEnv {
   return {
     rpc: overrides.rpc ?? process.env.SOMNIA_TESTNET_RPC ?? somniaTestnet.rpcUrls.default.http[0],
-    oracleAddress: overrides.oracleAddress ?? (process.env.SENTRY_ORACLE as Address | undefined) ?? DEFAULT_ORACLE,
-    queueAddress: overrides.queueAddress ?? (process.env.SENTRY_QUEUE as Address | undefined) ?? DEFAULT_QUEUE,
+    oracleAddress: overrides.oracleAddress ?? (process.env.WARD_ORACLE as Address | undefined) ?? DEFAULT_ORACLE,
+    queueAddress: overrides.queueAddress ?? (process.env.WARD_QUEUE as Address | undefined) ?? DEFAULT_QUEUE,
     privateKey: overrides.privateKey ?? (process.env.PRIVATE_KEY as `0x${string}` | undefined),
   };
 }
@@ -77,9 +77,9 @@ function truthy(name: string): boolean {
 }
 
 // Leave undefined by default so policy backfill uses the same bounded window as queue events.
-export const SENTRY_ORACLE_DEPLOY_BLOCK: bigint | undefined =
-  envBigInt("SENTRY_TUI_ORACLE_DEPLOY_BLOCK") ??
-  (truthy("SENTRY_TUI_DEEP_BACKFILL") ? envBigInt("SENTRY_ORACLE_DEPLOY_BLOCK") : undefined);
+export const WARD_ORACLE_DEPLOY_BLOCK: bigint | undefined =
+  envBigInt("WARD_TUI_ORACLE_DEPLOY_BLOCK") ??
+  (truthy("WARD_TUI_DEEP_BACKFILL") ? envBigInt("WARD_ORACLE_DEPLOY_BLOCK") : undefined);
 
 // Operators can widen this for older pending queue records.
-export const SENTRY_QUEUE_LOOKBACK_BLOCKS: bigint = envBigInt("SENTRY_QUEUE_LOOKBACK_BLOCKS") ?? DEFAULT_TUI_LOOKBACK_BLOCKS;
+export const WARD_QUEUE_LOOKBACK_BLOCKS: bigint = envBigInt("WARD_QUEUE_LOOKBACK_BLOCKS") ?? DEFAULT_TUI_LOOKBACK_BLOCKS;

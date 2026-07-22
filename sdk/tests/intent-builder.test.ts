@@ -103,7 +103,7 @@ describe("buildIntent", () => {
     expect(intent.value).toBe(2n);
   });
 
-  it("defaults Sentry metadata fields", () => {
+  it("defaults Ward metadata fields", () => {
     const intent = buildIntent({
       abi: jsonAbi,
       address: TARGET,
@@ -117,7 +117,7 @@ describe("buildIntent", () => {
     expect(intent.value).toBe(0n);
   });
 
-  it("preserves explicit Sentry metadata fields", () => {
+  it("preserves explicit Ward metadata fields", () => {
     const intent = buildIntent({
       abi: jsonAbi,
       address: TARGET,

@@ -1,3 +1,3 @@
-import Sentry.Theorems
+import Ward.Theorems
 
-def main : IO Unit := IO.println "Sentry Lean 4 model — proofs verified at build time."
+def main : IO Unit := IO.println "Ward Lean 4 model — proofs verified at build time."

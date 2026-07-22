@@ -16,7 +16,7 @@ function bytes32Ascii(s: string): Hex {
   return `0x${hex.padEnd(64, "0")}` as Hex;
 }
 
-/** Canonical `bytes32(...)` reason codes emitted by `PolicyLib.validate` and `SentryOracle.checkIntent`. */
+/** Canonical `bytes32(...)` reason codes emitted by `PolicyLib.validate` and `WardOracle.checkIntent`. */
 export const REASON_CODES = {
   OK: `0x${"00".repeat(32)}` as Hex,
   PAUSED: bytes32Ascii("PAUSED"),

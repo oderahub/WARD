@@ -163,7 +163,7 @@ function bitWidthOf(max: bigint): number {
   return max.toString(2).length;
 }
 
-/** Reject inputs outside the Solidity ABI domain for `SentryOracle.checkIntent`. */
+/** Reject inputs outside the Solidity ABI domain for `WardOracle.checkIntent`. */
 function validateInputDomain(
   intent: EvalIntent,
   spentTodayWei: bigint,
@@ -260,7 +260,7 @@ function validateInputDomain(
   }
 }
 
-/** Bit-faithful pure TS port of `SentryOracle.checkIntent`, returning canonical `(ok, reason)`. */
+/** Bit-faithful pure TS port of `WardOracle.checkIntent`, returning canonical `(ok, reason)`. */
 export function evalCheckIntent(
   policy: EvalPolicy,
   intent: EvalIntent,

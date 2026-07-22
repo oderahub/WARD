@@ -157,7 +157,7 @@ describe("PolicyBuilder", () => {
 });
 
 /**
- * Native-only unit parsing. Sentry meters native msg.value (STT) only; the
+ * Native-only unit parsing. Ward meters native msg.value (STT) only; the
  * parser deliberately accepts ONE unit suffix (`ether`, case-insensitive) and
  * rejects every other unit (`gwei`, `wei`, `eth`, etc.) so a user typo doesn't
  * silently fall through to a confusing low-level BigInt SyntaxError at publish

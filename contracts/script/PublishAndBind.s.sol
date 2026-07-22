@@ -2,25 +2,25 @@
 pragma solidity 0.8.26;
 
 import "forge-std/Script.sol";
-import "../src/SentryOracle.sol";
+import "../src/WardOracle.sol";
 import "../src/PolicyTypes.sol";
 import "./PolicyJson.sol";
 
-/// @notice Minimal external view of the SentryAgentBase surface we touch.
-///         Re-declared inline so the script doesn't carry the full SentryAgentBase
+/// @notice Minimal external view of the WardAgentBase surface we touch.
+///         Re-declared inline so the script doesn't carry the full WardAgentBase
 ///         dependency just to look up two selectors.
-interface ISentryAgent {
+interface IWardAgent {
     function setPolicyId(bytes32 newPolicyId) external;
     function POLICY_ID() external view returns (bytes32);
     function owner() external view returns (address);
 }
 
 /// @notice One-shot operator script that collapses the existing two-step
-///         `sentry push POLICY.md` + `cast send <agent> setPolicyId(bytes32)`
+///         `ward push POLICY.md` + `cast send <agent> setPolicyId(bytes32)`
 ///         dance into a single broadcast block.
 ///
 ///         === Inputs (env) ===
-///         POLICY_JSON_PATH  — path to a JSON produced by `sentry compile POLICY.md`.
+///         POLICY_JSON_PATH  — path to a JSON produced by `ward compile POLICY.md`.
 ///                             Required UNLESS POLICY_JSON is set. The path must
 ///                             sit inside foundry.toml's `fs_permissions` read
 ///                             whitelist (`./` relative to contracts/), so
@@ -30,26 +30,26 @@ interface ISentryAgent {
 ///                             reads are awkward (e.g. running from a sandbox
 ///                             that can't grant fs_permissions). When set,
 ///                             POLICY_JSON_PATH is ignored.
-///         AGENT_ADDR        — deployed SentryAgentBase-derived agent to bind
+///         AGENT_ADDR        — deployed WardAgentBase-derived agent to bind
 ///                             (required; must be owned by the broadcaster).
 ///         LABEL             — ASCII label (≤32 bytes); padded to bytes32
 ///                             (default: "default").
-///         ORACLE_ADDR       — SentryOracle deployment (default:
+///         ORACLE_ADDR       — WardOracle deployment (default:
 ///                             0x3C7bF90f243d670a01f512221d9546e09fEaCC9c, the
 ///                             v2 (modifier-compatible) Shannon testnet oracle
 ///                             from contracts/deployments/50312.json. v1
 ///                             (0x68d4B045…) stays live and can still be
 ///                             targeted by overriding ORACLE_ADDR — it lacks
 ///                             `checkSelector` and so cannot back the
-///                             `sentryGuarded` modifier, but `checkIntent` is
+///                             `wardGuarded` modifier, but `checkIntent` is
 ///                             unchanged).
 ///         DEPLOYER_PK       — broadcaster's private key (required).
 ///
 ///         === Usage ===
-///         1. `sentry compile examples/sentry-counter/policy.md > policy.json`
+///         1. `ward compile examples/ward-counter/policy.md > policy.json`
 ///         2. `POLICY_JSON_PATH=./policy.json AGENT_ADDR=0xMyAgent \
 ///             forge script contracts/script/PublishAndBind.s.sol \
-///             --rpc-url $SENTRY_RPC --broadcast --legacy \
+///             --rpc-url $WARD_RPC --broadcast --legacy \
 ///             --gas-estimate-multiplier 2000 --private-key $DEPLOYER_PK`
 ///
 ///         The script signs two back-to-back txs in one broadcast block —
@@ -58,7 +58,7 @@ interface ISentryAgent {
 ///         only signs once and the second tx auto-fires on success.
 contract PublishAndBind is Script {
     /// @notice Live Shannon testnet v2 oracle from `contracts/deployments/50312.json`.
-    ///         v2 carries `checkSelector` so it can back `sentryGuarded` modifier
+    ///         v2 carries `checkSelector` so it can back `wardGuarded` modifier
     ///         policies as well as the original `checkIntent` flow. Override
     ///         ORACLE_ADDR to target the v1 oracle (0x68d4B045…) for legacy
     ///         `checkIntent`-only publishes against pre-v0.11.0 agents.
@@ -76,8 +76,8 @@ contract PublishAndBind is Script {
         console2.log("Oracle:     ", oracleAddr);
         console2.log("Agent:      ", agentAddr);
 
-        SentryOracle oracle = SentryOracle(oracleAddr);
-        ISentryAgent agent = ISentryAgent(agentAddr);
+        WardOracle oracle = WardOracle(oracleAddr);
+        IWardAgent agent = IWardAgent(agentAddr);
 
         // Verify the broadcaster owns the agent BEFORE broadcasting so the
         // operator sees a clean require-revert during simulation rather than

@@ -7,14 +7,14 @@ import { analyzeGate } from "../src/cmd/analyze-gate.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURES = resolve(__dirname, "fixtures/analyze-gate");
-const COUNTER_AGENT = resolve(__dirname, "../../examples/sentry-counter/src/CounterAgent.sol");
+const COUNTER_AGENT = resolve(__dirname, "../../examples/ward-counter/src/CounterAgent.sol");
 const CLI_ENTRY = resolve(__dirname, "../dist/index.js");
 
 function read(path: string): string {
   return readFileSync(path, "utf8");
 }
 
-describe("sentry analyze:gate", () => {
+describe("ward analyze:gate", () => {
   it("CounterAgent.sol passes clean (it uses _gate properly)", () => {
     const findings = analyzeGate(COUNTER_AGENT, read(COUNTER_AGENT));
     expect(findings).toEqual([]);
@@ -31,8 +31,8 @@ describe("sentry analyze:gate", () => {
     expect(findings[0]!.line).toBe(8);
   });
 
-  it("recognizes SentryCall.check(...) as a valid gate", () => {
-    const path = resolve(FIXTURES, "SentryCallAgent.sol");
+  it("recognizes WardCall.check(...) as a valid gate", () => {
+    const path = resolve(FIXTURES, "WardCallAgent.sol");
     const findings = analyzeGate(path, read(path));
     expect(findings).toEqual([]);
   });

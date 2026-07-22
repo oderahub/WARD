@@ -49,8 +49,8 @@ function clearGlobals() {
   delete (globalThis as any).__WRITES__;
   delete (globalThis as any).__SENDS__;
   process.env.PRIVATE_KEY = ("0x" + "11".repeat(32));
-  process.env.SENTRY_QUEUE = "0x000000000000000000000000000000000000beef";
-  process.env.SENTRY_ORACLE = "0x0000000000000000000000000000000000000abc";
+  process.env.WARD_QUEUE = "0x000000000000000000000000000000000000beef";
+  process.env.WARD_ORACLE = "0x0000000000000000000000000000000000000abc";
 }
 
 const DUMMY_INTENT = {
@@ -95,14 +95,14 @@ function installLegacyHeaderPayloadMock() {
   return calls;
 }
 
-describe("sentry queue:dispatch", () => {
+describe("ward queue:dispatch", () => {
   let dir: string;
   let logs: string[];
   let restore: () => void;
 
   beforeEach(() => {
     clearGlobals();
-    dir = mkdtempSync(join(tmpdir(), "sentry-queue-"));
+    dir = mkdtempSync(join(tmpdir(), "ward-queue-"));
     logs = [];
     const origLog = console.log;
     const origErr = console.error;
@@ -185,14 +185,14 @@ describe("sentry queue:dispatch", () => {
   });
 });
 
-describe("sentry queue:enqueue", () => {
+describe("ward queue:enqueue", () => {
   let dir: string;
   let logs: string[];
   let restore: () => void;
 
   beforeEach(() => {
     clearGlobals();
-    dir = mkdtempSync(join(tmpdir(), "sentry-enq-"));
+    dir = mkdtempSync(join(tmpdir(), "ward-enq-"));
     logs = [];
     const origLog = console.log;
     const origErr = console.error;
@@ -271,14 +271,14 @@ describe("sentry queue:enqueue", () => {
   });
 });
 
-describe("sentry queue:handoff", () => {
+describe("ward queue:handoff", () => {
   let dir: string;
   let logs: string[];
   let restore: () => void;
 
   beforeEach(() => {
     clearGlobals();
-    dir = mkdtempSync(join(tmpdir(), "sentry-handoff-"));
+    dir = mkdtempSync(join(tmpdir(), "ward-handoff-"));
     logs = [];
     const origLog = console.log;
     const origErr = console.error;
@@ -316,14 +316,14 @@ describe("sentry queue:handoff", () => {
       tier: 1,
       hasAgentABI: true,
       hasDispatchQueued: false,
-      expected: ["Dispatch directly through SentryQueue", "dispatchQueued(uint256) not found", "integrator's agent may have its own dispatch flow"],
+      expected: ["Dispatch directly through WardQueue", "dispatchQueued(uint256) not found", "integrator's agent may have its own dispatch flow"],
     },
     {
       name: "DELAYED without agent ABI recommends raw queue with warning",
       tier: 1,
       hasAgentABI: false,
       hasDispatchQueued: false,
-      expected: ["Dispatch directly through SentryQueue", "Check the agent docs", '"dispatch(uint256)" 42'],
+      expected: ["Dispatch directly through WardQueue", "Check the agent docs", '"dispatch(uint256)" 42'],
     },
     {
       name: "VETO_REQUIRED prints policy owner and owner-only raw queue command",
@@ -396,7 +396,7 @@ describe("sentry queue:handoff", () => {
 
     const { readQueueHeader } = await import("../src/cmd/queue.js");
     await expect(readQueueHeader({ readContract: (globalThis as any).__READ_CONTRACT__ } as never, "0x000000000000000000000000000000000000beef", 1n)).rejects.toThrow(
-      "SentryQueue at 0x000000000000000000000000000000000000beef returned an unexpected payload shape (416 bytes); expected 384 or 352 bytes.",
+      "WardQueue at 0x000000000000000000000000000000000000beef returned an unexpected payload shape (416 bytes); expected 384 or 352 bytes.",
     );
   });
 });

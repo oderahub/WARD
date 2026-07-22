@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { createPublicClient, http, type Address, type Hex } from "viem";
 import {
-  SENTRY_ORACLE_ABI,
+  WARD_ORACLE_ABI,
   buildQueueHandoffRecommendation,
   type QueueRecordHeader,
   type QueueState,
-} from "@sentry-somnia/sdk";
+} from "@ward/sdk";
 
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useEventStore } from "../hooks/useEventStore";
@@ -365,7 +365,7 @@ function QueueHandoffPanel({
     client
       .readContract({
         address: oracleAddress,
-        abi: SENTRY_ORACLE_ABI,
+        abi: WARD_ORACLE_ABI,
         functionName: "policyOwner",
         args: [record.policyId],
       })

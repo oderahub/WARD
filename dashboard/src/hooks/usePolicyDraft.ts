@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { compilePolicy, type PolicyInput } from "@sentry-somnia/sdk";
+import { compilePolicy, type PolicyInput } from "@ward/sdk";
 import {
   emptyPolicyDraft,
   PolicyDraftSchema,

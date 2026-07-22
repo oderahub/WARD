@@ -3,19 +3,19 @@ pragma solidity 0.8.26;
 
 import "forge-std/Test.sol";
 import "../../src/PolicyTypes.sol";
-import "../../src/SentryOracle.sol";
-import "../../src/integration/SentryAgentBase.sol";
+import "../../src/WardOracle.sol";
+import "../../src/integration/WardAgentBase.sol";
 import "../../script/PolicyJson.sol";
 import "../mocks/MockTarget.sol";
 
-/// @notice Test-only subclass — `SentryAgentBase` is abstract, so we need a
+/// @notice Test-only subclass — `WardAgentBase` is abstract, so we need a
 ///         deployable concrete to exercise `setPolicyId` from the script path.
-contract _BoundableAgent is SentryAgentBase {
-    constructor(SentryOracle oracle_, address owner_) SentryAgentBase(oracle_, owner_) {}
+contract _BoundableAgent is WardAgentBase {
+    constructor(WardOracle oracle_, address owner_) WardAgentBase(oracle_, owner_) {}
 }
 
 contract PublishAndBindTest is Test {
-    SentryOracle internal oracle;
+    WardOracle internal oracle;
     MockTarget internal target;
     _BoundableAgent internal agent;
     address internal broadcaster = address(0xCAFE);
@@ -28,14 +28,14 @@ contract PublishAndBindTest is Test {
     string internal constant FIXTURE_PATH = "deployments/tmp-publishandbind-policy.json";
 
     function setUp() public {
-        oracle = new SentryOracle();
+        oracle = new WardOracle();
         target = new MockTarget();
         vm.prank(broadcaster);
         agent = new _BoundableAgent(oracle, broadcaster);
     }
 
     /// @notice Happy path: write the canonical CLI-shaped JSON to disk (mirrors
-    ///         what `sentry compile > policy.json` produces), decode it via the
+    ///         what `ward compile > policy.json` produces), decode it via the
     ///         same library the script uses, then publish + bind in one
     ///         broadcast block. Asserts on-chain state matches what the
     ///         operator would see in production.
@@ -102,7 +102,7 @@ contract PublishAndBindTest is Test {
 
         // But binding to an agent the broadcaster doesn't own reverts.
         vm.prank(broadcaster);
-        vm.expectRevert(SentryAgentBase.NotOwner.selector);
+        vm.expectRevert(WardAgentBase.NotOwner.selector);
         foreignAgent.setPolicyId(policyId);
     }
 

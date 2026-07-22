@@ -5,8 +5,8 @@
  *
  * Two steps, each independently skippable:
  *   1. Bind  — flip the deployed agent's POLICY_ID to the freshly published
- *              policyId (only meaningful for SentryAgentBase derivatives).
- *   2. Register — write the (agent → policyId) row to SentryAgentRegistry so
+ *              policyId (only meaningful for WardAgentBase derivatives).
+ *   2. Register — write the (agent → policyId) row to WardAgentRegistry so
  *              downstream indexers can discover the binding.
  *
  * State for the orchestrator lives in `postPublishChecklistState.ts` as a
@@ -177,7 +177,7 @@ export function PostPublishChecklist({
 
       {isRegisterRevealed(state) && !registerStepAvailable && (
         <Alert variant="warn" title="Registry not deployed on this chain">
-          The catalog step can't run because no SentryAgentRegistry address is
+          The catalog step can't run because no WardAgentRegistry address is
           configured for chain {expectedChainId}. Step 1's bind tx (if any)
           stands on its own — the agent will still gate calls against the
           published policy.

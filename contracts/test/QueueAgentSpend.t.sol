@@ -3,28 +3,28 @@ pragma solidity 0.8.26;
 
 import "forge-std/Test.sol";
 import "../src/PolicyTypes.sol";
-import "../src/SentryOracle.sol";
-import "../src/SentryQueue.sol";
+import "../src/WardOracle.sol";
+import "../src/WardQueue.sol";
 import "../src/integration/QueueAgentBase.sol";
 import "./mocks/MockTarget.sol";
 
-/// @notice Real-wired harness (SentryOracle + SentryQueue) exposing a value-bearing
+/// @notice Real-wired harness (WardOracle + WardQueue) exposing a value-bearing
 ///         DELAYED enqueue plus a spend accessor so spend-reservation can be asserted.
 contract QueueSpendHarness is QueueAgentBase {
-    constructor(SentryOracle oracle_, SentryQueue queue_, address owner_) QueueAgentBase(oracle_, queue_, owner_) {}
+    constructor(WardOracle oracle_, WardQueue queue_, address owner_) QueueAgentBase(oracle_, queue_, owner_) {}
 
     receive() external payable {}
 
     function enqueueValued(address target, uint256 value, uint256 reqId) external returns (uint256) {
-        return _sentryEnqueueDelayed(target, abi.encodeWithSelector(MockTarget.ping.selector), value, reqId);
+        return _wardEnqueueDelayed(target, abi.encodeWithSelector(MockTarget.ping.selector), value, reqId);
     }
 
     function enqueueVetoValued(address target, uint256 value, uint256 reqId) external returns (uint256) {
-        return _sentryEnqueueDelayed(target, abi.encodeWithSelector(MockTarget.pong.selector), value, reqId);
+        return _wardEnqueueDelayed(target, abi.encodeWithSelector(MockTarget.pong.selector), value, reqId);
     }
 
     function spentToday() external view returns (uint256) {
-        return _sentrySpentToday();
+        return _wardSpentToday();
     }
 }
 
@@ -32,8 +32,8 @@ contract QueueSpendHarness is QueueAgentBase {
 ///         must reserve against the enqueue-day bucket so the cap cannot be exceeded by
 ///         enqueuing several intents while spentToday is low, then dispatching them all.
 contract QueueAgentSpendTest is Test {
-    SentryOracle internal oracle;
-    SentryQueue internal queue;
+    WardOracle internal oracle;
+    WardQueue internal queue;
     MockTarget internal target;
     QueueSpendHarness internal agent;
 
@@ -44,8 +44,8 @@ contract QueueAgentSpendTest is Test {
     bytes4 internal constant SEL_PING = MockTarget.ping.selector;
 
     function setUp() public {
-        oracle = new SentryOracle();
-        queue = new SentryQueue(oracle);
+        oracle = new WardOracle();
+        queue = new WardQueue(oracle);
         target = new MockTarget();
         agent = new QueueSpendHarness(oracle, queue, owner);
 
@@ -79,7 +79,7 @@ contract QueueAgentSpendTest is Test {
         assertEq(agent.spentToday(), 1 ether, "enqueue reserves against the daily cap");
 
         vm.prank(owner);
-        vm.expectRevert(abi.encodeWithSelector(SentryQueue.NotQueueable.selector, bytes32("DAILY_CAP")));
+        vm.expectRevert(abi.encodeWithSelector(WardQueue.NotQueueable.selector, bytes32("DAILY_CAP")));
         agent.enqueueValued(address(target), 1 ether, 2);
     }
 
@@ -109,7 +109,7 @@ contract QueueAgentSpendTest is Test {
         // policy owner directly dispatches via the queue (backward-compat path); agent never consumes
         vm.prank(policyOwner);
         queue.dispatch(execId);
-        assertEq(uint8(queue.getRecord(execId).state), uint8(SentryQueue.State.Committed));
+        assertEq(uint8(queue.getRecord(execId).state), uint8(WardQueue.State.Committed));
         // before the fix settleQueued is a no-op here (state Committed); after, it releases the stuck reservation
         agent.settleQueued(execId);
         assertEq(agent.spentToday(), 0, "owner-direct-dispatched reservation released");
@@ -125,7 +125,7 @@ contract QueueAgentSpendTest is Test {
         // reverting (e.g. no underflow) and be idempotent on a second call.
         skip(60 + uint256(queue.COMMIT_WINDOW_SECONDS()) + 1);
         queue.expireIfStale(execId);
-        assertEq(uint8(queue.getRecord(execId).state), uint8(SentryQueue.State.Expired));
+        assertEq(uint8(queue.getRecord(execId).state), uint8(WardQueue.State.Expired));
         agent.settleQueued(execId);
         agent.settleQueued(execId); // idempotent no-op, must not revert
     }

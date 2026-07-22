@@ -35,8 +35,8 @@ import {
 } from "./ui/tooltip";
 
 /**
- * Sentry-watched agents on Somnia — the discoverability surface that answers
- * "who else is using Sentry?" Stacks above MyPoliciesPanel on the Watched tab.
+ * Ward-watched agents on Somnia — the discoverability surface that answers
+ * "who else is using Ward?" Stacks above MyPoliciesPanel on the Watched tab.
  *
  * Data flows from `useAgentsCatalog` which runs the 2-tier fallback (on-chain
  * registry walk → IDB cache). The hook is intentionally
@@ -119,7 +119,7 @@ export default function AgentsCatalogPanel() {
         </div>
       ) : agents.length === 0 ? (
         <EmptyState
-          title="No agents have registered with Sentry yet."
+          title="No agents have registered with Ward yet."
           hint="Be the first. Register your agent in the Publish flow."
         />
       ) : (

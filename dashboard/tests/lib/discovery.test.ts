@@ -22,7 +22,7 @@ interface ClientOpts {
   nonce?: number;
   /** Balance returned by getBalance. */
   balance?: bigint;
-  /** Head block returned by getBlockNumber. If omitted, throws (skips Sentry-aware probes). */
+  /** Head block returned by getBlockNumber. If omitted, throws (skips Ward-aware probes). */
   headBlock?: bigint;
   /** Per-functionName behaviour for readContract. */
   readContract?: (args: { functionName: string; args?: readonly unknown[] }) => unknown;
@@ -52,7 +52,7 @@ function makeClient(opts: ClientOpts): PublicClient {
 }
 
 describe("discoverAgent", () => {
-  it("classifies an EOA with nonce 0 and reports sentryAware=false", async () => {
+  it("classifies an EOA with nonce 0 and reports wardAware=false", async () => {
     const client = makeClient({
       code: "0x",
       nonce: 0,
@@ -85,7 +85,7 @@ describe("discoverAgent", () => {
     expect(report.codeSize).toBe(0);
     expect(report.nonce).toBe(0);
     expect(report.tokenFingerprint).toBeNull();
-    expect(report.sentryAware.sentryAware).toBe(false);
+    expect(report.wardAware.wardAware).toBe(false);
     expect(report.alreadyRegistered.registered).toBe(false);
     expect(report.rpcCallsUsed).toBeGreaterThan(0);
     expect(report.errors).toEqual([]);
@@ -142,7 +142,7 @@ describe("discoverAgent", () => {
     }
   });
 
-  it("detects a Sentry-aware registry hit via getLogs + populates the canonical row from getAgent", async () => {
+  it("detects a Ward-aware registry hit via getLogs + populates the canonical row from getAgent", async () => {
     const registeredRow = {
       agent: AGENT,
       registrar: REGISTRAR,
@@ -193,12 +193,12 @@ describe("discoverAgent", () => {
 
     const report = await discoverAgent({ publicClient: client, address: AGENT });
 
-    expect(report.sentryAware.sentryAware).toBe(true);
-    if (report.sentryAware.sentryAware) {
-      expect(report.sentryAware.evidence.kind).toBe("registry");
-      if (report.sentryAware.evidence.kind === "registry") {
-        expect(report.sentryAware.evidence.policyId).toBe(POLICY_ID);
-        expect(report.sentryAware.evidence.oracle).toBe(ORACLE);
+    expect(report.wardAware.wardAware).toBe(true);
+    if (report.wardAware.wardAware) {
+      expect(report.wardAware.evidence.kind).toBe("registry");
+      if (report.wardAware.evidence.kind === "registry") {
+        expect(report.wardAware.evidence.policyId).toBe(POLICY_ID);
+        expect(report.wardAware.evidence.oracle).toBe(ORACLE);
       }
     }
     expect(report.alreadyRegistered.registered).toBe(true);

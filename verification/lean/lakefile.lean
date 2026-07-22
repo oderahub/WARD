@@ -1,11 +1,11 @@
 import Lake
 open Lake DSL
 
-package «sentry» where
+package «ward» where
 
-lean_lib «Sentry» where
+lean_lib «Ward» where
   -- no Mathlib; stdlib only
 
 @[default_target]
-lean_exe «sentry-verify» where
+lean_exe «ward-verify» where
   root := `Main

@@ -27,7 +27,7 @@ const rules = [
   },
   {
     name: "non-silent TUI JSON pipe",
-    regex: /pnpm\s+sentry\s+tui\s+--json\s*\|/g,
+    regex: /pnpm\s+ward\s+tui\s+--json\s*\|/g,
   },
 ];
 
@@ -74,11 +74,11 @@ for (const file of files) {
 }
 
 if (findings.length > 0) {
-  console.error("Found stale Sentry launcher guidance:");
+  console.error("Found stale Ward launcher guidance:");
   for (const f of findings) {
     console.error(`- ${f.file}:${f.lineNo} [${f.rule}] ${f.line}`);
   }
-  console.error("\nUse `pnpm sentry ...` for interactive commands and `pnpm --silent sentry tui --json` for NDJSON pipelines.");
+  console.error("\nUse `pnpm ward ...` for interactive commands and `pnpm --silent ward tui --json` for NDJSON pipelines.");
   process.exit(1);
 }
 

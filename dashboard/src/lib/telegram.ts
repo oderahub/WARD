@@ -14,7 +14,7 @@
 // - No retries, queueing, or debouncing here. The wizard button is
 //   responsible for click-debounce (Telegram's ~30 msg/sec global, 1
 //   msg/sec/chat limit).
-// - Test alerts MUST be visibly marked with the "[Sentry watch wizard · test]"
+// - Test alerts MUST be visibly marked with the "[Ward watch wizard · test]"
 //   prefix so they cannot be mistaken for a real alert. There is intentionally
 //   no `sendAlertTelegram` alias — adding one before a divergent production
 //   text-builder exists would invite production sends carrying the self-test
@@ -99,7 +99,7 @@ function buildText(opts: SendTestAlertTelegramOpts, isoTimestamp: string): strin
   const reason = sanitizePlain(opts.recommendationReason);
   const chainId = opts.chainId ?? 50312;
   return [
-    `[Sentry watch wizard · test]`,
+    `[Ward watch wizard · test]`,
     ``,
     `Agent: ${opts.agent}`,
     `Policy ID: ${opts.policyId}`,
@@ -174,7 +174,7 @@ async function mapErrorByStatus(response: Response): Promise<string> {
     // For any other 400 we surface a generic payload-bug message. We log a
     // FIXED breadcrumb (no description, no chat_id) so devtools shows that
     // a 400 happened without leaking anything.
-    console.warn('[sentry-telegram] Telegram returned 400 (description withheld to avoid leaking chat_id).');
+    console.warn('[ward-telegram] Telegram returned 400 (description withheld to avoid leaking chat_id).');
     return GENERIC_PAYLOAD_BUG;
   }
   return `Telegram returned HTTP ${status}.`;

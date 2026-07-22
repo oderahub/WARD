@@ -1,5 +1,5 @@
 import type { Hex } from "viem";
-import { openSentryDB } from "./persistence";
+import { openWardDB } from "./persistence";
 
 /**
  * Local registry of policies the dashboard is watching in passive (non-
@@ -8,7 +8,7 @@ import { openSentryDB } from "./persistence";
  * never blocks. We persist the cursor (`lastCheckedBlock`) so reloads resume
  * incrementally instead of rescanning history every time.
  *
- * Storage lives in the same `sentry-store` IndexedDB as the snapshot cache.
+ * Storage lives in the same `ward-store` IndexedDB as the snapshot cache.
  * Records are keyed by
  * `${chainId}:${oracleAddress.toLowerCase()}:${policyId.toLowerCase()}:${agent.toLowerCase()}`
  * so the same (policyId, agent) pair can be watched independently across
@@ -61,7 +61,7 @@ function watchedKey(
 }
 
 export async function addWatchedPolicy(entry: WatchedPolicy): Promise<void> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const rec: WatchedRecord = {
       ...entry,
@@ -86,7 +86,7 @@ export async function removeWatchedPolicy(
   policyId: Hex,
   watchedAgent: Hex,
 ): Promise<void> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const tx = db.transaction(STORE, "readwrite");
     await tx.store.delete(watchedKey(chainId, oracleAddress, policyId, watchedAgent));
@@ -100,7 +100,7 @@ export async function listWatchedPolicies(
   chainId: number,
   oracleAddress: Hex,
 ): Promise<WatchedPolicy[]> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const all = (await db.getAll(STORE)) as WatchedRecord[];
     const oracleLower = oracleAddress.toLowerCase();
@@ -120,7 +120,7 @@ export async function getWatchedPolicy(
   policyId: Hex,
   watchedAgent: Hex,
 ): Promise<WatchedPolicy | undefined> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const rec = (await db.get(
       STORE,
@@ -161,7 +161,7 @@ export async function updateLastCheckedBlock(
   watchedAgent: Hex,
   blockNumber: bigint,
 ): Promise<void> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const key = watchedKey(chainId, oracleAddress, policyId, watchedAgent);
     const tx = db.transaction(STORE, "readwrite");

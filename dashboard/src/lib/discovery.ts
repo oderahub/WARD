@@ -5,16 +5,16 @@
  * Given an arbitrary 0x address on Somnia Shannon (chainId 50312), produces a
  * `DiscoveryReport` that classifies the account (EOA / ERC-20 / ERC-721 /
  * generic contract), surfaces a token fingerprint when applicable, and
- * answers two Sentry-specific questions:
+ * answers two Ward-specific questions:
  *
- *   1. **Is this agent Sentry-aware?** — proven by either a SentryAgentRegistry
- *      `AgentRegistered` log OR a SentryQueue `Enqueued` log naming the
- *      address. A `true` here means real-time gating via SentryOracle is
+ *   1. **Is this agent Ward-aware?** — proven by either a WardAgentRegistry
+ *      `AgentRegistered` log OR a WardQueue `Enqueued` log naming the
+ *      address. A `true` here means real-time gating via WardOracle is
  *      end-to-end achievable; `false` means the wizard must drop to
  *      observation-only Slack alerts per the project scope-honesty constraint.
  *
  *   2. **Is it already registered in this oracle's registry?** — read
- *      authoritatively from `SentryAgentRegistry.getAgent(address)` so the
+ *      authoritatively from `WardAgentRegistry.getAgent(address)` so the
  *      wizard can flip to its update-path UI without a second round-trip.
  *      Crucially, this is checked even when the event probe missed (the
  *      agent may have been registered before our 5_000-block lookback
@@ -42,7 +42,7 @@
  * Hard constraints honoured:
  *   - Network pinned to 50312 (throws if `publicClient.chain.id` differs).
  *   - No `debug_traceTransaction` — call-surface enumeration is out of scope
- *     here; the recommender only needs class signals + sentry-aware signal.
+ *     here; the recommender only needs class signals + ward-aware signal.
  *   - No `client.multicall` — Shannon has no Multicall3 deployment (see
  *     `dashboard/src/main.tsx` chain definition, no `contracts.multicall3`).
  *   - No HTTP / no external indexer — every signal comes from the pinned RPC.
@@ -58,11 +58,11 @@ import {
 } from "viem";
 import {
   ERC20_ABI,
-  SENTRY_AGENT_REGISTRY_ABI,
+  WARD_AGENT_REGISTRY_ABI,
   type RegistryAgent,
   type SelectorRule,
   type TargetRule,
-} from "@sentry-somnia/sdk";
+} from "@ward/sdk";
 
 // `recoverPolicyInputFromChain` (dashboard/src/lib/policyRecovery.ts) would
 // be the hook for resolvedTargets. We deliberately do NOT call it here:
@@ -90,9 +90,9 @@ export type AgentKind =
   | "unknown-contract";
 
 /**
- * Concrete proof that the address participates in Sentry's call-time gating.
+ * Concrete proof that the address participates in Ward's call-time gating.
  *
- *   - `kind: 'registry'` — the address has an active row in SentryAgentRegistry.
+ *   - `kind: 'registry'` — the address has an active row in WardAgentRegistry.
  *     We forward the full canonical entry (from `getAgent`, which returns the
  *     post-update Agent struct including `tags` — the public mapping
  *     `agents(addr)` omits the dynamic `tags` array because Solidity can't
@@ -107,10 +107,10 @@ export type AgentKind =
  *     to observation-only recommendation".
  *
  *   - `kind: 'queue'` — the address has routed a VETO_REQUIRED / DELAYED
- *     intent through SentryQueue. Doesn't prove registry membership, but
+ *     intent through WardQueue. Doesn't prove registry membership, but
  *     proves the agent at minimum reads checkIntent's tier-routing path.
  */
-export type SentryAwareEvidence =
+export type WardAwareEvidence =
   | {
       kind: "registry";
       policyId: Hex;
@@ -171,10 +171,10 @@ export interface DiscoveryReport {
     decimals?: number;
     supports721: boolean;
   } | null;
-  sentryAware:
-    | { sentryAware: true; evidence: SentryAwareEvidence }
+  wardAware:
+    | { wardAware: true; evidence: WardAwareEvidence }
     | {
-        sentryAware: false;
+        wardAware: false;
         reason:
           | "no-registry-no-queue"
           | "registry-check-failed"
@@ -212,7 +212,7 @@ export interface DiscoverAgentOpts {
 }
 
 /**
- * Sentry-aware lookback window in blocks. ~5000 blocks at Shannon's ~1s
+ * Ward-aware lookback window in blocks. ~5000 blocks at Shannon's ~1s
  * block time ≈ 80 minutes. Wide enough to catch any registration that the
  * operator just kicked off in a sibling tab, narrow enough to keep the whole
  * probe under ~2s. The authoritative `alreadyRegistered` answer comes from
@@ -220,7 +220,7 @@ export interface DiscoverAgentOpts {
  * window only affects how fast we discover the FRESHEST evidence — older
  * registrations still resolve via the canonical read.
  */
-export const SENTRY_AWARE_LOOKBACK_BLOCKS = 5_000n;
+export const WARD_AWARE_LOOKBACK_BLOCKS = 5_000n;
 
 /**
  * Shannon caps `eth_getLogs` at 1000 blocks per call. Matches the rest of
@@ -512,7 +512,7 @@ async function probeRegistry(
   signal: AbortSignal | undefined,
 ): Promise<RegistryProbeResult> {
   const floor =
-    head > SENTRY_AWARE_LOOKBACK_BLOCKS ? head - SENTRY_AWARE_LOOKBACK_BLOCKS : 0n;
+    head > WARD_AWARE_LOOKBACK_BLOCKS ? head - WARD_AWARE_LOOKBACK_BLOCKS : 0n;
   const chunks = chunkBlockRangeDesc(floor, head, RPC_LOGS_CHUNK_SIZE);
   const errors: DiscoveryProbeError[] = [];
   let failedChunks = 0;
@@ -585,12 +585,12 @@ async function probeRegistry(
 }
 
 /**
- * Walk SentryQueue's `Enqueued` event filtered on `asker` (the third indexed
- * arg, per SENTRY_QUEUE_ABI). Same chunking discipline as registry probe.
+ * Walk WardQueue's `Enqueued` event filtered on `asker` (the third indexed
+ * arg, per WARD_QUEUE_ABI). Same chunking discipline as registry probe.
  *
- * An Enqueued event proves the agent's calls routed through Sentry's
+ * An Enqueued event proves the agent's calls routed through Ward's
  * tier-gating queue (VETO_REQUIRED or DELAYED) — which only happens for
- * Sentry-aware caller code paths.
+ * Ward-aware caller code paths.
  */
 async function probeQueue(
   client: PublicClient,
@@ -600,7 +600,7 @@ async function probeQueue(
   signal: AbortSignal | undefined,
 ): Promise<QueueProbeResult> {
   const floor =
-    head > SENTRY_AWARE_LOOKBACK_BLOCKS ? head - SENTRY_AWARE_LOOKBACK_BLOCKS : 0n;
+    head > WARD_AWARE_LOOKBACK_BLOCKS ? head - WARD_AWARE_LOOKBACK_BLOCKS : 0n;
   const chunks = chunkBlockRangeDesc(floor, head, RPC_LOGS_CHUNK_SIZE);
   const errors: DiscoveryProbeError[] = [];
   let failedChunks = 0;
@@ -693,7 +693,7 @@ async function fetchRegistryRow(
     // immutable arrays from readContract.
     const row = (await client.readContract({
       address: registryAddress,
-      abi: SENTRY_AGENT_REGISTRY_ABI as never,
+      abi: WARD_AGENT_REGISTRY_ABI as never,
       functionName: "getAgent",
       args: [agent],
     })) as RegistryAgent;
@@ -722,7 +722,7 @@ async function fetchRegistryRow(
 
 /**
  * Minimal ABI for the public `POLICY_ID()` view exposed by late-binding
- * agents (see SKILL.md §6.5 + examples/sentry-counter/src/CounterAgent.sol).
+ * agents (see SKILL.md §6.5 + examples/ward-counter/src/CounterAgent.sol).
  * Read returns `bytes32(0)` when the agent is intentionally unbound — that
  * is NOT a probe failure, it's the documented "ungated" state.
  */
@@ -789,7 +789,7 @@ export async function discoverAgent(
     throw new Error("discoverAgent: address is not a 40-hex address");
   }
 
-  // Network must have registry + queue + oracle pinned for Sentry-aware
+  // Network must have registry + queue + oracle pinned for Ward-aware
   // probes to mean anything. Refusal here is a programmer-config error
   // (missing networks.ts entry), not a runtime failure.
   const network = getNetwork(SOMNIA_CHAIN_ID);
@@ -913,7 +913,7 @@ export async function discoverAgent(
     }
   } else {
     warnings.push(
-      "Skipped Sentry-aware event probes — head block fetch failed.",
+      "Skipped Ward-aware event probes — head block fetch failed.",
     );
   }
 
@@ -943,15 +943,15 @@ export async function discoverAgent(
   // Priority: registry hit > queue hit > canonical row > negative reason.
   //
   // When the recent-log probes both miss but the canonical row exists, the
-  // agent IS Sentry-aware (it's just an older registration) — surface that
+  // agent IS Ward-aware (it's just an older registration) — surface that
   // via a synthesized 'registry' evidence carrying the canonical row, so
   // the recommender doesn't drop to observation-only just because the agent
   // hasn't been touched in the lookback window.
-  let sentryAware: DiscoveryReport["sentryAware"];
+  let wardAware: DiscoveryReport["wardAware"];
   if (registryProbe?.hit) {
     const hit = registryProbe.hit;
-    sentryAware = {
-      sentryAware: true,
+    wardAware = {
+      wardAware: true,
       evidence: {
         kind: "registry",
         policyId: hit.policyId,
@@ -977,8 +977,8 @@ export async function discoverAgent(
       },
     };
   } else if (queueProbe?.hit) {
-    sentryAware = {
-      sentryAware: true,
+    wardAware = {
+      wardAware: true,
       evidence: {
         kind: "queue",
         execId: queueProbe.hit.execId,
@@ -989,8 +989,8 @@ export async function discoverAgent(
     };
   } else if (rowResult.entry) {
     // Registered, but no recent activity within the lookback window.
-    sentryAware = {
-      sentryAware: true,
+    wardAware = {
+      wardAware: true,
       evidence: {
         kind: "registry",
         policyId: rowResult.entry.policyId,
@@ -1021,7 +1021,7 @@ export async function discoverAgent(
       // affordance.
       reason = "registry-check-failed";
     }
-    sentryAware = { sentryAware: false, reason };
+    wardAware = { wardAware: false, reason };
   }
 
   const alreadyRegistered: DiscoveryReport["alreadyRegistered"] = rowResult.entry
@@ -1037,7 +1037,7 @@ export async function discoverAgent(
     nonce: step1.nonce ?? (hasCode ? 1 : 0),
     balanceWei: step2.balanceWei ?? 0n,
     tokenFingerprint,
-    sentryAware,
+    wardAware,
     alreadyRegistered,
     lateBinding: lateBindingResult.lateBinding,
     scannedAtMs,

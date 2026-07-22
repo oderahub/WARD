@@ -1,5 +1,5 @@
 import type { Address } from "viem";
-import { openSentryDB } from "./persistence";
+import { openWardDB } from "./persistence";
 
 /**
  * Per-(policy, agent, UTC day) cumulative spend tally for watch mode.
@@ -57,7 +57,7 @@ export function computeKey(
 export async function getSpendDaily(
   opts: SpendKeyOpts,
 ): Promise<SpendDailyEntry | null> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const key = computeKey(
       opts.chainId,
@@ -97,7 +97,7 @@ export async function addSpendDaily(
   opts: SpendKeyOpts,
   observation: AddSpendObservation,
 ): Promise<{ applied: boolean }> {
-  const db = await openSentryDB();
+  const db = await openWardDB();
   try {
     const key = computeKey(
       opts.chainId,

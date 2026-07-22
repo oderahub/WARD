@@ -12,13 +12,13 @@ export interface AiInitOptions {
   skillPath?: string;
 }
 
-const GENERATED_HEADER = "<!-- GENERATED — edit /SKILL.md and rerun `sentry ai:init` to update -->";
-const CODEX_BEGIN = "<!-- sentry-ai-init:begin -->";
-const CODEX_END = "<!-- sentry-ai-init:end -->";
+const GENERATED_HEADER = "<!-- GENERATED — edit /SKILL.md and rerun `ward ai:init` to update -->";
+const CODEX_BEGIN = "<!-- ward-ai-init:begin -->";
+const CODEX_END = "<!-- ward-ai-init:end -->";
 
 export async function aiInitCmd(opts: AiInitOptions = {}): Promise<void> {
   const result = generateAiAssistPack(opts);
-  console.log(kleur.bold().cyan("# sentry ai:init"));
+  console.log(kleur.bold().cyan("# ward ai:init"));
   for (const file of result.written) console.log(kleur.green(`  wrote ${file}`));
 }
 
@@ -35,13 +35,13 @@ export function generateAiAssistPack(opts: AiInitOptions = {}): AiInitResult {
   const written: string[] = [];
 
   if (targets.cursor) {
-    const path = join(cwd, ".cursor/rules/sentry.mdc");
+    const path = join(cwd, ".cursor/rules/ward.mdc");
     writeGeneratedFile(path, renderCursorRule(parsed), opts.force);
     written.push(relativeDisplay(cwd, path));
   }
 
   if (targets.claude) {
-    const path = join(cwd, ".claude/skills/sentry-integration/SKILL.md");
+    const path = join(cwd, ".claude/skills/ward-integration/SKILL.md");
     writeGeneratedFile(path, renderClaudeSkill(skill), opts.force);
     written.push(relativeDisplay(cwd, path));
   }
@@ -70,15 +70,15 @@ function selectedTargets(opts: AiInitOptions): Required<Pick<AiInitOptions, "cur
 }
 
 function parseSkill(skill: string): ParsedSkill {
-  if (!skill.startsWith("---\n")) return { description: "Sentry integration guide", body: skill };
+  if (!skill.startsWith("---\n")) return { description: "Ward integration guide", body: skill };
   const end = skill.indexOf("\n---", 4);
-  if (end < 0) return { description: "Sentry integration guide", body: skill };
+  if (end < 0) return { description: "Ward integration guide", body: skill };
   const frontmatter = skill.slice(4, end).trim();
   const body = skill.slice(end + "\n---".length).replace(/^\n/, "");
   const descriptionLine = frontmatter.split("\n").find((line) => line.trim().startsWith("description:"));
   const description = descriptionLine
     ? descriptionLine.slice(descriptionLine.indexOf(":") + 1).trim().replace(/^["']|["']$/g, "")
-    : "Sentry integration guide";
+    : "Ward integration guide";
   return { description, body };
 }
 
@@ -97,7 +97,7 @@ ${skill.trimEnd()}
 
 ## How this file was generated
 
-This file was generated from the canonical /SKILL.md by \`sentry ai:init\`. Edit /SKILL.md and rerun the command to update it.
+This file was generated from the canonical /SKILL.md by \`ward ai:init\`. Edit /SKILL.md and rerun the command to update it.
 `;
 }
 
@@ -106,11 +106,11 @@ function renderCodexSection(skill: string): string {
   const parsed = parseSkill(skill);
   return `${CODEX_BEGIN}
 ${GENERATED_HEADER}
-## Sentry
+## Ward
 
 ${parsed.description}
 
-The canonical, full integration manual for Sentry lives in [/SKILL.md](SKILL.md). AI agents should read that file for Sentry conventions, contract addresses, the \`sentryGuarded\` modifier shape, policy authoring, and CLI / dashboard usage. The body is intentionally not duplicated here.
+The canonical, full integration manual for Ward lives in [/SKILL.md](SKILL.md). AI agents should read that file for Ward conventions, contract addresses, the \`wardGuarded\` modifier shape, policy authoring, and CLI / dashboard usage. The body is intentionally not duplicated here.
 ${CODEX_END}`;
 }
 
@@ -138,7 +138,7 @@ function writeCodexAgents(path: string, section: string, force = false): void {
     const sectionEnd = end + CODEX_END.length;
     const oldSection = existing.slice(start, sectionEnd);
     if (!force && !oldSection.includes(GENERATED_HEADER)) {
-      throw new Error(`${path} has a hand-edited Sentry section; rerun with --force to replace it`);
+      throw new Error(`${path} has a hand-edited Ward section; rerun with --force to replace it`);
     }
     writeFileSync(path, `${existing.slice(0, start)}${section}${existing.slice(sectionEnd)}`);
     return;

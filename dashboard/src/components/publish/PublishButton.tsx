@@ -3,7 +3,7 @@ import { useAccount, usePublicClient, useWriteContract, useChainId } from "wagmi
 import { decodeEventLog, stringToHex, type Hex } from "viem";
 import { Upload } from "@phosphor-icons/react";
 import { toast } from "sonner";
-import { compilePolicy, policyIdFor, SENTRY_ORACLE_ABI } from "@sentry-somnia/sdk";
+import { compilePolicy, policyIdFor, WARD_ORACLE_ABI } from "@ward/sdk";
 import type { CompileResult } from "../../hooks/usePolicyDraft";
 import { useEventStore } from "../../hooks/useEventStore";
 import { useWrongNetwork } from "../../hooks/useWrongNetwork";
@@ -177,7 +177,7 @@ export function PublishButton({
       for (const log of receipt.logs) {
         try {
           const parsed = decodeEventLog({
-            abi: SENTRY_ORACLE_ABI,
+            abi: WARD_ORACLE_ABI,
             data: log.data,
             topics: log.topics,
           });
@@ -186,7 +186,7 @@ export function PublishButton({
             break;
           }
         } catch {
-          // not a SentryOracle event; skip
+          // not a WardOracle event; skip
         }
       }
       if (!onChainId) {

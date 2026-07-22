@@ -19,10 +19,10 @@ function extractMessage(err: unknown): string {
  * still render their canonical name instead of a generic "Contract reverted".
  *
  * Names map to:
- *   - NotOwner: thrown by SentryAgentBase.setPolicyId when the caller isn't
+ *   - NotOwner: thrown by WardAgentBase.setPolicyId when the caller isn't
  *     the agent's owner. Common when a dev pastes their agent address but
  *     connects a different wallet (e.g. deployer vs. ops wallet).
- *   - NotRegistrar: thrown by SentryAgentRegistry.{register,update,setActive}
+ *   - NotRegistrar: thrown by WardAgentRegistry.{register,update,setActive}
  *     when the caller isn't the original registrar. The wizard normally gates
  *     against this via the alreadyRegisteredByOther check, but a stale-cache
  *     race (or a registry-RPC timeout that hid the existing row) can still
@@ -30,7 +30,7 @@ function extractMessage(err: unknown): string {
  */
 const REVERT_NAME_HUMANIZED: Record<string, string> = {
   NotOwner:
-    "This wallet doesn't own the agent. The original deployer (or whoever was passed to SentryAgentBase's constructor) is the only address that can rebind its policy.",
+    "This wallet doesn't own the agent. The original deployer (or whoever was passed to WardAgentBase's constructor) is the only address that can rebind its policy.",
   NotRegistrar:
     "This wallet didn't register the agent. Only the original registrar can update its registry row.",
 };
@@ -41,7 +41,7 @@ const REVERT_NAME_HUMANIZED: Record<string, string> = {
  * selector, so the call lands in execution-revert with no data — viem surfaces
  * that as an empty-`data` ContractFunctionRevertedError, or, for older RPCs,
  * as a generic "execution reverted" with no decoded reason. We treat both as
- * "the agent didn't inherit SentryAgentBase" because that is by far the most
+ * "the agent didn't inherit WardAgentBase" because that is by far the most
  * common cause when a caller knows the wallet is the owner.
  *
  * Heuristic, not proof: a custom agent could intentionally revert from
@@ -68,7 +68,7 @@ function isSetPolicyIdMissingShape(err: unknown, functionName?: string): boolean
 export interface HumanizeOptions {
   /** When the caller knows which contract function was being invoked, pass
    *  the name here so the humanizer can specialize messages — e.g. the
-   *  "agent didn't inherit SentryAgentBase" sentence is only meaningful for
+   *  "agent didn't inherit WardAgentBase" sentence is only meaningful for
    *  `setPolicyId`. */
   functionName?: string;
 }
@@ -100,12 +100,12 @@ export function humanizeWeb3Error(
         };
       }
       // No decoded errorName for a setPolicyId call → agent likely doesn't
-      // inherit SentryAgentBase. Tested via isSetPolicyIdMissingShape so the
+      // inherit WardAgentBase. Tested via isSetPolicyIdMissingShape so the
       // string-match fallback handles RPCs that flatten the revert.
       if (isSetPolicyIdMissingShape(err, options.functionName)) {
         return {
           headline:
-            "This agent doesn't expose a setPolicyId hook, so Sentry can't update its policy binding from the dashboard. To enable that, inherit from contracts/src/integration/SentryAgentBase.sol (Sentry's base contract for late-binding) and redeploy.",
+            "This agent doesn't expose a setPolicyId hook, so Ward can't update its policy binding from the dashboard. To enable that, inherit from contracts/src/integration/WardAgentBase.sol (Ward's base contract for late-binding) and redeploy.",
           detail: revertError.shortMessage || revertError.message,
         };
       }
@@ -121,7 +121,7 @@ export function humanizeWeb3Error(
   if (isSetPolicyIdMissingShape(err, options.functionName)) {
     return {
       headline:
-        "This agent doesn't expose a setPolicyId hook, so Sentry can't update its policy binding from the dashboard. To enable that, inherit from contracts/src/integration/SentryAgentBase.sol (Sentry's base contract for late-binding) and redeploy.",
+        "This agent doesn't expose a setPolicyId hook, so Ward can't update its policy binding from the dashboard. To enable that, inherit from contracts/src/integration/WardAgentBase.sol (Ward's base contract for late-binding) and redeploy.",
       detail: message.trim().slice(0, 200),
     };
   }

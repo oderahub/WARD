@@ -5,20 +5,20 @@ import { tmpdir } from "node:os";
 import { generateAiAssistPack, aiInitInternals } from "../src/cmd/ai-init.js";
 
 const FIXTURE_SKILL = `---
-name: sentry-integration
-description: Tiny Sentry guide.
+name: ward-integration
+description: Tiny Ward guide.
 ---
 
-# Sentry
+# Ward
 
-Use Sentry before calls.
+Use Ward before calls.
 `;
 
-describe("sentry ai:init", () => {
+describe("ward ai:init", () => {
   let dir: string;
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), "sentry-ai-init-"));
+    dir = mkdtempSync(join(tmpdir(), "ward-ai-init-"));
     writeFileSync(join(dir, "SKILL.md"), FIXTURE_SKILL);
   });
 
@@ -28,38 +28,38 @@ describe("sentry ai:init", () => {
 
   it("generates the Cursor rule from SKILL.md", () => {
     generateAiAssistPack({ cwd: dir, cursor: true });
-    const out = readFileSync(join(dir, ".cursor/rules/sentry.mdc"), "utf8");
+    const out = readFileSync(join(dir, ".cursor/rules/ward.mdc"), "utf8");
     expect(out).toMatchInlineSnapshot(`
-      "<!-- GENERATED — edit /SKILL.md and rerun \`sentry ai:init\` to update -->
+      "<!-- GENERATED — edit /SKILL.md and rerun \`ward ai:init\` to update -->
       ---
-      description: "Tiny Sentry guide."
+      description: "Tiny Ward guide."
       ---
 
 
-      # Sentry
+      # Ward
 
-      Use Sentry before calls.
+      Use Ward before calls.
       "
     `);
   });
 
   it("generates the Claude skill with a provenance footer", () => {
     generateAiAssistPack({ cwd: dir, claude: true });
-    const out = readFileSync(join(dir, ".claude/skills/sentry-integration/SKILL.md"), "utf8");
+    const out = readFileSync(join(dir, ".claude/skills/ward-integration/SKILL.md"), "utf8");
     expect(out).toMatchInlineSnapshot(`
-      "<!-- GENERATED — edit /SKILL.md and rerun \`sentry ai:init\` to update -->
+      "<!-- GENERATED — edit /SKILL.md and rerun \`ward ai:init\` to update -->
       ---
-      name: sentry-integration
-      description: Tiny Sentry guide.
+      name: ward-integration
+      description: Tiny Ward guide.
       ---
 
-      # Sentry
+      # Ward
 
-      Use Sentry before calls.
+      Use Ward before calls.
 
       ## How this file was generated
 
-      This file was generated from the canonical /SKILL.md by \`sentry ai:init\`. Edit /SKILL.md and rerun the command to update it.
+      This file was generated from the canonical /SKILL.md by \`ward ai:init\`. Edit /SKILL.md and rerun the command to update it.
       "
     `);
   });
@@ -68,18 +68,18 @@ describe("sentry ai:init", () => {
     generateAiAssistPack({ cwd: dir, codex: true });
     const out = readFileSync(join(dir, "AGENTS.md"), "utf8");
     expect(out).toMatchInlineSnapshot(`
-      "<!-- sentry-ai-init:begin -->
-      <!-- GENERATED — edit /SKILL.md and rerun \`sentry ai:init\` to update -->
-      ## Sentry
+      "<!-- ward-ai-init:begin -->
+      <!-- GENERATED — edit /SKILL.md and rerun \`ward ai:init\` to update -->
+      ## Ward
 
-      Tiny Sentry guide.
+      Tiny Ward guide.
 
-      The canonical, full integration manual for Sentry lives in [/SKILL.md](SKILL.md). AI agents should read that file for Sentry conventions, contract addresses, the \`sentryGuarded\` modifier shape, policy authoring, and CLI / dashboard usage. The body is intentionally not duplicated here.
-      <!-- sentry-ai-init:end -->
+      The canonical, full integration manual for Ward lives in [/SKILL.md](SKILL.md). AI agents should read that file for Ward conventions, contract addresses, the \`wardGuarded\` modifier shape, policy authoring, and CLI / dashboard usage. The body is intentionally not duplicated here.
+      <!-- ward-ai-init:end -->
       "
     `);
     // The pointer-stub does NOT carry the SKILL body inline (the whole point of the dedup).
-    expect(out).not.toContain("Use Sentry before calls.");
+    expect(out).not.toContain("Use Ward before calls.");
   });
 
   it("appends into an existing AGENTS.md and replaces the marked section on rerun", () => {
@@ -90,12 +90,12 @@ describe("sentry ai:init", () => {
     const out = readFileSync(join(dir, "AGENTS.md"), "utf8");
     expect(out.startsWith("# Project rules\n\nKeep changes scoped.\n\n")).toBe(true);
     expect(out.match(new RegExp(aiInitInternals.CODEX_BEGIN, "g"))).toHaveLength(1);
-    expect(out).toContain("## Sentry");
+    expect(out).toContain("## Ward");
     expect(out).toContain("[/SKILL.md](SKILL.md)");
   });
 
   it("refuses to overwrite hand-edited canonical files without --force", () => {
-    const path = join(dir, ".cursor/rules/sentry.mdc");
+    const path = join(dir, ".cursor/rules/ward.mdc");
     mkdirSync(join(dir, ".cursor/rules"), { recursive: true });
     writeFileSync(path, "hand edited");
 

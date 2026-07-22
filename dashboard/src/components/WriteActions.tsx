@@ -15,11 +15,11 @@ import {
 } from "viem";
 import { usePublicClient, useWalletClient } from "wagmi";
 import {
-  SENTRY_ORACLE_ABI,
+  WARD_ORACLE_ABI,
   TIER_DELAYED,
   TIER_VETO_REQUIRED,
   type QueueRecordHeader,
-} from "@sentry-somnia/sdk";
+} from "@ward/sdk";
 
 import { useEventStore } from "../hooks/useEventStore";
 import { useUrlState } from "../hooks/useUrlState";
@@ -77,7 +77,7 @@ function usePolicyOwner(policyId: Hex): Address | undefined {
     publicClient
       .readContract({
         address: oracleAddress,
-        abi: SENTRY_ORACLE_ABI,
+        abi: WARD_ORACLE_ABI,
         functionName: "policyOwner",
         args: [policyId],
       })

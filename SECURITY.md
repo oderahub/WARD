@@ -1,6 +1,6 @@
 # Security
 
-Security spec for Sentry: status, scope, the trust + threat model, per-function
+Security spec for Ward: status, scope, the trust + threat model, per-function
 contract invariants, and how to report a vulnerability.
 
 ## Contents
@@ -9,34 +9,34 @@ contract invariants, and how to report a vulnerability.
 - [Scope](#scope)
 - [Reporting a vulnerability](#reporting-a-vulnerability)
 - [Security model](#security-model)
-  - [What Sentry addresses](#what-sentry-addresses)
-  - [What Sentry deliberately does NOT address](#what-sentry-deliberately-does-not-address)
+  - [What Ward addresses](#what-ward-addresses)
+  - [What Ward deliberately does NOT address](#what-ward-deliberately-does-not-address)
   - [Trust assumptions](#trust-assumptions)
   - [Example-contract foot-guns](#example-contract-foot-guns)
   - [Preflight is a UX layer, not a security boundary](#preflight-is-a-ux-layer-not-a-security-boundary)
 - [Contract invariants](#contract-invariants)
   - [Global invariants](#global-invariants)
-  - [SentryOracle per-function invariants](#sentryoracle-per-function-invariants)
-  - [SentryQueue per-function invariants](#sentryqueue-per-function-invariants)
+  - [WardOracle per-function invariants](#wardoracle-per-function-invariants)
+  - [WardQueue per-function invariants](#wardqueue-per-function-invariants)
 
 ## Status
 
-**Sentry is an unaudited prototype.** No third-party audit. Lean 4 specifies and
+**Ward is an unaudited prototype.** No third-party audit. Lean 4 specifies and
 verifies the policy validation core — `PolicyLib.validate` precedence/monotonicity
-plus the `SentryQueue` state machine, no `sorry` — see
+plus the `WardQueue` state machine, no `sorry` — see
 [`verification/lean/`](verification/lean/). The Solidity contracts (Solidity
 0.8.26) have manual review only — no symbolic execution or Halmos/Echidna
 fuzzing. Lean proves properties about the model, not about the deployed bytecode.
 
-Do not place high-value flows behind Sentry without independent security review.
+Do not place high-value flows behind Ward without independent security review.
 
 ## Scope
 
 **In scope:**
 
-- `contracts/src/SentryOracle.sol`
-- `contracts/src/SentryQueue.sol`
-- `contracts/src/SentryAgentRegistry.sol`
+- `contracts/src/WardOracle.sol`
+- `contracts/src/WardQueue.sol`
+- `contracts/src/WardAgentRegistry.sol`
 - `contracts/src/PolicyLib.sol`
 - `contracts/src/PolicyNormalizer.sol`
 - `contracts/src/PolicyTypes.sol`
@@ -50,7 +50,7 @@ Do not place high-value flows behind Sentry without independent security review.
   discussed in the trust model only because the assumptions it exposes apply to
   any integrator.
 - Off-chain prompt-injection defence, MEV protection, gas-price oracles, and the
-  upstream LLM. Sentry validates calldata against a published policy; it does
+  upstream LLM. Ward validates calldata against a published policy; it does
   not interpret model output.
 
 ## Reporting a vulnerability
@@ -63,14 +63,14 @@ repo metadata.
 
 ## Security model
 
-Sentry is a synchronous, no-custody on-chain policy oracle. It validates
+Ward is a synchronous, no-custody on-chain policy oracle. It validates
 calldata against a published policy and returns a decision. It does not
 interpret intent, hold funds, or execute calls.
 
-### What Sentry addresses
+### What Ward addresses
 
 The on-chain gate rejects calldata that violates the published policy. From
-`SentryOracle.checkIntent` and the `PolicyLib.validate` chain it drives:
+`WardOracle.checkIntent` and the `PolicyLib.validate` chain it drives:
 
 - A `target` outside the policy's allow-list → `TARGET_NOT_ALLOWED`.
 - An allowed target with a forbidden selector → `SELECTOR_NOT_ALLOWED`.
@@ -81,26 +81,26 @@ The on-chain gate rejects calldata that violates the published policy. From
 - Cumulative spend over the per-day cap, **as reported by the asker** →
   `DAILY_CAP`.
 - A paused or expired policy → `PAUSED` / `EXPIRED`, re-checked at
-  `SentryQueue.dispatch` (alongside a `policyVersion` equality check) so a
+  `WardQueue.dispatch` (alongside a `policyVersion` equality check) so a
   queued intent cannot ship after the owner pulls the kill switch or edits the
   policy.
 - Non-immediate tiers surfaced as a rejection rather than a silent pass:
   `TIER_DELAYED` → `(false, "REQUIRES_DELAY")`, `TIER_VETO_REQUIRED` →
   `(false, "REQUIRES_VETO")`, so a naive consumer cannot bypass the queue.
 
-### What Sentry deliberately does NOT address
+### What Ward deliberately does NOT address
 
 - **Prompt injection at the LLM layer.** If the upstream model is jailbroken
-  into producing wrong-but-policy-valid calldata, Sentry lets it through.
-  Sentry validates calldata against a published policy; it does not interpret
+  into producing wrong-but-policy-valid calldata, Ward lets it through.
+  Ward validates calldata against a published policy; it does not interpret
   intent or model output. Mitigate upstream and keep policies narrow.
 - **Compromised policy owner key.** The owner can `updatePolicy` to widen the
   surface, `veto` legitimate intents, or pause the policy entirely. Treat the
   owner key like any other privileged on-chain role.
-- **Compromised asker contract / operator.** Sentry cannot constrain an asker
+- **Compromised asker contract / operator.** Ward cannot constrain an asker
   that lies about `spentToday`, fails to revoke approvals, or runs side effects
   outside the gate.
-- **Reentrancy in the target.** `SentryOracle` is pure-view and `SentryQueue`
+- **Reentrancy in the target.** `WardOracle` is pure-view and `WardQueue`
   never executes the call, so neither holds a `nonReentrant` guard — there is
   nothing to reenter. Reentrancy safety lives in the asker contract.
 - **MEV / ordering attacks** on the eventual dispatch transaction.
@@ -109,28 +109,28 @@ The on-chain gate rejects calldata that violates the published policy. From
 
 ### Trust assumptions
 
-Sentry's safety rests on a small set of assumptions. Each is a place where the
+Ward's safety rests on a small set of assumptions. Each is a place where the
 gate's guarantee ends and yours begins.
 
-- **Sentry never holds funds.** `SentryOracle` is pure-view (registry plus
-  validators). `SentryQueue` stores `Intent` metadata and state-machine
+- **Ward never holds funds.** `WardOracle` is pure-view (registry plus
+  validators). `WardQueue` stores `Intent` metadata and state-machine
   transitions only; it neither receives `value` nor executes calls.
 - **The policy owner is the on-chain authority.** The address that called
   `publishPolicy` — or accepted ownership via the two-step handoff
   (`transferPolicyOwnership` then `acceptPolicyOwnership`) — can update, pause,
   transfer, or veto. There is no role above the owner.
-- **The asker contract is trusted by its operator.** Sentry only gates the
+- **The asker contract is trusted by its operator.** Ward only gates the
   intents an asker submits; it cannot constrain what the asker does outside the
   gate (spend tracking, value handling, post-dispatch execution).
-- **The caller executes after dispatch.** `SentryQueue.dispatch` returns the
+- **The caller executes after dispatch.** `WardQueue.dispatch` returns the
   `Intent` struct to the caller and emits `Dispatched`; the caller performs
-  `target.call{value: i.value}(i.data)`. Sentry never executes. If the asker
+  `target.call{value: i.value}(i.data)`. Ward never executes. If the asker
   forgets to execute, the intent is marked `Committed` but nothing ships.
 
 Five assumptions are worth calling out individually because each is a sharp
 edge for integrators:
 
-1. **`SentryQueue.dispatch` does not re-run `PolicyLib.validate`.** It does not
+1. **`WardQueue.dispatch` does not re-run `PolicyLib.validate`.** It does not
    re-check value caps, daily spend, the target allow-list, or the selector
    allow-list against the live policy. The only policy re-checks at dispatch
    time are `paused`, `expiresAt`, and a `policyVersion` equality check: `dispatch`
@@ -149,7 +149,7 @@ edge for integrators:
    `updatePolicy`). Pinning a `policyId` therefore does **not** protect against
    in-place edits — the asker is pinned to that id and the bytes underneath
    change. Note that in-flight queued intents are not silently re-validated
-   against the edited policy: `SentryQueue.dispatch` snapshots `policyVersion`
+   against the edited policy: `WardQueue.dispatch` snapshots `policyVersion`
    at enqueue and reverts `PolicyChanged("UPDATED")` if the policy was edited
    before dispatch (see assumption 1), so an edit invalidates queued intents
    rather than re-validating them. Mitigations: treat policies as immutable and
@@ -158,7 +158,7 @@ edge for integrators:
    re-pin under the new policy after a change; or hold the owner key behind a
    timelocked multisig.
 
-3. **`SentryQueue.enqueue` is open to any caller.** Sentry treats `msg.sender`
+3. **`WardQueue.enqueue` is open to any caller.** Ward treats `msg.sender`
    as the `asker` and stores it; there is no per-policy asker allow-list. A
    hostile enqueue is still validated against the policy, so the worst it can do
    is create queue noise and (for `TIER_DELAYED`) leave a record only that
@@ -166,7 +166,7 @@ edge for integrators:
    actively `dispatch`, so hostile enqueues are inert unless ratified. Operators
    who care should filter `Enqueued` events by `asker`.
 
-4. **`spentToday` is tracked by the asker, not Sentry.** Sentry has no view into
+4. **`spentToday` is tracked by the asker, not Ward.** Ward has no view into
    the asker's wallet balance or historical spend — the asker passes
    `spentToday` into `checkIntent`, `checkSelector`, and `enqueue`. A buggy
    asker that under-reports `spentToday` defeats the `DAILY_CAP` check. The
@@ -194,7 +194,7 @@ when adapting them:
   keeping approve+call an atomic pair. If your flow forces approve-first, reset
   the allowance to `0` on rejection or use a permit-style flow that ties
   approval to a single call. The surviving sample, `CounterAgent` in
-  `examples/sentry-counter/`, is single-outbound and uses the `sentryGuarded`
+  `examples/ward-counter/`, is single-outbound and uses the `wardGuarded`
   modifier so the gate runs before the call by construction — preserve that
   ordering when you add side effects.
 
@@ -211,15 +211,15 @@ when adapting them:
 
 ### Preflight is a UX layer, not a security boundary
 
-The frontend-gating packages (e.g. `@sentry-somnia/react` under
-`packages/sentry-react/`) run a Sentry policy *preflight* before opening the
-wallet. `useSentryGuardedWrite` evaluates the policy locally, from a spec, or
+The frontend-gating packages (e.g. `@ward/react` under
+`packages/ward-react/`) run a Ward policy *preflight* before opening the
+wallet. `useWardGuardedWrite` evaluates the policy locally, from a spec, or
 via the on-chain oracle, then calls `writeContract` only if it passes. A rejected
-preflight throws `SentryPreflightRejectedError` and never shows a wallet prompt.
+preflight throws `WardPreflightRejectedError` and never shows a wallet prompt.
 
 Preflight runs in the user's browser and can be bypassed by anyone who calls the
 agent contract directly. The real gate is the on-chain `checkIntent` /
-`checkSelector` call inside the agent, or the `sentryGuarded` modifier that wraps
+`checkSelector` call inside the agent, or the `wardGuarded` modifier that wraps
 it. If that gate is missing from the contract, frontend preflight does not make
 the flow safe.
 
@@ -228,12 +228,12 @@ the flow safe.
 ## Contract invariants
 
 Per-function preconditions, postconditions, and authorization for
-`SentryOracle` and `SentryQueue`, lifted from the contract source.
+`WardOracle` and `WardQueue`, lifted from the contract source.
 
 This is a lookup reference. For the threat narrative behind these guarantees,
 see [Security model](#security-model) above.
 
-Source of truth: `contracts/src/SentryOracle.sol`, `contracts/src/SentryQueue.sol`,
+Source of truth: `contracts/src/WardOracle.sol`, `contracts/src/WardQueue.sol`,
 `contracts/src/PolicyLib.sol`, `contracts/src/PolicyTypes.sol`. Solidity 0.8.26.
 
 Convention used below:
@@ -246,13 +246,13 @@ Convention used below:
 
 These hold across every function in both contracts.
 
-- **No custody.** Neither contract has a `payable` function, holds a balance, or forwards `value`. `SentryOracle` is pure registry + view. `SentryQueue` stores metadata and state only. The external `target.call{value: i.value}(i.data)` is always the caller's job after `dispatch` returns the `Intent`.
+- **No custody.** Neither contract has a `payable` function, holds a balance, or forwards `value`. `WardOracle` is pure registry + view. `WardQueue` stores metadata and state only. The external `target.call{value: i.value}(i.data)` is always the caller's job after `dispatch` returns the `Intent`.
 - **No execution.** Neither contract performs the gated external call. `checkIntent` / `checkSelector` are `view`; `dispatch` mutates state and returns the `Intent` struct but does not call into `target`.
-- **Policy authority is the policy owner.** Every mutating `SentryOracle` function except `publishPolicy` checks `policyOwner[policyId] == msg.sender`. There is no global admin and no contract owner.
+- **Policy authority is the policy owner.** Every mutating `WardOracle` function except `publishPolicy` checks `policyOwner[policyId] == msg.sender`. There is no global admin and no contract owner.
 - **`policyId` is content-addressed by publisher.** `policyId == keccak256(abi.encode(msg.sender, label))`. A given `(publisher, label)` pair maps to exactly one policy slot for the life of the contract.
 - **Unknown `policyId` reverts, never silently denies.** Every oracle read except `policyIdFor` reverts `PolicyNotFound` when `policyOwner[policyId] == address(0)`, so a misconfigured reference cannot be misread as "policy denied".
 
-### SentryOracle per-function invariants
+### WardOracle per-function invariants
 
 State touched: `policies` (private), `policyOwner`, `pendingPolicyOwner`, `policyVersion`. Errors: `NotPolicyOwner`, `NotPendingOwner`, `NoPendingTransfer`, `PolicyExists`, `PolicyNotFound`, `ZeroAddress`.
 
@@ -270,7 +270,7 @@ State touched: `policies` (private), `policyOwner`, `pendingPolicyOwner`, `polic
 - **Auth:** `policyOwner[policyId]` only, else revert `NotPolicyOwner`.
 - **Pre:** `input` satisfies the normalizer bounds.
 - **Post:** policy content replaced in place under the **same** `policyId`; `policyVersion[policyId] += 1`. Emits `PolicyUpdated(policyId, msg.sender)`.
-- **Invariant:** `policyId` is unchanged — there is **no on-chain timelock** and pinning a `policyId` does not protect against in-place edits. The monotonically increasing `policyVersion` is the only on-chain signal of a content change, and `SentryQueue.dispatch` keys its `UPDATED` re-check on it. To freeze content, never call `updatePolicy`; publish a fresh `label` instead. See the [Trust assumptions](#trust-assumptions) section above.
+- **Invariant:** `policyId` is unchanged — there is **no on-chain timelock** and pinning a `policyId` does not protect against in-place edits. The monotonically increasing `policyVersion` is the only on-chain signal of a content change, and `WardQueue.dispatch` keys its `UPDATED` re-check on it. To freeze content, never call `updatePolicy`; publish a fresh `label` instead. See the [Trust assumptions](#trust-assumptions) section above.
 
 #### `transferPolicyOwnership(bytes32 policyId, address newOwner)`
 
@@ -302,7 +302,7 @@ State touched: `policies` (private), `policyOwner`, `pendingPolicyOwner`, `polic
   - `TIER_DELAYED` → `(false, "REQUIRES_DELAY")`.
   - `TIER_VETO_REQUIRED` → `(false, "REQUIRES_VETO")`.
 
-  A naive consumer that only proceeds on `ok == true` therefore cannot dispatch a `DELAYED` or `VETO_REQUIRED` intent — it is forced through `SentryQueue`.
+  A naive consumer that only proceeds on `ok == true` therefore cannot dispatch a `DELAYED` or `VETO_REQUIRED` intent — it is forced through `WardQueue`.
 
 `PolicyLib.validate` reason precedence, in evaluation order (first failing check wins):
 
@@ -324,28 +324,28 @@ This precedence is property-tested (`test/properties/PolicyLibProperties.t.sol`)
 - **Auth:** anyone.
 - **Pre:** `policyOwner[policyId] != address(0)`, else revert `PolicyNotFound`.
 - **Post:** none.
-- **Invariant:** calldata-less variant of `checkIntent`. Internally synthesizes an `Intent` with `data = abi.encodePacked(selector)` (so `BAD_CALLDATA` and `SELECTOR_MISMATCH` cannot fire) and the remaining intent fields zeroed (`agentId`, `requestId`, `promptHash`, `taskClass`). Same tier handling and same safe-by-default guarantee as `checkIntent`. This is the function the `sentryGuarded` modifier on `SentryAgentBase` uses.
+- **Invariant:** calldata-less variant of `checkIntent`. Internally synthesizes an `Intent` with `data = abi.encodePacked(selector)` (so `BAD_CALLDATA` and `SELECTOR_MISMATCH` cannot fire) and the remaining intent fields zeroed (`agentId`, `requestId`, `promptHash`, `taskClass`). Same tier handling and same safe-by-default guarantee as `checkIntent`. This is the function the `wardGuarded` modifier on `WardAgentBase` uses.
 
 #### `tierAndDelay(bytes32 policyId, address target, bytes4 selector) → (uint8 tier, uint32 delaySeconds)` — `view`
 
 - **Auth:** anyone.
 - **Pre:** `policyOwner[policyId] != address(0)`, else revert `PolicyNotFound`.
-- **Invariant:** returns the configured `tier` and `delaySeconds` for the pair. Use to distinguish "policy denied" from "policy requires queueing" and to size a queue window. `SentryQueue.enqueue` reads it to compute `earliestCommitAt`.
+- **Invariant:** returns the configured `tier` and `delaySeconds` for the pair. Use to distinguish "policy denied" from "policy requires queueing" and to size a queue window. `WardQueue.enqueue` reads it to compute `earliestCommitAt`.
 
 #### `policyHealth(bytes32 policyId) → (bool paused, uint64 expiresAt)` — `view`
 
 - **Auth:** anyone.
 - **Pre:** `policyOwner[policyId] != address(0)`, else revert `PolicyNotFound`.
-- **Invariant:** returns only the kill-switch fields. Designed for `SentryQueue.dispatch` re-validation, where the dispatcher (the policy owner for `VETO_REQUIRED`) may lack the asker's `spentToday` and so cannot re-run a full `checkIntent`.
+- **Invariant:** returns only the kill-switch fields. Designed for `WardQueue.dispatch` re-validation, where the dispatcher (the policy owner for `VETO_REQUIRED`) may lack the asker's `spentToday` and so cannot re-run a full `checkIntent`.
 
 #### `policyIdFor(address publisher, bytes32 label) → bytes32` — `pure`
 
 - **Auth:** anyone. The only oracle read that does **not** revert `PolicyNotFound` (it is pure and touches no state).
 - **Invariant:** returns `keccak256(abi.encode(publisher, label))` — the `policyId` that `publishPolicy` would assign for that pair. Off-chain helper for deriving the canonical id before publishing.
 
-### SentryQueue per-function invariants
+### WardQueue per-function invariants
 
-`SentryQueue` is a metadata + state-machine + audit-trail contract bound to one immutable `oracle` (set in the constructor). It holds no funds and executes no calls.
+`WardQueue` is a metadata + state-machine + audit-trail contract bound to one immutable `oracle` (set in the constructor). It holds no funds and executes no calls.
 
 #### State machine
 

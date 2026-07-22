@@ -13,7 +13,7 @@ import ThemeToggle from "./ThemeToggle";
  * TopBar — Lane B "document grade" chrome.
  *
  * Light warm-paper surface, single bottom hairline (no shadow). Brand mark
- * sits on the left (small accent square + "Sentry" wordmark in Geist
+ * sits on the left (small accent square + "Ward" wordmark in Geist
  * Semibold). Wallet sits on the right: balance in Medium, address in mono
  * muted, disconnect as a link-style ghost button.
  *

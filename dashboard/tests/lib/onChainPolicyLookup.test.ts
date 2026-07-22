@@ -5,7 +5,7 @@ import {
   lookupPoliciesByOwner,
   lookupPolicyOnChain,
 } from "../../src/lib/onChainPolicyLookup";
-import { SENTRY_ORACLE_ABI, type PolicyMeta } from "@sentry-somnia/sdk";
+import { WARD_ORACLE_ABI, type PolicyMeta } from "@ward/sdk";
 
 /**
  * Build the calldata for `updatePolicy(policyId, input)` with a minimal
@@ -18,7 +18,7 @@ function encodeUpdatePolicyCalldata(
   fields: { paused: boolean; expiresAt: bigint },
 ): Hex {
   return encodeFunctionData({
-    abi: SENTRY_ORACLE_ABI,
+    abi: WARD_ORACLE_ABI,
     functionName: "updatePolicy",
     args: [
       policyId,

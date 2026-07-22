@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { PolicyInput } from "@sentry-somnia/sdk";
+import type { PolicyInput } from "@ward/sdk";
 import { simulateIntent } from "../../lib/policy-draft";
 import { Button, Input } from "../primitives";
 import { Separator } from "../ui/separator";
@@ -12,7 +12,7 @@ const LEGEND = "text-[11px] font-semibold uppercase tracking-[0.12em] text-text-
 const LABEL = "w-40 shrink-0 text-xs text-text-muted";
 
 /**
- * Client-side preview of `SentryOracle.checkIntent` against the in-form draft
+ * Client-side preview of `WardOracle.checkIntent` against the in-form draft
  * policy. Lets a publisher sanity-check what their policy would allow BEFORE
  * spending gas to publish it. On-chain checkIntent remains authoritative.
  */

@@ -3,14 +3,14 @@ pragma solidity 0.8.26;
 
 import "forge-std/Test.sol";
 import "../src/PolicyTypes.sol";
-import "../src/SentryOracle.sol";
-import "../src/SentryQueue.sol";
+import "../src/WardOracle.sol";
+import "../src/WardQueue.sol";
 import "../src/integration/QueueAgentBase.sol";
-import "./mocks/MockSentryOracle.sol";
+import "./mocks/MockWardOracle.sol";
 import "./mocks/MockTarget.sol";
 
-contract MockSentryQueue {
-    SentryQueue.State public nextState = SentryQueue.State.Committed;
+contract MockWardQueue {
+    WardQueue.State public nextState = WardQueue.State.Committed;
     bool public revertImmediate;
     bool public revertTooEarly;
     bool public revertPastDeadline;
@@ -22,20 +22,20 @@ contract MockSentryQueue {
     event MockEnqueued(uint256 indexed execId, bytes32 indexed policyId, address indexed asker);
 
     function enqueue(bytes32 policyId, Intent calldata intent, uint256) external returns (uint256 execId) {
-        if (revertImmediate) revert SentryQueue.NotQueueable(bytes32("IMMEDIATE_NO_QUEUE_NEEDED"));
+        if (revertImmediate) revert WardQueue.NotQueueable(bytes32("IMMEDIATE_NO_QUEUE_NEEDED"));
         execId = nextExecId++;
         storedIntent = intent;
         emit MockEnqueued(execId, policyId, msg.sender);
     }
 
     function dispatch(uint256) external view returns (Intent memory) {
-        if (revertTooEarly) revert SentryQueue.TooEarly();
-        if (revertPastDeadline) revert SentryQueue.PastDeadline();
-        if (revertNotPending) revert SentryQueue.NotPending();
+        if (revertTooEarly) revert WardQueue.TooEarly();
+        if (revertPastDeadline) revert WardQueue.PastDeadline();
+        if (revertNotPending) revert WardQueue.NotPending();
         return storedIntent;
     }
 
-    function getRecord(uint256) external view returns (SentryQueue.QueuedIntent memory record) {
+    function getRecord(uint256) external view returns (WardQueue.QueuedIntent memory record) {
         record.intent = storedIntent;
         record.state = nextState;
     }
@@ -64,7 +64,7 @@ contract MockSentryQueue {
         revertNotPending = value;
     }
 
-    function setNextState(SentryQueue.State value) external {
+    function setNextState(WardQueue.State value) external {
         nextState = value;
     }
 }
@@ -75,12 +75,12 @@ contract QueueAgentHarness is QueueAgentBase {
     address public lastExpiredTarget;
     uint256 public lastExpiredValue;
 
-    constructor(SentryOracle oracle_, SentryQueue queue_, address owner_) QueueAgentBase(oracle_, queue_, owner_) {}
+    constructor(WardOracle oracle_, WardQueue queue_, address owner_) QueueAgentBase(oracle_, queue_, owner_) {}
 
     receive() external payable {}
 
     function enqueuePing(address target, uint256 value, uint256 reqId) external returns (uint256) {
-        return _sentryEnqueueDelayed(target, abi.encodeWithSelector(MockTarget.ping.selector), value, reqId);
+        return _wardEnqueueDelayed(target, abi.encodeWithSelector(MockTarget.ping.selector), value, reqId);
     }
 
     function _onQueueExpire(uint256 execId, address target, uint256 value) internal override {
@@ -92,8 +92,8 @@ contract QueueAgentHarness is QueueAgentBase {
 }
 
 contract QueueAgentBaseTest is Test {
-    MockSentryOracle internal oracle;
-    MockSentryQueue internal queue;
+    MockWardOracle internal oracle;
+    MockWardQueue internal queue;
     MockTarget internal target;
     QueueAgentHarness internal agent;
 
@@ -101,21 +101,21 @@ contract QueueAgentBaseTest is Test {
     address internal stranger = address(0xB0B);
 
     function setUp() public {
-        oracle = new MockSentryOracle();
-        queue = new MockSentryQueue();
+        oracle = new MockWardOracle();
+        queue = new MockWardQueue();
         target = new MockTarget();
-        agent = new QueueAgentHarness(SentryOracle(address(oracle)), SentryQueue(address(queue)), owner);
+        agent = new QueueAgentHarness(WardOracle(address(oracle)), WardQueue(address(queue)), owner);
         vm.deal(address(agent), 10 ether);
         vm.prank(owner);
         agent.setPolicyId(bytes32("queue-policy"));
     }
 
-    function test_sentryEnqueueDelayed_happyPathChecksThenEnqueues() public {
+    function test_wardEnqueueDelayed_happyPathChecksThenEnqueues() public {
         oracle.expectCheck(address(target), MockTarget.ping.selector);
         oracle.setNextResult(false, bytes32("REQUIRES_DELAY"));
 
         vm.expectEmit(true, true, true, false, address(queue));
-        emit MockSentryQueue.MockEnqueued(1, bytes32("queue-policy"), address(agent));
+        emit MockWardQueue.MockEnqueued(1, bytes32("queue-policy"), address(agent));
 
         uint256 execId = agent.enqueuePing(address(target), 0, 99);
 
@@ -127,7 +127,7 @@ contract QueueAgentBaseTest is Test {
         oracle.setNextResult(true, bytes32(0));
         queue.setRevertImmediate(true);
 
-        vm.expectRevert(abi.encodeWithSelector(SentryQueue.NotQueueable.selector, bytes32("IMMEDIATE_NO_QUEUE_NEEDED")));
+        vm.expectRevert(abi.encodeWithSelector(WardQueue.NotQueueable.selector, bytes32("IMMEDIATE_NO_QUEUE_NEEDED")));
         agent.enqueuePing(address(target), 0, 1);
     }
 
@@ -143,7 +143,7 @@ contract QueueAgentBaseTest is Test {
 
     function test_dispatchQueued_nonOwnerReverts() public {
         vm.prank(stranger);
-        vm.expectRevert(SentryAgentBase.NotOwner.selector);
+        vm.expectRevert(WardAgentBase.NotOwner.selector);
         agent.dispatchQueued(1);
     }
 
@@ -152,7 +152,7 @@ contract QueueAgentBaseTest is Test {
         queue.setRevertTooEarly(true);
 
         vm.prank(owner);
-        vm.expectRevert(SentryQueue.TooEarly.selector);
+        vm.expectRevert(WardQueue.TooEarly.selector);
         agent.dispatchQueued(1);
     }
 
@@ -184,7 +184,7 @@ contract QueueAgentBaseTest is Test {
         queue.setRevertPastDeadline(false);
         queue.setRevertNotPending(true);
         vm.prank(owner);
-        vm.expectRevert(SentryQueue.NotPending.selector);
+        vm.expectRevert(WardQueue.NotPending.selector);
         agent.dispatchQueued(1);
         assertEq(agent.expireCount(), 1, "hook not repeated on retry");
     }

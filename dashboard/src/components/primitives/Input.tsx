@@ -2,7 +2,7 @@ import { forwardRef } from 'react';
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
 
 const BASE =
-  'rounded-md border border-sentry-border bg-surface px-2 text-xs placeholder:text-text-subtle focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent';
+  'rounded-md border border-ward-border bg-surface px-2 text-xs placeholder:text-text-subtle focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   className?: string;

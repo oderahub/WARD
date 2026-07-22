@@ -1,7 +1,7 @@
 import { type Address, type Hex, type PublicClient } from "viem";
-import { SENTRY_AGENT_REGISTRY_ABI } from "./abi.js";
+import { WARD_AGENT_REGISTRY_ABI } from "./abi.js";
 
-/** Field-for-field mirror of `SentryAgentRegistry.Agent`; viem decodes uints as `bigint` and arrays as readonly. */
+/** Field-for-field mirror of `WardAgentRegistry.Agent`; viem decodes uints as `bigint` and arrays as readonly. */
 export interface RegistryAgent {
   agent: Address;
   registrar: Address;
@@ -16,7 +16,7 @@ export interface RegistryAgent {
 
 type OnchainAgent = RegistryAgent;
 
-export interface FindSentryAgentsOpts {
+export interface FindWardAgentsOpts {
   publicClient: PublicClient;
   registryAddress: Address;
   /** When true, filter out entries where `active === false`. Default false (return all). */
@@ -27,7 +27,7 @@ export interface FindSentryAgentsOpts {
   signal?: AbortSignal;
 }
 
-export type FindSentryAgentsResult =
+export type FindWardAgentsResult =
   | { ok: true; registryAddress: Address; agents: RegistryAgent[]; totalCount: bigint; pagesRead: number }
   | { ok: false; error: string; agents?: RegistryAgent[]; pagesRead?: number };
 
@@ -36,10 +36,10 @@ const MIN_PAGE_SIZE = 1;
 const MAX_PAGE_SIZE = 500;
 
 /** Walk `agentsPaginated(offset, limit)` until `agentCount()` is exhausted. */
-export async function findSentryAgents(opts: FindSentryAgentsOpts): Promise<FindSentryAgentsResult> {
+export async function findWardAgents(opts: FindWardAgentsOpts): Promise<FindWardAgentsResult> {
   const { publicClient, registryAddress, onlyActive, signal } = opts;
-  if (!publicClient) throw new Error("find-sentry-agents: publicClient required");
-  if (!registryAddress) throw new Error("find-sentry-agents: registryAddress required");
+  if (!publicClient) throw new Error("find-ward-agents: publicClient required");
+  if (!registryAddress) throw new Error("find-ward-agents: registryAddress required");
 
   const pageSize = Math.min(Math.max(opts.pageSize ?? DEFAULT_PAGE_SIZE, MIN_PAGE_SIZE), MAX_PAGE_SIZE);
 
@@ -47,11 +47,11 @@ export async function findSentryAgents(opts: FindSentryAgentsOpts): Promise<Find
   try {
     totalCount = (await publicClient.readContract({
       address: registryAddress,
-      abi: SENTRY_AGENT_REGISTRY_ABI as never,
+      abi: WARD_AGENT_REGISTRY_ABI as never,
       functionName: "agentCount",
     })) as bigint;
   } catch (err) {
-    return { ok: false, error: `find-sentry-agents: agentCount() reverted: ${(err as Error).message}` };
+    return { ok: false, error: `find-ward-agents: agentCount() reverted: ${(err as Error).message}` };
   }
 
   if (totalCount === 0n) {
@@ -64,21 +64,21 @@ export async function findSentryAgents(opts: FindSentryAgentsOpts): Promise<Find
 
   while (offset < totalCount) {
     if (signal?.aborted) {
-      return { ok: false, error: "find-sentry-agents: aborted", agents: collected, pagesRead };
+      return { ok: false, error: "find-ward-agents: aborted", agents: collected, pagesRead };
     }
 
     let page: readonly OnchainAgent[];
     try {
       page = (await publicClient.readContract({
         address: registryAddress,
-        abi: SENTRY_AGENT_REGISTRY_ABI as never,
+        abi: WARD_AGENT_REGISTRY_ABI as never,
         functionName: "agentsPaginated",
         args: [offset, BigInt(pageSize)],
       })) as readonly OnchainAgent[];
     } catch (err) {
       return {
         ok: false,
-        error: `find-sentry-agents: agentsPaginated(${offset},${pageSize}) reverted: ${(err as Error).message}`,
+        error: `find-ward-agents: agentsPaginated(${offset},${pageSize}) reverted: ${(err as Error).message}`,
         agents: collected,
         pagesRead,
       };
@@ -90,7 +90,7 @@ export async function findSentryAgents(opts: FindSentryAgentsOpts): Promise<Find
     if (page.length === 0) {
       return {
         ok: false,
-        error: `find-sentry-agents: agentsPaginated returned empty page at offset ${offset} with totalCount ${totalCount}`,
+        error: `find-ward-agents: agentsPaginated returned empty page at offset ${offset} with totalCount ${totalCount}`,
         agents: collected,
         pagesRead,
       };

@@ -1,12 +1,12 @@
 import { readFileSync } from "node:fs";
-import { compilePolicy, policyIdFor, SENTRY_ORACLE_ABI, type PolicyInput } from "@sentry-somnia/sdk";
+import { compilePolicy, policyIdFor, WARD_ORACLE_ABI, type PolicyInput } from "@ward/sdk";
 import kleur from "kleur";
 import { stringToHex, type Hex } from "viem";
 import {
   loadEnv,
   publicClient,
   walletClient,
-  requireSentryOracle,
+  requireWardOracle,
   requirePrivateKey,
 } from "../lib/env.js";
 
@@ -15,8 +15,8 @@ export async function compileCmd(path: string): Promise<void> {
   // Env gatekeeper addresses let the SDK reject self-targeting policies during CLI compiles.
   const env = loadEnv();
   const policy = compilePolicy(md, {
-    oracleAddress: env.sentryOracle,
-    queueAddress: env.sentryQueue,
+    oracleAddress: env.wardOracle,
+    queueAddress: env.wardQueue,
   });
   console.log(kleur.bold().cyan("# compiled PolicyInput"));
   console.log(JSON.stringify(serialize(policy), null, 2));
@@ -30,12 +30,12 @@ export interface PushOptions {
 export async function pushCmd(path: string, opts: PushOptions): Promise<void> {
   const env = loadEnv();
   const pk = requirePrivateKey(env);
-  const oracle = requireSentryOracle(env);
+  const oracle = requireWardOracle(env);
   const md = readFileSync(path, "utf-8");
   // Mirror dashboard publish checks for reserved targets and label control bytes.
   const policy = compilePolicy(md, {
     oracleAddress: oracle,
-    queueAddress: env.sentryQueue,
+    queueAddress: env.wardQueue,
     label: opts.label,
   });
   const wallet = walletClient(pk, env.rpc);
@@ -48,7 +48,7 @@ export async function pushCmd(path: string, opts: PushOptions): Promise<void> {
   // Auto-detect publish vs update by reading on-chain ownership.
   const owner = (await client.readContract({
     address: oracle,
-    abi: SENTRY_ORACLE_ABI as never,
+    abi: WARD_ORACLE_ABI as never,
     functionName: "policyOwner",
     args: [policyId],
   })) as `0x${string}`;
@@ -66,7 +66,7 @@ export async function pushCmd(path: string, opts: PushOptions): Promise<void> {
   try {
     await client.simulateContract({
       address: oracle,
-      abi: SENTRY_ORACLE_ABI as never,
+      abi: WARD_ORACLE_ABI as never,
       functionName,
       args,
       account: wallet.account,
@@ -78,7 +78,7 @@ export async function pushCmd(path: string, opts: PushOptions): Promise<void> {
 
   const hash = await wallet.writeContract({
     address: oracle,
-    abi: SENTRY_ORACLE_ABI as never,
+    abi: WARD_ORACLE_ABI as never,
     functionName,
     args,
   });

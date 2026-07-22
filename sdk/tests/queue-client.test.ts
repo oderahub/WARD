@@ -6,7 +6,7 @@ import { createQueueClient, type QueueState } from "../src/queue-client.js";
  *
  * Without this, a silent reorder of the on-chain `enum State` (None / Pending /
  * Committed / Vetoed / Expired) would mis-decode at the SDK boundary without
- * any test catching it. The Solidity-side enum is locked by the 17 SentryQueue
+ * any test catching it. The Solidity-side enum is locked by the 17 WardQueue
  * Foundry tests but they assert via Solidity enum names, not via off-chain
  * numeric ordinals.
  */
@@ -54,11 +54,11 @@ describe("queue-client state decoding", () => {
 /**
  * Pins the canonical→legacy ABI fallback chain for getRecordHeader().
  *
- * The live SentryQueue on Shannon (0x98A3…90D5) predates the policyVersion
+ * The live WardQueue on Shannon (0x98A3…90D5) predates the policyVersion
  * field added to RecordHeader, so it returns 11 words instead of 12. viem's
  * decoder surfaces this as "is out of bounds" / "not in safe integer range".
  * The client must catch that specific class of shape errors, retry against
- * LEGACY_SENTRY_QUEUE_ABI_V0, and synthesize policyVersion: 0n so consumers
+ * LEGACY_WARD_QUEUE_ABI_V0, and synthesize policyVersion: 0n so consumers
  * see a uniform shape. Non-shape errors (RPC failure, missing record, etc.)
  * must propagate without a legacy retry.
  */
