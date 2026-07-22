@@ -10,7 +10,7 @@ import { type QueueRecordHeader } from "@sentry-somnia/sdk";
 
 import { useFocusTrapAndEsc } from "../../hooks/useFocusTrapAndEsc";
 import { humanizeWeb3Error } from "../../lib/humanizeError";
-import { SOMNIA_CHAIN_ID } from "../../lib/networks";
+import { ACTIVE_CHAIN_ID, getActiveNetwork } from "../../lib/networks";
 import {
   dispatchIntent,
   expireIfStaleIntent,
@@ -77,9 +77,9 @@ export function ActionModal({
     }
     setTx({ kind: "awaiting-signature" });
     try {
-      if (walletClient.chain && walletClient.chain.id !== SOMNIA_CHAIN_ID) {
+      if (walletClient.chain && walletClient.chain.id !== ACTIVE_CHAIN_ID) {
         throw new Error(
-          `Wrong network. Connected to chainId ${walletClient.chain.id}, expected ${SOMNIA_CHAIN_ID} (Somnia testnet).`,
+          `Wrong network. Connected to chainId ${walletClient.chain.id}, expected ${ACTIVE_CHAIN_ID} (${getActiveNetwork().name}).`,
         );
       }
       const result =

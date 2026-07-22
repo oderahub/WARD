@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Address, Hex } from "viem";
-import { NETWORKS, getNetwork } from "../lib/networks";
+import { NETWORKS, getNetwork, ACTIVE_CHAIN_ID, SOMNIA_TESTNET_CHAIN_ID } from "../lib/networks";
 
 /**
- * Default Sentry deployment on Shannon (chainId 50312). Each can be
- * overridden via `?rpc=…&oracle=…&queue=…`. Addresses are sourced from the
- * NETWORKS registry so adding a chain doesn't require editing this file.
+ * Default Sentry deployment for the active chain (Shannon unless
+ * VITE_SENTRY_CHAIN selects another). Each can be overridden via
+ * `?rpc=…&oracle=…&queue=…`. Addresses are sourced from the NETWORKS registry
+ * so adding a chain doesn't require editing this file.
  */
-const DEFAULT_CHAIN_ID = 50312;
-const DEFAULT_NETWORK = getNetwork(DEFAULT_CHAIN_ID) ?? NETWORKS[DEFAULT_CHAIN_ID];
+const DEFAULT_CHAIN_ID = ACTIVE_CHAIN_ID;
+const DEFAULT_NETWORK =
+  getNetwork(DEFAULT_CHAIN_ID) ?? NETWORKS[SOMNIA_TESTNET_CHAIN_ID];
 export const DEFAULT_RPC = DEFAULT_NETWORK.rpc;
 export const DEFAULT_ORACLE: Address = DEFAULT_NETWORK.oracleAddress;
 export const DEFAULT_QUEUE: Address = DEFAULT_NETWORK.queueAddress;

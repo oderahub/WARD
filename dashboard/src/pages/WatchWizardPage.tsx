@@ -1337,7 +1337,8 @@ function Step1Body({
   return (
     <div className="max-w-2xl space-y-4">
       <p className="text-sm text-text-muted">
-        We&rsquo;ll look it up on Shannon (chain {SOMNIA_CHAIN_ID}) and
+        We&rsquo;ll look it up on {getNetwork(SOMNIA_CHAIN_ID)?.name ?? "Shannon"}{" "}
+        (chain {SOMNIA_CHAIN_ID}) and
         recommend three deterministic policy tiers. No transactions yet
         &mdash; just read-only RPC calls.
       </p>

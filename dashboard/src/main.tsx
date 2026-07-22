@@ -19,11 +19,32 @@ export const somniaTestnet = defineChain({
   },
 });
 
+export const avalancheFuji = defineChain({
+  id: 43113,
+  name: "Avalanche Fuji",
+  nativeCurrency: { name: "Avalanche", symbol: "AVAX", decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: [
+        import.meta.env.VITE_FUJI_RPC?.trim() || "https://api.avax-test.network/ext/bc/C/rpc",
+      ],
+    },
+  },
+  blockExplorers: {
+    default: { name: "SnowTrace (Testnet)", url: "https://testnet.snowtrace.io" },
+  },
+  testnet: true,
+});
+
+// Both chains are registered so wagmi can read from, and switchChain into,
+// whichever one networks.ts resolves as active. Which one the UI targets is
+// decided there (VITE_SENTRY_CHAIN), not here.
 const wagmiConfig = createConfig({
-  chains: [somniaTestnet],
+  chains: [somniaTestnet, avalancheFuji],
   connectors: [injected()],
   transports: {
     [somniaTestnet.id]: http(undefined, { timeout: 8_000 }),
+    [avalancheFuji.id]: http(undefined, { timeout: 8_000 }),
   },
 });
 
