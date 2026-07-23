@@ -1,0 +1,10 @@
+<svg width="840" height="220" viewBox="0 0 840 220" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(24,30) scale(2.5)">
+    <polygon points="32,8 54,20 54,44 32,56 10,44 10,20" fill="none" stroke="#F0E9DD" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="29" y="22" width="6" height="20" fill="#F0E9DD" rx="2"/>
+    <line x1="2" y1="32" x2="18" y2="32" stroke="#5B7CFA" stroke-width="4" stroke-dasharray="4 3" stroke-linecap="round"/>
+    <line x1="46" y1="32" x2="58" y2="32" stroke="#5B7CFA" stroke-width="5" stroke-linecap="round"/>
+    <polygon points="62,32 56,28 56,36" fill="#5B7CFA"/>
+  </g>
+  <text x="228" y="152" font-family="Helvetica, Arial, sans-serif" font-size="132" font-weight="700" letter-spacing="2" fill="#F0E9DD">WARD</text>
+</svg>
