@@ -361,7 +361,7 @@ Two-minute tutorials — pick a lane.
 
 Total time: **~2 minutes** after `pnpm install` finishes.
 
-The hosted build is at **<https://ward.vercel.app>**. To run it locally instead of the production build, use `pnpm -C dashboard run dev` (Vite dev server). The default deployment targets the canonical Fuji contracts; point the dashboard at a different oracle/queue/RPC per-session with URL params — `?oracle=0x…&queue=0x…&rpc=https://…` — which is how share links carry a non-default deployment.
+The hosted build is at **<https://ward-dashboard-five.vercel.app>**. To run it locally instead of the production build, use `pnpm -C dashboard run dev` (Vite dev server). The default deployment targets the canonical Fuji contracts; point the dashboard at a different oracle/queue/RPC per-session with URL params — `?oracle=0x…&queue=0x…&rpc=https://…` — which is how share links carry a non-default deployment.
 
 ### Quickstart — CLI + TUI
 
@@ -678,7 +678,7 @@ policies, and run the **Watch wizard** to bind alerts to an agent. Every write i
 signed by your connected wallet; Ward never takes custody.
 
 This section assumes you have a wallet (e.g. MetaMask) with a little AVAX on
-Fuji. The hosted build is at **<https://ward.vercel.app>** or run it
+Fuji. The hosted build is at **<https://ward-dashboard-five.vercel.app>** or run it
 locally with `pnpm -C dashboard run dev` (Vite dev server).
 
 Connect your wallet from the top-right of the **TopBar**. If you are on the wrong
