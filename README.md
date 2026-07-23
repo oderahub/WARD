@@ -385,9 +385,11 @@ The only sample in this repo is [`examples/ward-counter/`](examples/ward-counter
 #### 1. Install and build the tools
 
 ```bash
-git clone <ward-repo> && cd ward
+git clone --recurse-submodules https://github.com/oderahub/WARD.git && cd WARD
 pnpm install
 ```
+
+*(Already cloned without `--recurse-submodules`? Run `git submodule update --init --recursive` — `forge-std` lives at `contracts/lib/forge-std` and the contracts won't build without it.)*
 
 `pnpm install` is enough — the `pnpm ward` launcher runs the CLI straight from TypeScript via `tsx` if no build is present. Building first is optional but makes invocations faster and is what CI uses:
 
