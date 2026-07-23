@@ -755,10 +755,10 @@ export function renderPolicyMarkdown(draft: PolicyDraft): string {
 export const TEMPLATES: { id: string; description: string; draft: PolicyDraft }[] = [
   {
     id: "dex-swapper-v1",
-    description: "Trading bot that swaps via dreamDEX router",
+    description: "Trading bot that swaps via a DEX router (e.g. LFJ)",
     draft: {
       name: "DEX swapper",
-      description: "Trading bot that swaps via dreamDEX router",
+      description: "Trading bot that swaps via a DEX router (e.g. LFJ)",
       label: "dex-swapper-v1",
       dailySpendWeiCap: "1 ether",
       expiresAtISO: "2026-11-30T00:00:00.000Z",
@@ -821,12 +821,12 @@ export const TEMPLATES: { id: string; description: string; draft: PolicyDraft }[
     },
   },
   {
-    id: "llm-dispatcher-v1",
-    description: "LLM-agent dispatcher with delayed review window",
+    id: "keeper-bot-v1",
+    description: "Automation keeper with a delayed review window on upkeeps",
     draft: {
-      name: "LLM dispatcher",
-      description: "LLM-agent dispatcher with delayed review window",
-      label: "llm-dispatcher-v1",
+      name: "Keeper bot",
+      description: "Automation keeper with a delayed review window on upkeeps",
+      label: "keeper-bot-v1",
       dailySpendWeiCap: "0",
       expiresAtISO: "2026-11-30T00:00:00.000Z",
       paused: false,
@@ -834,7 +834,7 @@ export const TEMPLATES: { id: string; description: string; draft: PolicyDraft }[
         {
           target: "0x0000000000000000000000000000000000000000",
           selectors: [
-            { selector: "doThing(uint256,string)", tier: "DELAYED", valueCapPerCall: "0", delaySeconds: 30 },
+            { selector: "performUpkeep(bytes)", tier: "DELAYED", valueCapPerCall: "0", delaySeconds: 30 },
           ],
         },
       ],
