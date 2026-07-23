@@ -9,7 +9,7 @@
 
 <p>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href="#deploying-to-avalanche"><img alt="Network: Avalanche Fuji" src="https://img.shields.io/badge/Avalanche-Fuji%20testnet-blueviolet"></a>
+  <a href="#live-on-avalanche-fuji"><img alt="Network: Avalanche Fuji" src="https://img.shields.io/badge/Avalanche-Fuji%20testnet-blueviolet"></a>
   <a href="#test-surface"><img alt="Tests: 950+ passing" src="https://img.shields.io/badge/tests-950%2B%20passing-brightgreen"></a>
   <a href="verification/lean/"><img alt="Lean 4: 10 theorems, no sorry" src="https://img.shields.io/badge/Lean%204-10%20theorems%2C%20no%20sorry-informational"></a>
 </p>
@@ -19,7 +19,7 @@
   <a href="SKILL.md"><b>Docs</b></a> ·
   <a href="#integrate-into-your-agent"><b>Integrate</b></a> ·
   <a href="sdk/README.md"><b>SDK</b></a> ·
-  <a href="#deploying-to-avalanche"><b>Contracts</b></a>
+  <a href="#live-on-avalanche-fuji"><b>Contracts</b></a>
 </p>
 
 </div>
@@ -51,7 +51,7 @@ It is an Avalanche-native set of three no-custody contracts:
   - [Dashboard](#quickstart--dashboard)
   - [CLI + TUI](#quickstart--cli--tui)
 - [Integrate into your agent](#integrate-into-your-agent)
-- [Deploying to Avalanche](#deploying-to-avalanche)
+- [Live on Avalanche Fuji](#live-on-avalanche-fuji)
 - [Using the dashboard](#using-the-dashboard)
 - [Worked examples](#worked-examples)
 - [Prior art](#prior-art)
@@ -367,7 +367,7 @@ The hosted build is at **<https://ward.vercel.app>**. To run it locally instead 
 
 Publish your first on-chain policy and watch it live, entirely from the terminal — no browser required.
 
-This tutorial takes you end to end on the Avalanche Fuji testnet (chain id `43113`) against a `WardOracle` you deploy yourself — see [Deploying to Avalanche](#deploying-to-avalanche). You will install the tools, run a preflight check, compile and publish the policy that ships with the `ward-counter` example, and open the live TUI monitor. By the end you will have a real `policyId` on-chain and know how to bind it to an agent.
+This tutorial takes you end to end on the Avalanche Fuji testnet (chain id `43113`) against a `WardOracle` you deploy yourself — see [Live on Avalanche Fuji](#live-on-avalanche-fuji). You will install the tools, run a preflight check, compile and publish the policy that ships with the `ward-counter` example, and open the live TUI monitor. By the end you will have a real `policyId` on-chain and know how to bind it to an agent.
 
 #### Before you start
 
@@ -595,19 +595,33 @@ contract CounterAgent is WardAgentBase {
 
 Modifier order is deliberate: Solidity runs modifiers left-to-right, so `onlyOperator` rejects unauthorized callers *before* the agent makes the external oracle call — gas saved on doomed calls. `POLICY_ID` is inherited and late-bound via `setPolicyId(0xNEW)`; while unbound the Ward layer short-circuits, so the agent can ship to testnet before a policy exists (`setPolicyId(0)` is the Ward kill switch). For **multi-outbound** functions (e.g. `approve` + `swap`), use the inline `oracle.checkIntent` / `_wardCheck` + `_call` path instead — see the integration models + integration guide in **[SKILL.md](SKILL.md)**. Canonical sample: **[`examples/ward-counter/`](examples/ward-counter/)**.
 
-## Deploying to Avalanche
+## Live on Avalanche Fuji
 
-Ward has **no canonical Avalanche deployment yet** — the contracts are ownerless and
-hold no funds, so you deploy your own and point the tooling at it. Chain ids: Fuji
-`43113`, C-Chain mainnet `43114`.
+Deployed and source-verified on Fuji (chainId `43113`):
+
+| Contract | Address |
+|---|---|
+| `WardOracle` | [`0x111C0Eb8e964f8fE2725d5Bbeb9E1c41CAE2093E`](https://testnet.snowtrace.io/address/0x111C0Eb8e964f8fE2725d5Bbeb9E1c41CAE2093E) |
+| `WardQueue` | [`0x9d3352f46B9dd2b3705449F69BA994f013cf5C26`](https://testnet.snowtrace.io/address/0x9d3352f46B9dd2b3705449F69BA994f013cf5C26) |
+| `WardAgentRegistry` | [`0x821427e8fc8d55737d210E868C485409256A9815`](https://testnet.snowtrace.io/address/0x821427e8fc8d55737d210E868C485409256A9815) |
+
+Deployment gas (measured from receipts): `WardOracle` 1,395,695 · `WardQueue` 1,324,385 · `WardAgentRegistry` 1,289,952.
+Point the tooling at them with `WARD_ORACLE` / `WARD_QUEUE` / `WARD_AGENT_REGISTRY`
+(and `VITE_WARD_*` for the dashboard). Mainnet C-Chain (`43114`) is not deployed yet.
+
+### Deploying your own
+
+The contracts are ownerless and hold no funds, so running your own instance is a
+supported path — nothing is shared or privileged.
 
 ```bash
 cd contracts
 export DEPLOYER_PK=0xYOUR_FUNDED_KEY          # fund from https://faucet.avax.network/
 forge script script/Deploy.s.sol --rpc-url avalanche_fuji --broadcast
+forge script script/DeployRegistry.s.sol --rpc-url avalanche_fuji --broadcast
 ```
 
-That writes `contracts/deployments/43113.json`:
+The deploy writes `contracts/deployments/43113.json`:
 
 | Contract | Where its address comes from |
 |---|---|

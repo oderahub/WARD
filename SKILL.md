@@ -64,10 +64,23 @@ This file is self-contained: every address, command, schema rule, selector, stru
 
 ---
 
-## 1. Deploy your own Ward contracts
+## 1. Canonical Avalanche Fuji addresses
 
-There is **no canonical Avalanche deployment yet**. Ward's contracts are ownerless and
-hold no funds, so every integrator deploys their own and points the tooling at it.
+Deployed and source-verified on Fuji (chainId `43113`):
+
+| Contract | Address |
+|---|---|
+| `WardOracle` | `0x111C0Eb8e964f8fE2725d5Bbeb9E1c41CAE2093E` |
+| `WardQueue` | `0x9d3352f46B9dd2b3705449F69BA994f013cf5C26` |
+| `WardAgentRegistry` | `0x821427e8fc8d55737d210E868C485409256A9815` |
+| Chain | Avalanche Fuji testnet, chainId `43113` (mainnet C-Chain `43114` — not yet deployed) |
+
+Export them as `WARD_ORACLE` / `WARD_QUEUE` / `WARD_AGENT_REGISTRY` (or `VITE_WARD_*` for
+the dashboard).
+
+### Deploying your own
+
+The contracts are ownerless and hold no funds, so a private instance is a supported path:
 
 ```bash
 cd contracts
@@ -76,15 +89,10 @@ forge script script/Deploy.s.sol --rpc-url avalanche_fuji --broadcast
 forge script script/DeployRegistry.s.sol --rpc-url avalanche_fuji --broadcast
 ```
 
-| Thing | Where it comes from |
-|---|---|
-| `WardOracle` | `contracts/deployments/43113.json` → `wardOracle`; export as `WARD_ORACLE` |
-| `WardQueue` | `contracts/deployments/43113.json` → `wardQueue`; export as `WARD_QUEUE` |
-| `WardAgentRegistry` | `contracts/deployments/43113-registry.json`; export as `WARD_AGENT_REGISTRY` |
-| Chain | Avalanche Fuji testnet, chainId `43113` (mainnet C-Chain is `43114`) |
+Addresses land in `contracts/deployments/43113.json` and `43113-registry.json`.
 
 Throughout this document, `$WARD_ORACLE` / `$WARD_QUEUE` / `$WARD_AGENT_REGISTRY` refer to
-**your** deployment's addresses.
+the addresses above, or to your own deployment if you ran one.
 | RPC | `https://api.avax-test.network/ext/bc/C/rpc` |
 | Explorer | `https://testnet.snowtrace.io` |
 

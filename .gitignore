@@ -83,3 +83,10 @@ contracts/deployments/.tmp-*
 examples/ward-counter/deployments/*.json
 !examples/ward-counter/deployments/.gitkeep
 .vercel
+
+# forge-std lives at contracts/lib/forge-std (see .gitmodules). Not vendored
+# into the public repo — run `forge install foundry-rs/forge-std` on a fresh clone.
+contracts/lib/
+
+# Changelog is Somnia-era history; excluded from the public Avalanche repo.
+CHANGELOG.md
