@@ -17,9 +17,8 @@ import { Sun, Moon, Desktop } from "@phosphor-icons/react";
  * into the app surface via the `app` query param.
  */
 
-/** "View on GitHub" target. TODO(landing): point this at the real repository.
- *  There is no git remote configured in this workspace to infer it from. */
-const GITHUB_URL = "https://github.com/Timidan/ward";
+/** "View on GitHub" target — the published Ward repository. */
+const GITHUB_URL = "https://github.com/oderahub/WARD";
 
 /** The surfaces an integrator can reach Ward through. Each links to the
  *  canonical "how do I use this" doc anchor (GitHub slug-rules: lowercased,
